@@ -7,7 +7,7 @@ type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
-const LOCAL_API_PROXY_TARGET = "http://127.0.0.1:8000";
+const LOCAL_API_PROXY_TARGET = "http://127.0.0.1:8080";
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 

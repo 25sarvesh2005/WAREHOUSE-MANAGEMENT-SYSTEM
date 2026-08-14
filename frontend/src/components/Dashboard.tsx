@@ -293,26 +293,25 @@ export function Dashboard({ user }: { user: User }) {
         <Card className="relative overflow-hidden p-7">
           <div className="absolute right-0 top-0 h-40 w-40 rounded-bl-[64px] bg-primary-tint" />
           <div className="relative">
-            <p className="text-sm font-semibold text-primary">Warehouse Command Center</p>
+            <p className="text-sm font-semibold text-primary">Whitfield Operations Command Center</p>
             <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
               Welcome back, {user.name.split(" ")[0] || user.name}.
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              A clean operating view for Reno and Columbus: receipts, stock, orders, transfers,
-              returns, migration and safe AI drafts.
+              Bicoastal operations overview for Reno (RNO) and Columbus (CMH) hubs: real-time stock balances, inbound receipts, active fulfillment, and hub transfers.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 to="/receipts"
                 className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.22)] transition hover:bg-primary-dark"
               >
-                Open receiving <ArrowRight className="size-4" />
+                Inbound dock receipts <ArrowRight className="size-4" />
               </Link>
               <Link
                 to="/inventory"
                 className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-white px-5 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary-tint"
               >
-                View inventory
+                Live inventory matrix
               </Link>
             </div>
           </div>
@@ -324,8 +323,8 @@ export function Dashboard({ user }: { user: User }) {
               <SearchCheck className="size-6" />
             </span>
             <div>
-              <h2 className="font-semibold text-foreground">Today at a glance</h2>
-              <p className="text-sm text-muted-foreground">Role-scoped to {user.role}</p>
+              <h2 className="font-semibold text-foreground">Operational Overview</h2>
+              <p className="text-sm text-muted-foreground">Signed in as {user.role.replaceAll("_", " ")}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -350,7 +349,7 @@ export function Dashboard({ user }: { user: User }) {
         </Card>
       </section>
 
-      <LedgerNoticeBanner message="Inventory is computed from workflow movements, not overwritten like spreadsheet cells." />
+      <LedgerNoticeBanner message="Live Real-Time Inventory: All balances are synchronized across Reno (RNO) and Columbus (CMH) fulfillment centers with audit-grade ledger precision." />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
