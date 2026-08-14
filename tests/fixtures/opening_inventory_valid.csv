@@ -1,0 +1,4 @@
+seller_code,sku,upc,warehouse_code,location_code,inventory_state,quantity
+SELLER-001,SKU-001,012345678905,RENO,A-01,AVAILABLE,25.00
+SELLER-001,SKU-002,,RENO,,DAMAGED,2.00
+

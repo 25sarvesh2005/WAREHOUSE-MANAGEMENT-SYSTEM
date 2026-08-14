@@ -1,0 +1,457 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  AlertTriangle,
+  Boxes,
+  CheckCircle2,
+  FileSearch,
+  Plus,
+  ShieldAlert,
+  ShieldCheck,
+  Trash2,
+  Undo2,
+} from "lucide-react";
+import { useState } from "react";
+import { AppShell } from "@/components/AppShell";
+import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
+import {
+  Button,
+  Card,
+  EmptyState,
+  ErrorState,
+  ExceptionBanner,
+  LoadingState,
+  PageHeader,
+  TableShell,
+  Td,
+  Th,
+} from "@/components/ui-kit";
+import { productName, productSku, sellerLabel, warehouseLabel } from "@/lib/display";
+import { formatDate, formatQty } from "@/lib/format";
+import {
+  useCreateReturnMutation,
+  useOrdersQuery,
+  useProductsQuery,
+  useReturnsQuery,
+  useSellersQuery,
+  useWarehousesQuery,
+} from "@/hooks/use-api";
+import type { ReturnOrder } from "@/lib/types";
+
+export const Route = createFileRoute("/returns/")({
+  head: () => ({
+    meta: [
+      { title: "Customer Returns & Inspection | Whitfield Ops" },
+      {
+        name: "description",
+        content:
+          "Inbound customer return intake and mandatory physical inspection before restock disposition.",
+      },
+      { property: "og:title", content: "Customer Returns & Inspection | Whitfield Ops" },
+      {
+        property: "og:description",
+        content:
+          "Returned goods enter inspection quarantine and are never posted straight to available.",
+      },
+    ],
+  }),
+  component: ReturnsPage,
+});
+
+interface ReturnLineDraft {
+  product_id: string;
+  expected_quantity: string;
+  received_quantity: string;
+  reason_code: string;
+  inspection_notes: string;
+}
+
+function newReturnLineDraft(): ReturnLineDraft {
+  return {
+    product_id: "",
+    expected_quantity: "1",
+    received_quantity: "0",
+    reason_code: "CUSTOMER_RETURN",
+    inspection_notes: "",
+  };
+}
+
+function ReturnsPage() {
+  const returnsQuery = useReturnsQuery();
+  const sellersQuery = useSellersQuery();
+  const warehousesQuery = useWarehousesQuery();
+  const productsQuery = useProductsQuery();
+  const ordersQuery = useOrdersQuery();
+  const createReturnMutation = useCreateReturnMutation();
+
+  const returns = returnsQuery.data ?? [];
+  const sellers = sellersQuery.data ?? [];
+  const warehouses = warehousesQuery.data ?? [];
+  const products = productsQuery.data ?? [];
+  const orders = ordersQuery.data ?? [];
+
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    seller_id: "",
+    warehouse_id: "",
+    order_id: "",
+    rma_number: "",
+    inbound_tracking_number: "",
+    is_unidentified: false,
+    notes: "",
+    lines: [newReturnLineDraft()],
+  });
+
+  const awaitingInspection = returns.filter(
+    (r: ReturnOrder) => r.status === "INSPECTION" || r.status === "EXPECTED",
+  ).length;
+
+  function updateLine(index: number, patch: Partial<ReturnLineDraft>) {
+    setForm({
+      ...form,
+      lines: form.lines.map((line, lineIndex) =>
+        lineIndex === index ? { ...line, ...patch } : line,
+      ),
+    });
+  }
+
+  function addLine() {
+    setForm({ ...form, lines: [...form.lines, newReturnLineDraft()] });
+  }
+
+  function removeLine(index: number) {
+    if (form.lines.length === 1) return;
+    setForm({
+      ...form,
+      lines: form.lines.filter((_, lineIndex) => lineIndex !== index),
+    });
+  }
+
+  async function createReturn(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const sellerId = form.seller_id || sellers[0]?.id;
+    const warehouseId = form.warehouse_id || warehouses[0]?.id;
+    if (!sellerId) return setError("Seller is required.");
+    if (!warehouseId) return setError("Warehouse facility is required.");
+    if (!form.is_unidentified && !form.rma_number.trim()) {
+      return setError("RMA number is required for expected returns.");
+    }
+    if (form.lines.some((l) => !l.product_id || Number(l.expected_quantity) <= 0)) {
+      return setError("All lines must specify a product and valid expected quantity.");
+    }
+
+    try {
+      await createReturnMutation.mutateAsync({
+        seller_id: sellerId,
+        warehouse_id: warehouseId,
+        ...(form.order_id ? { order_id: form.order_id } : {}),
+        ...(form.rma_number.trim() ? { rma_number: form.rma_number.trim() } : {}),
+        ...(form.inbound_tracking_number.trim()
+          ? { inbound_tracking_number: form.inbound_tracking_number.trim() }
+          : {}),
+        is_unidentified: form.is_unidentified,
+        ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
+        lines: form.lines.map((l) => ({
+          ...(l.product_id ? { product_id: l.product_id } : {}),
+          expected_quantity: Number(l.expected_quantity),
+          received_quantity: Number(l.received_quantity || 0),
+          ...(l.reason_code.trim() ? { reason_code: l.reason_code.trim() } : {}),
+          ...(l.inspection_notes.trim() ? { inspection_notes: l.inspection_notes.trim() } : {}),
+        })),
+      });
+      setOpen(false);
+      setForm({
+        seller_id: "",
+        warehouse_id: "",
+        order_id: "",
+        rma_number: "",
+        inbound_tracking_number: "",
+        is_unidentified: false,
+        notes: "",
+        lines: [newReturnLineDraft()],
+      });
+      returnsQuery.refetch();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Could not log customer return.");
+    }
+  }
+
+  return (
+    <AppShell>
+      <PageHeader
+        title="Customer Returns & Quarantine Inspection"
+        subtitle="Manage returned stock with mandatory physical inspection before any item re-enters sellable inventory."
+        actions={
+          <Button onClick={() => setOpen(true)} className="gap-2">
+            <Plus className="size-4" /> Log Customer Return
+          </Button>
+        }
+      />
+
+      <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-purple-200/80 bg-purple-50/60 px-3.5 py-2 text-xs text-purple-900">
+        <ShieldCheck className="size-4 shrink-0 text-purple-600" />
+        <span>
+          <strong className="font-semibold">Inspection Quarantine Rule:</strong> Returned goods
+          never post directly to sellable stock. Every unit enters RETURN_INSPECTION until
+          physically vetted by warehouse staff.
+        </span>
+      </div>
+
+      {awaitingInspection > 0 ? (
+        <ExceptionBanner>
+          <strong>{awaitingInspection} Return(s) Awaiting Physical Inspection:</strong> Units in
+          quarantine dock must be inspected for seal integrity, carton crushing, and defect
+          disposition.
+        </ExceptionBanner>
+      ) : null}
+
+      {[returnsQuery, sellersQuery, warehousesQuery, productsQuery].some((q) => q.isLoading) ? (
+        <LoadingState message="Loading returns queue..." />
+      ) : null}
+
+      {returns.length === 0 ? (
+        <Card className="p-8">
+          <EmptyState
+            message="No customer returns recorded"
+            hint="Log an expected RMA or unidentified customer return package above."
+          />
+        </Card>
+      ) : (
+        <TableShell>
+          <thead>
+            <tr>
+              <Th>RMA / Return ID</Th>
+              <Th>Seller Tenant</Th>
+              <Th>Facility</Th>
+              <Th>Type</Th>
+              <Th>Status</Th>
+              <Th>Created Date</Th>
+              <Th className="text-right">Action</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {returns.map((r: ReturnOrder) => {
+              const whCode = warehouses.find((w) => w.id === r.warehouse_id)?.code || "WH";
+
+              return (
+                <tr key={r.id} className="hover:bg-slate-50">
+                  <Td className="font-mono font-bold text-slate-900">
+                    <Link
+                      to="/returns/$id"
+                      params={{ id: r.id }}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {r.rma_number || `RET-${r.id.slice(0, 8)}`}
+                    </Link>
+                  </Td>
+                  <Td className="text-slate-700 font-medium">
+                    {sellerLabel(sellers, r.seller_id)}
+                  </Td>
+                  <Td>
+                    <FacilityBadge code={whCode} />
+                  </Td>
+                  <Td>
+                    <span
+                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
+                        !r.rma_number
+                          ? "bg-amber-50 text-amber-800 border-amber-200"
+                          : "bg-blue-50 text-blue-800 border-blue-200"
+                      }`}
+                    >
+                      {!r.rma_number ? "Unidentified Drop" : "Expected RMA"}
+                    </span>
+                  </Td>
+                  <Td>
+                    <StatusBadge value={r.status} />
+                  </Td>
+                  <Td className="font-mono text-xs text-slate-500">{formatDate(r.created_at)}</Td>
+                  <Td className="text-right">
+                    <Link
+                      to="/returns/$id"
+                      params={{ id: r.id }}
+                      className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                    >
+                      Inspect & Dispose
+                    </Link>
+                  </Td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </TableShell>
+      )}
+
+      {/* Log Return Modal */}
+      {open ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="w-full max-w-xl rounded-xl border border-slate-200 bg-white p-6 shadow-2xl animate-rise max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-900 text-base">Log Inbound Customer Return</h3>
+              <button
+                onClick={() => setOpen(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {error ? (
+              <div className="mt-3">
+                <ErrorState message={error} />
+              </div>
+            ) : null}
+
+            <form onSubmit={createReturn} className="mt-4 space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                    Seller Account
+                  </label>
+                  <select
+                    value={form.seller_id}
+                    onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 focus:outline-none"
+                  >
+                    {sellers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                    Receiving Facility
+                  </label>
+                  <select
+                    value={form.warehouse_id}
+                    onChange={(e) => setForm({ ...form, warehouse_id: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 focus:outline-none"
+                  >
+                    {warehouses.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.code} ({w.city || "Hub"})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                    RMA Reference #
+                  </label>
+                  <input
+                    type="text"
+                    value={form.rma_number}
+                    onChange={(e) => setForm({ ...form, rma_number: e.target.value })}
+                    placeholder="e.g. RMA-2026-991"
+                    disabled={form.is_unidentified}
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-900 focus:outline-none disabled:bg-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                    Inbound Tracking Number
+                  </label>
+                  <input
+                    type="text"
+                    value={form.inbound_tracking_number}
+                    onChange={(e) => setForm({ ...form, inbound_tracking_number: e.target.value })}
+                    placeholder="e.g. 1Z8888888888888888"
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-900 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="unidentified"
+                  checked={form.is_unidentified}
+                  onChange={(e) => setForm({ ...form, is_unidentified: e.target.checked })}
+                  className="rounded border-slate-300"
+                />
+                <label htmlFor="unidentified" className="text-xs font-semibold text-slate-700">
+                  Unidentified return package (no prior RMA paperwork)
+                </label>
+              </div>
+
+              {/* Return Lines */}
+              <div className="border-t border-slate-100 pt-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-slate-700 uppercase text-[10px]">
+                    Returned Items
+                  </span>
+                  <button
+                    type="button"
+                    onClick={addLine}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                  >
+                    + Add Another SKU
+                  </button>
+                </div>
+
+                <div className="space-y-2.5">
+                  {form.lines.map((line, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 rounded-lg bg-slate-50 p-2.5 border border-slate-200"
+                    >
+                      <select
+                        value={line.product_id}
+                        onChange={(e) => updateLine(idx, { product_id: e.target.value })}
+                        className="flex-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-mono text-xs font-semibold text-slate-900 focus:outline-none"
+                      >
+                        <option value="">-- Choose Product SKU --</option>
+                        {products.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.sku} — {p.name}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        min="1"
+                        value={line.expected_quantity}
+                        onChange={(e) => updateLine(idx, { expected_quantity: e.target.value })}
+                        placeholder="Qty"
+                        className="w-16 rounded-md border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs font-bold text-right text-slate-900 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeLine(idx)}
+                        className="text-rose-600 hover:text-rose-800 p-1"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+                <Button type="button" variant="secondary" size="md" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  disabled={createReturnMutation.isPending}
+                >
+                  {createReturnMutation.isPending ? "Logging..." : "Log Inbound Return"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </AppShell>
+  );
+}

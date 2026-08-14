@@ -1,0 +1,366 @@
+"""
+--------------------------------------------------------------------------------
+File        : core/constants.py
+Purpose     : Define shared domain constants and enums.
+
+Responsibilities:
+    - Centralize roles, statuses, inventory states, and policy defaults.
+    - Provide string enums that serialize cleanly through FastAPI.
+
+Flow:
+    Domain modules
+        ->
+    Import enums/constants
+        ->
+    Validate and serialize known values
+
+Used By:
+    - core/models
+    - common/auth.py
+    - common/warehouse_scope.py
+
+Returns:
+    Enum values - Shared constrained domain values.
+
+Raises:
+    None.
+--------------------------------------------------------------------------------
+"""
+
+from __future__ import annotations
+
+from enum import Enum
+from typing import Final
+
+DEFAULT_RESERVATION_EXPIRY_MINUTES: Final[int] = 60
+
+
+class UserRole(str, Enum):
+    """Application user roles."""
+
+    RECEIVER = "RECEIVER"
+    PICKER_PACKER = "PICKER_PACKER"
+    WAREHOUSE_MANAGER = "WAREHOUSE_MANAGER"
+    SELLER = "SELLER"
+    ADMINISTRATOR = "ADMINISTRATOR"
+    SERVICE_ACCOUNT = "SERVICE_ACCOUNT"
+
+
+class UserStatus(str, Enum):
+    """Operational user statuses."""
+
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    PENDING_APPROVAL = "PENDING_APPROVAL"
+    INVITED = "INVITED"
+    SUSPENDED = "SUSPENDED"
+    REVOKED = "REVOKED"
+
+
+class BusinessStatus(str, Enum):
+    """Generic lifecycle values for master data."""
+
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    SUSPENDED = "SUSPENDED"
+    ARCHIVED = "ARCHIVED"
+
+
+class WarehouseLocationType(str, Enum):
+    """Warehouse location categories used by receiving and fulfillment."""
+
+    RECEIVING = "RECEIVING"
+    STORAGE = "STORAGE"
+    PICKING = "PICKING"
+    PACKING = "PACKING"
+    QUARANTINE = "QUARANTINE"
+    DAMAGE = "DAMAGE"
+    RETURN_INSPECTION = "RETURN_INSPECTION"
+    TRANSFER_STAGING = "TRANSFER_STAGING"
+
+
+class ProductIdentifierType(str, Enum):
+    """Supported product identifier types."""
+
+    UPC = "UPC"
+    EAN = "EAN"
+    SELLER_CODE = "SELLER_CODE"
+
+
+class AllocationStrategy(str, Enum):
+    """Supported reservation allocation strategies."""
+
+    FIFO = "FIFO"
+    FEFO = "FEFO"
+    WAREHOUSE_PRIORITY = "WAREHOUSE_PRIORITY"
+
+
+class AuditActionType(str, Enum):
+    """Initial audit action categories."""
+
+    AUTH_LOGIN = "AUTH_LOGIN"
+    AUTH_LOGOUT = "AUTH_LOGOUT"
+    AUTH_TOKEN_REFRESH = "AUTH_TOKEN_REFRESH"
+    USER_CREATED = "USER_CREATED"
+    USER_UPDATED = "USER_UPDATED"
+    SELLER_CREATED = "SELLER_CREATED"
+    SELLER_UPDATED = "SELLER_UPDATED"
+    WAREHOUSE_CREATED = "WAREHOUSE_CREATED"
+    PRODUCT_CREATED = "PRODUCT_CREATED"
+    POLICY_CREATED = "POLICY_CREATED"
+    RECEIPT_CREATED = "RECEIPT_CREATED"
+    RECEIPT_COMPLETED = "RECEIPT_COMPLETED"
+    RECEIPT_CANCELLED = "RECEIPT_CANCELLED"
+    RECEIPT_OVERRIDDEN = "RECEIPT_OVERRIDDEN"
+    INVENTORY_ADJUSTED = "INVENTORY_ADJUSTED"
+    INVENTORY_RECONCILED = "INVENTORY_RECONCILED"
+    ORDER_CREATED = "ORDER_CREATED"
+    ORDER_RESERVED = "ORDER_RESERVED"
+    ORDER_CANCELLED = "ORDER_CANCELLED"
+    PICK_TASK_CREATED = "PICK_TASK_CREATED"
+    PICK_TASK_COMPLETED = "PICK_TASK_COMPLETED"
+    SHIPMENT_DISPATCHED = "SHIPMENT_DISPATCHED"
+    TRANSFER_CREATED = "TRANSFER_CREATED"
+    TRANSFER_APPROVED = "TRANSFER_APPROVED"
+    TRANSFER_DISPATCHED = "TRANSFER_DISPATCHED"
+    TRANSFER_RECEIVED = "TRANSFER_RECEIVED"
+    TRANSFER_DISCREPANCY_RESOLVED = "TRANSFER_DISCREPANCY_RESOLVED"
+    RETURN_CREATED = "RETURN_CREATED"
+    RETURN_RECEIVED = "RETURN_RECEIVED"
+    RETURN_INSPECTED = "RETURN_INSPECTED"
+    RETURN_COMPLETED = "RETURN_COMPLETED"
+    MIGRATION_BATCH_CREATED = "MIGRATION_BATCH_CREATED"
+    MIGRATION_ROWS_SUBMITTED = "MIGRATION_ROWS_SUBMITTED"
+    MIGRATION_BATCH_VALIDATED = "MIGRATION_BATCH_VALIDATED"
+    MIGRATION_BATCH_APPROVED = "MIGRATION_BATCH_APPROVED"
+    MIGRATION_BATCH_APPLIED = "MIGRATION_BATCH_APPLIED"
+    MIGRATION_BATCH_REJECTED = "MIGRATION_BATCH_REJECTED"
+    AI_INTERACTION_CREATED = "AI_INTERACTION_CREATED"
+    AI_TOOL_CALL_RECORDED = "AI_TOOL_CALL_RECORDED"
+    AI_DRAFT_ACTION_CREATED = "AI_DRAFT_ACTION_CREATED"
+    AI_DRAFT_ACTION_REJECTED = "AI_DRAFT_ACTION_REJECTED"
+    AI_FEEDBACK_RECORDED = "AI_FEEDBACK_RECORDED"
+    AI_SAFETY_REFUSAL_RECORDED = "AI_SAFETY_REFUSAL_RECORDED"
+    VOICE_RECEIVING_TRANSCRIBED = "VOICE_RECEIVING_TRANSCRIBED"
+    VOICE_RECEIVING_DRAFT_CREATED = "VOICE_RECEIVING_DRAFT_CREATED"
+    VOICE_RECEIVING_DRAFT_DISCARDED = "VOICE_RECEIVING_DRAFT_DISCARDED"
+    VOICE_RECEIVING_DRAFT_APPLIED = "VOICE_RECEIVING_DRAFT_APPLIED"
+    VOICE_SYNTHESIS_REQUESTED = "VOICE_SYNTHESIS_REQUESTED"
+
+
+class VoiceInteractionStatus(str, Enum):
+    """Voice interaction lifecycle statuses."""
+
+    TRANSCRIBED = "TRANSCRIBED"
+    PARSED = "PARSED"
+    FAILED = "FAILED"
+    DISCARDED = "DISCARDED"
+    APPLIED_TO_DRAFT = "APPLIED_TO_DRAFT"
+
+
+class VoiceReceivingDraftStatus(str, Enum):
+    """Voice receiving draft lifecycle statuses."""
+
+    DRAFTED = "DRAFTED"
+    APPLIED_TO_RECEIPT_DRAFT = "APPLIED_TO_RECEIPT_DRAFT"
+    DISCARDED = "DISCARDED"
+
+
+class AIInteractionStatus(str, Enum):
+    """AI interaction lifecycle statuses."""
+
+    PENDING = "PENDING"
+    COMPLETED = "COMPLETED"
+    REFUSED = "REFUSED"
+    FAILED = "FAILED"
+
+
+class AIRequestCategory(str, Enum):
+    """Supported read-only AI request categories."""
+
+    INVENTORY_LOOKUP = "INVENTORY_LOOKUP"
+    LEDGER_EXPLANATION = "LEDGER_EXPLANATION"
+    ORDER_STATUS = "ORDER_STATUS"
+    RECEIPT_STATUS = "RECEIPT_STATUS"
+    TRANSFER_STATUS = "TRANSFER_STATUS"
+    SHIPMENT_STATUS = "SHIPMENT_STATUS"
+    RETURN_STATUS = "RETURN_STATUS"
+    EXCEPTION_SUMMARY = "EXCEPTION_SUMMARY"
+    DRAFT_RECOMMENDATION = "DRAFT_RECOMMENDATION"
+    VOICE_RECEIVING_DRAFT = "VOICE_RECEIVING_DRAFT"
+    GENERAL_OPERATIONS = "GENERAL_OPERATIONS"
+
+
+class AIToolCallStatus(str, Enum):
+    """AI application-tool audit statuses."""
+
+    PENDING = "PENDING"
+    COMPLETED = "COMPLETED"
+    DENIED = "DENIED"
+    FAILED = "FAILED"
+
+
+class AIDraftActionStatus(str, Enum):
+    """AI draft action lifecycle statuses."""
+
+    DRAFTED = "DRAFTED"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    EXPIRED = "EXPIRED"
+
+
+class AISafetyDecision(str, Enum):
+    """AI safety guard decisions for warehouse operations."""
+
+    ALLOW_READ_ONLY = "ALLOW_READ_ONLY"
+    REFUSE_MUTATION = "REFUSE_MUTATION"
+    REFUSE_SECRET = "REFUSE_SECRET"
+    REFUSE_CROSS_TENANT = "REFUSE_CROSS_TENANT"
+    REFUSE_UNSUPPORTED = "REFUSE_UNSUPPORTED"
+
+
+class TransferStatus(str, Enum):
+    """Transfer order lifecycle statuses."""
+
+    DRAFT = "DRAFT"
+    PENDING_APPROVAL = "PENDING_APPROVAL"
+    APPROVED = "APPROVED"
+    DISPATCHED = "DISPATCHED"
+    PARTIALLY_RECEIVED = "PARTIALLY_RECEIVED"
+    RECEIVED = "RECEIVED"
+    DISCREPANCY_REVIEW = "DISCREPANCY_REVIEW"
+    CANCELLED = "CANCELLED"
+
+
+class ReturnStatus(str, Enum):
+    """Customer / seller return lifecycle statuses."""
+
+    EXPECTED = "EXPECTED"
+    RECEIVED = "RECEIVED"
+    INSPECTION = "INSPECTION"
+    PARTIALLY_DISPOSED = "PARTIALLY_DISPOSED"
+    COMPLETED = "COMPLETED"
+    REJECTED = "REJECTED"
+    UNIDENTIFIED = "UNIDENTIFIED"
+
+
+class ReturnDispositionState(str, Enum):
+    """Destination inventory buckets for return inspection dispositions."""
+
+    AVAILABLE = "AVAILABLE"
+    DAMAGED = "DAMAGED"
+    QUARANTINED = "QUARANTINED"
+    REJECTED = "REJECTED"
+    RESTOCKED = "RESTOCKED"
+    SCRAPPED = "SCRAPPED"
+
+
+class OrderStatus(str, Enum):
+    """Order lifecycle statuses."""
+
+    DRAFT = "DRAFT"
+    PENDING_RESERVATION = "PENDING_RESERVATION"
+    PARTIALLY_RESERVED = "PARTIALLY_RESERVED"
+    RESERVED = "RESERVED"
+    BACKORDERED = "BACKORDERED"
+    PICKING = "PICKING"
+    PACKED = "PACKED"
+    SHIPPED = "SHIPPED"
+    PARTIALLY_SHIPPED = "PARTIALLY_SHIPPED"
+    CANCELLED = "CANCELLED"
+    CLOSED = "CLOSED"
+
+
+class ReservationStatus(str, Enum):
+    """Inventory reservation statuses."""
+
+    ACTIVE = "ACTIVE"
+    FULFILLED = "FULFILLED"
+    RELEASED = "RELEASED"
+    EXPIRED = "EXPIRED"
+
+
+class PickTaskStatus(str, Enum):
+    """Pick task lifecycle statuses."""
+
+    ASSIGNED = "ASSIGNED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    SHORT_PICK_EXCEPTION = "SHORT_PICK_EXCEPTION"
+
+
+class ShipmentStatus(str, Enum):
+    """Shipment lifecycle statuses."""
+
+    LABEL_CREATED = "LABEL_CREATED"
+    PACKED = "PACKED"
+    SHIPPED = "SHIPPED"
+    DELIVERED = "DELIVERED"
+    CANCELLED = "CANCELLED"
+
+
+class InventoryState(str, Enum):
+    """Inventory bucket states."""
+
+    AVAILABLE = "AVAILABLE"
+    RESERVED = "RESERVED"
+    DAMAGED = "DAMAGED"
+    QUARANTINED = "QUARANTINED"
+    RETURN_INSPECTION = "RETURN_INSPECTION"
+    IN_TRANSIT = "IN_TRANSIT"
+    SHIPPED = "SHIPPED"
+
+
+class InventoryMovementType(str, Enum):
+    """Append-only movement ledger categories."""
+
+    RECEIPT = "RECEIPT"
+    RESERVATION = "RESERVATION"
+    RESERVATION_RELEASE = "RESERVATION_RELEASE"
+    PICK = "PICK"
+    SHORT_PICK_CORRECTION = "SHORT_PICK_CORRECTION"
+    SHIPMENT = "SHIPMENT"
+    RETURN_INSPECTION = "RETURN_INSPECTION"
+    RETURN_DISPOSITION = "RETURN_DISPOSITION"
+    TRANSFER_DISPATCH = "TRANSFER_DISPATCH"
+    TRANSFER_RECEIPT = "TRANSFER_RECEIPT"
+    ADJUSTMENT = "ADJUSTMENT"
+    MIGRATION = "MIGRATION"
+    MIGRATION_OPENING_BALANCE = "MIGRATION_OPENING_BALANCE"
+
+
+class MigrationBatchStatus(str, Enum):
+    """Import batch lifecycle statuses."""
+
+    STAGED = "STAGED"
+    VALIDATED = "VALIDATED"
+    VALIDATION_FAILED = "VALIDATION_FAILED"
+    APPROVED = "APPROVED"
+    APPLIED = "APPLIED"
+    REJECTED = "REJECTED"
+
+
+class StagedRowValidationStatus(str, Enum):
+    """Staged opening inventory row validation statuses."""
+
+    PENDING = "PENDING"
+    VALID = "VALID"
+    INVALID = "INVALID"
+
+
+class ReceiptStatus(str, Enum):
+    """Receiving receipt lifecycle statuses."""
+
+    DRAFT = "DRAFT"
+    IN_PROGRESS = "IN_PROGRESS"
+    PENDING_REVIEW = "PENDING_REVIEW"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+
+class ReceiptSourceType(str, Enum):
+    """Receiving source categories."""
+
+    CARRIER_TRACKING = "CARRIER_TRACKING"
+    DROP_OFF_TICKET = "DROP_OFF_TICKET"
+    SUPPLIER_MANIFEST = "SUPPLIER_MANIFEST"

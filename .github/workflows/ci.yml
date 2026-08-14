@@ -1,0 +1,97 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  backend-checks:
+    name: Backend Lint, Compile & Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: warehouse_app
+          POSTGRES_PASSWORD: change-me
+          POSTGRES_DB: warehouse_ops
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install Backend Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: FastAPI Import Check
+        env:
+          DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
+          JWT_SECRET: replace-with-long-random-secret-for-ci-testing-purposes-only
+          APP_ENV: test
+        run: |
+          python -c "import main; print('main import ok')"
+
+      - name: Python Compileall Check
+        run: |
+          python -m compileall main.py common core cli tools tests
+
+      - name: Run Backend Pytest Suite
+        env:
+          DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
+          JWT_SECRET: replace-with-long-random-secret-for-ci-testing-purposes-only
+          APP_ENV: test
+        run: |
+          pytest -v
+
+      - name: Frontend Secret Audit
+        run: |
+          python tools/audit_frontend_secrets.py
+
+  frontend-checks:
+    name: Frontend Typecheck & Production Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend/package.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: TypeScript Typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Frontend Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Vite Production Build
+        working-directory: frontend
+        run: npm run build
