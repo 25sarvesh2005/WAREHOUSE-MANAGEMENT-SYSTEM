@@ -35,13 +35,16 @@ jobs:
         with:
           python-version: "3.13"
           cache: "pip"
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install Backend Dependencies
+        working-directory: backend
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: FastAPI Import Check
+        working-directory: backend
         env:
           DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
           JWT_SECRET: replace-with-long-random-secret-for-ci-testing-purposes-only
@@ -50,10 +53,12 @@ jobs:
           python -c "import main; print('main import ok')"
 
       - name: Python Compileall Check
+        working-directory: backend
         run: |
           python -m compileall main.py common core cli tools tests
 
       - name: Run Backend Pytest Suite
+        working-directory: backend
         env:
           DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
           JWT_SECRET: replace-with-long-random-secret-for-ci-testing-purposes-only
@@ -62,6 +67,7 @@ jobs:
           pytest -v
 
       - name: Frontend Secret Audit
+        working-directory: backend
         run: |
           python tools/audit_frontend_secrets.py
 
