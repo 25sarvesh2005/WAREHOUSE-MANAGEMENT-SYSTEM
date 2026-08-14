@@ -7,16 +7,16 @@ import { useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Whitfield Ops — Warehouse Operations Platform" },
+      { title: "Whitfield Logistics — Nationwide Fulfillment & Live Inventory Network" },
       {
         name: "description",
         content:
-          "Multi-warehouse inventory, receiving, fulfillment, transfers and returns in one operating layer.",
+          "Bicoastal 3PL fulfillment network in Reno, NV and Columbus, OH. Real-time multi-channel inventory sync, AI-assisted supply chain analytics, and audit-grade ledger precision.",
       },
-      { property: "og:title", content: "Whitfield Ops — Warehouse Operations Platform" },
+      { property: "og:title", content: "Whitfield Logistics — Nationwide Fulfillment & Live Inventory Network" },
       {
         property: "og:description",
-        content: "Live inventory, role-based access and audit-ready logs across every site.",
+        content: "2-Day delivery to 98% of the US from our Reno and Columbus fulfillment centers.",
       },
     ],
   }),

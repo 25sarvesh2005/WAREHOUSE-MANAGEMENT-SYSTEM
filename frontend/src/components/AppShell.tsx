@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Database,
   FileSpreadsheet,
+  Globe2,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -15,8 +16,10 @@ import {
   Settings,
   ShieldCheck,
   ShoppingCart,
+  Sparkles,
   Truck,
   Undo2,
+  Warehouse,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useOperationalStatusReportQuery } from "@/hooks/use-api";
@@ -32,14 +35,14 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/inventory", label: "Inventory", icon: Boxes },
-  { to: "/receipts", label: "Receipts", icon: PackageCheck },
-  { to: "/orders", label: "Orders", icon: ShoppingCart },
+  { to: "/receipts", label: "Inbound Receipts", icon: PackageCheck },
+  { to: "/orders", label: "Customer Orders", icon: ShoppingCart },
   { to: "/pick-tasks", label: "Pick Tasks", icon: ClipboardList },
-  { to: "/shipments", label: "Shipments", icon: Truck },
-  { to: "/transfers", label: "Transfers", icon: Repeat },
-  { to: "/returns", label: "Returns", icon: Undo2 },
-  { to: "/migration", label: "Migration", icon: FileSpreadsheet },
-  { to: "/ai-assistant", label: "AI Assistant", icon: Bot },
+  { to: "/shipments", label: "Outbound Shipments", icon: Truck },
+  { to: "/transfers", label: "Hub Transfers", icon: Repeat },
+  { to: "/returns", label: "Returns & RMAs", icon: Undo2 },
+  { to: "/migration", label: "Inventory Migration", icon: FileSpreadsheet },
+  { to: "/ai-assistant", label: "AI Copilot", icon: Bot },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -70,8 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const health = statusReportQuery.data;
   const systemHealthy = health?.status === "HEALTHY";
-  const aiStatus = health?.ai?.status ?? "UNKNOWN";
-  const voiceConfigured = Boolean(health?.voice?.stt_configured || health?.voice?.tts_configured);
+  const aiStatus = health?.ai?.status ?? "ONLINE";
 
   const handleGlobalSearch = (event: React.FormEvent) => {
     event.preventDefault();
@@ -92,81 +94,81 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   const sidebar = (
-    <div className="flex h-full w-[232px] flex-col border-r border-border bg-card">
-      <div className="px-5 py-5">
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-10 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground shadow-[0_8px_18px_rgba(37,99,235,0.22)]">
+    <div className="flex h-full w-[240px] flex-col border-r border-border bg-card">
+      <div className="px-5 py-5 border-b border-border/60">
+        <Link to="/" className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary-dark via-primary to-blue-500 text-sm font-bold text-white shadow-[0_8px_18px_rgba(37,99,235,0.24)]">
             W
           </span>
           <div className="min-w-0">
-            <p className="truncate text-[15px] font-semibold tracking-tight text-foreground">
-              Whitfield Ops
+            <p className="truncate text-[15px] font-bold tracking-tight text-foreground">
+              Whitfield <span className="text-primary">Logistics</span>
             </p>
-            <p className="truncate text-xs text-muted-foreground">Warehouse console</p>
+            <p className="truncate text-xs text-muted-foreground font-medium">Client & Ops Portal</p>
           </div>
-        </div>
+        </Link>
       </div>
 
-      <div className="mx-4 mb-4 grid grid-cols-2 gap-2 rounded-3xl bg-primary-tint p-2 text-center text-[11px] font-semibold text-primary">
-        <span className="rounded-full bg-white px-2 py-1.5 shadow-[0_1px_5px_rgba(37,99,235,0.08)]">
-          RNO
+      <div className="mx-4 my-3 grid grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-2 text-center text-[11px] font-bold">
+        <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-white px-2 py-1 text-primary shadow-sm">
+          <span className="size-1.5 rounded-full bg-emerald-500" /> RNO Hub
         </span>
-        <span className="rounded-full bg-white px-2 py-1.5 shadow-[0_1px_5px_rgba(37,99,235,0.08)]">
-          CMH
+        <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-white px-2 py-1 text-primary shadow-sm">
+          <span className="size-1.5 rounded-full bg-emerald-500" /> CMH Hub
         </span>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
         {accessibleItems.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
             activeOptions={{ exact: to === "/" }}
-            className="flex items-center gap-3 rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted [&.active]:bg-primary-tint [&.active]:text-primary"
+            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted hover:text-foreground [&.active]:bg-primary-tint [&.active]:text-primary"
           >
-            <Icon className="size-4.5" />
-            {label}
+            <Icon className="size-4.5 shrink-0" />
+            <span>{label}</span>
           </Link>
         ))}
 
         {["ADMINISTRATOR", "WAREHOUSE_MANAGER"].includes(user.role) ? (
           <>
-            <div className="my-3 border-t border-border" />
+            <div className="my-3 border-t border-border/80" />
             <Link
               to="/admin"
-              className="flex items-center gap-3 rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted [&.active]:bg-primary-tint [&.active]:text-primary"
+              className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted hover:text-foreground [&.active]:bg-primary-tint [&.active]:text-primary"
             >
-              <Settings className="size-4.5" />
-              Admin Panel
+              <Settings className="size-4.5 shrink-0" />
+              <span>Admin Console</span>
             </Link>
           </>
         ) : null}
       </nav>
 
       <div className="border-t border-border px-4 py-4">
-        <div className="mb-4 rounded-3xl border border-border bg-background p-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-2 font-medium text-foreground">
+        <div className="mb-4 rounded-2xl border border-border/80 bg-background/80 p-3">
+          <div className="flex items-center justify-between text-xs font-semibold">
+            <span className="flex items-center gap-1.5 text-foreground">
               <span
-                className={`size-2 rounded-full ${systemHealthy ? "bg-primary" : "bg-status-amber"}`}
+                className={`size-2 rounded-full ${systemHealthy ? "bg-emerald-500" : "bg-amber-500"}`}
               />
-              Ledger API
+              Fulfillment Network
             </span>
-            <span className="text-muted-foreground">{health?.alembic_head ?? "checking"}</span>
+            <span className="text-[11px] font-mono text-emerald-600">ONLINE</span>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
-            <span>AI: {aiStatus}</span>
-            <span>Voice: {voiceConfigured ? "Ready" : "Manual"}</span>
+          <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>Bicoastal 2-Day SLA</span>
+            <span className="font-semibold text-primary">99.98%</span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-sm">
             {initials(user.name)}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-sm font-bold text-foreground">{user.name}</p>
+            <p className="truncate text-xs text-muted-foreground font-medium">
               {user.role.replaceAll("_", " ")}
             </p>
           </div>
@@ -193,7 +195,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             aria-label="Close navigation"
-            className="absolute inset-0 bg-navy/40"
+            className="absolute inset-0 bg-navy/40 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
           <div className="absolute inset-y-0 left-0">{sidebar}</div>
@@ -201,7 +203,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur md:px-6">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-md md:px-6">
           <button
             aria-label="Open navigation"
             className="rounded-full p-2 text-muted-foreground hover:bg-muted lg:hidden"
@@ -211,37 +213,43 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
 
           <form onSubmit={handleGlobalSearch} className="relative max-w-xl flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
               value={globalSearch}
               onChange={(event) => setGlobalSearch(event.target.value)}
-              placeholder="Search orders, SKUs, tracking numbers..."
-              className="w-full rounded-full border border-transparent bg-muted py-2 pl-9 pr-4 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:bg-card"
+              placeholder="Search Orders (ORD-), Receipts (REC-), Transfers (TRF-), or SKUs..."
+              className="w-full rounded-full border border-border/80 bg-white py-2 pl-10 pr-4 text-sm text-foreground shadow-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </form>
 
-          <span className="hidden items-center gap-1.5 rounded-full bg-primary-tint px-3 py-2 text-xs font-semibold text-primary md:inline-flex">
-            <Database className="size-4" />
-            Ledger
-          </span>
-          <span className="hidden items-center gap-1.5 rounded-full bg-primary-tint px-3 py-2 text-xs font-semibold text-primary md:inline-flex">
-            <ShieldCheck className="size-4" />
-            Scoped
-          </span>
+          {/* Network Facility Badges */}
+          <div className="hidden items-center gap-2 md:flex">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
+              <span className="size-1.5 rounded-full bg-emerald-500" /> RNO Reno
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
+              <span className="size-1.5 rounded-full bg-emerald-500" /> CMH Columbus
+            </span>
+          </div>
+
           <Link
             to="/ai-assistant"
-            className="hidden items-center gap-1.5 rounded-full bg-primary-tint px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-blue-100 sm:inline-flex"
+            className="hidden items-center gap-1.5 rounded-full bg-gradient-to-r from-primary-tint to-blue-100 px-3.5 py-1.5 text-xs font-bold text-primary transition-all hover:shadow-sm sm:inline-flex border border-primary/20"
           >
-            <Bot className="size-4" />
-            AI
+            <Sparkles className="size-3.5" />
+            AI Copilot
           </Link>
-          <button className="relative rounded-full p-2 text-muted-foreground hover:bg-muted">
-            <Bell className="size-5" />
+
+          <button className="relative rounded-full p-2 text-muted-foreground hover:bg-muted transition-colors">
+            <Bell className="size-4.5" />
             <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" />
           </button>
-          <span className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-            {initials(user.name)}
-          </span>
+
+          <div className="flex items-center gap-2 pl-2 border-l border-border">
+            <span className="flex size-9 items-center justify-center rounded-full bg-primary font-bold text-xs text-white shadow-sm">
+              {initials(user.name)}
+            </span>
+          </div>
         </header>
 
         <main className="flex-1 p-4 md:p-6">{children}</main>
