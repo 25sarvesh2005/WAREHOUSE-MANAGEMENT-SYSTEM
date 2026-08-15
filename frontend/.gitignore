@@ -1,4 +1,16 @@
+# Environment files (never commit real secrets)
+.env
+.env.*
+!.env.example
+
+# Build outputs
+build/
+coverage/
+storybook-static/
+.cache/
+
 # Logs
+
 logs
 *.log
 npm-debug.log*
