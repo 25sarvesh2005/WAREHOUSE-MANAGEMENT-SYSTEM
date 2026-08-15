@@ -29,4 +29,4 @@ npm install
 npm run dev
 ```
 
-The application connects to the backend API at `http://127.0.0.1:8000/api/v1`.
+The application connects to the backend API at `http://127.0.0.1:8080/api/v1` (proxied via Vite during development — set `VITE_API_BASE_URL` in `.env` to override).
