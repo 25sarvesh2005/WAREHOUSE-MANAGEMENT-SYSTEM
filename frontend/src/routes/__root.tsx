@@ -80,11 +80,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Whitfield Logistics — Enterprise Fulfillment & Live Inventory Platform" },
       {
         name: "description",
-        content: "Bicoastal 3PL warehouse operations and client inventory platform across Reno, NV and Columbus, OH.",
+        content:
+          "Bicoastal 3PL warehouse operations and client inventory platform across Reno, NV and Columbus, OH.",
       },
       { name: "author", content: "Whitfield Fulfillment Inc." },
       { property: "og:title", content: "Whitfield Logistics" },
-      { property: "og:description", content: "Next-generation nationwide fulfillment and real-time inventory network." },
+      {
+        property: "og:description",
+        content: "Next-generation nationwide fulfillment and real-time inventory network.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

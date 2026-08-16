@@ -261,7 +261,11 @@ export function Landing() {
         details: `Live record verified • Verified at Whitfield Facility • 100% Stock Reserved`,
         steps: [
           { label: "Entry Logged in Ledger", done: true, timestamp: "Today, 09:12 AM" },
-          { label: "Facility Allocation & Barcode Verification", done: true, timestamp: "Today, 10:45 AM" },
+          {
+            label: "Facility Allocation & Barcode Verification",
+            done: true,
+            timestamp: "Today, 10:45 AM",
+          },
           { label: "Active Staging & Inspection", done: true, timestamp: "In Progress" },
           { label: "Carrier Handoff & Dispatch", done: false },
         ],
@@ -276,7 +280,8 @@ export function Landing() {
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-2">
           <span className="flex size-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>
-            <strong>Bicoastal Fulfillment Network Active</strong> — Reno (RNO) & Columbus (CMH) hubs operating at 99.98% on-time dispatch.
+            <strong>Bicoastal Fulfillment Network Active</strong> — Reno (RNO) & Columbus (CMH) hubs
+            operating at 99.98% on-time dispatch.
           </span>
         </div>
       </div>
@@ -347,7 +352,7 @@ export function Landing() {
       {/* Hero Section */}
       <section className="relative overflow-hidden border-b border-border/60 bg-gradient-to-b from-white via-[#f8faff] to-[#edf4fe] py-16 lg:py-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(37,99,235,0.12),transparent)]" />
-        
+
         <div className="relative mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-8">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-tint px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm">
@@ -360,7 +365,9 @@ export function Landing() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Reach <strong>98% of the United States in 2 days</strong> from our modern Reno, NV and Columbus, OH fulfillment centers. Powered by real-time inventory ledger precision, automated carrier dispatch, and AI-driven supply chain analytics.
+              Reach <strong>98% of the United States in 2 days</strong> from our modern Reno, NV and
+              Columbus, OH fulfillment centers. Powered by real-time inventory ledger precision,
+              automated carrier dispatch, and AI-driven supply chain analytics.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -403,9 +410,7 @@ export function Landing() {
                 <p className="font-mono text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   &lt; 12h
                 </p>
-                <p className="mt-1 text-xs font-medium text-muted-foreground">
-                  Dock-to-Stock SLA
-                </p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">Dock-to-Stock SLA</p>
               </div>
               <div>
                 <p className="font-mono text-2xl font-bold tracking-tight text-primary sm:text-3xl">
@@ -419,9 +424,7 @@ export function Landing() {
                 <p className="font-mono text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   100%
                 </p>
-                <p className="mt-1 text-xs font-medium text-muted-foreground">
-                  Audit-Grade Ledger
-                </p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">Audit-Grade Ledger</p>
               </div>
             </div>
           </div>
@@ -455,7 +458,9 @@ export function Landing() {
                   </div>
                   <div className="mt-1 flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Today's Dispatch SLA:</span>
-                    <span className="font-mono font-semibold text-emerald-600">100% on schedule</span>
+                    <span className="font-mono font-semibold text-emerald-600">
+                      100% on schedule
+                    </span>
                   </div>
                 </div>
 
@@ -528,7 +533,9 @@ export function Landing() {
               Nationwide Reach with Bi-Coastal Fulfillment Hubs
             </h2>
             <p className="mt-4 text-base text-muted-foreground">
-              By splitting your inventory between Reno and Columbus, you reduce transit zones, cut shipping rates by up to 35%, and reach virtually all continental customers in 2 days via standard ground.
+              By splitting your inventory between Reno and Columbus, you reduce transit zones, cut
+              shipping rates by up to 35%, and reach virtually all continental customers in 2 days
+              via standard ground.
             </p>
           </div>
 
@@ -596,7 +603,9 @@ export function Landing() {
               Live Shipment & Dock Intake Tracker
             </h2>
             <p className="mt-3 text-sm text-muted-foreground">
-              Search any Customer Order ID (e.g. <code>ORD-1001</code>), Dock Inbound Ticket (e.g. <code>REC-1001</code>), or Transfer (e.g. <code>TRF-1001</code>) to view real-time status.
+              Search any Customer Order ID (e.g. <code>ORD-1001</code>), Dock Inbound Ticket (e.g.{" "}
+              <code>REC-1001</code>), or Transfer (e.g. <code>TRF-1001</code>) to view real-time
+              status.
             </p>
           </div>
 
@@ -704,7 +713,8 @@ export function Landing() {
               Engineered for High-Growth E-Commerce & Retail Brands
             </h2>
             <p className="mt-4 text-base text-muted-foreground">
-              Eliminate stockouts, blind spots, and fulfillment errors. Every capability is designed for enterprise accuracy and speed.
+              Eliminate stockouts, blind spots, and fulfillment errors. Every capability is designed
+              for enterprise accuracy and speed.
             </p>
           </div>
 
@@ -738,7 +748,10 @@ export function Landing() {
       </section>
 
       {/* AI Assistant & Copilot Showcase */}
-      <section id="ai-intelligence" className="border-b border-border bg-gradient-to-br from-slate-900 via-[#0b1b36] to-slate-950 py-16 sm:py-24 text-white">
+      <section
+        id="ai-intelligence"
+        className="border-b border-border bg-gradient-to-br from-slate-900 via-[#0b1b36] to-slate-950 py-16 sm:py-24 text-white"
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <div>
@@ -749,7 +762,9 @@ export function Landing() {
                 Real-Time Supply Chain Intelligence in Plain English.
               </h2>
               <p className="mt-4 text-base text-slate-300 leading-relaxed">
-                Empower your inventory managers and client success teams to query real-time stock balances, diagnose order exceptions, and get instant explanations for any inventory movement across Reno and Columbus.
+                Empower your inventory managers and client success teams to query real-time stock
+                balances, diagnose order exceptions, and get instant explanations for any inventory
+                movement across Reno and Columbus.
               </p>
 
               <div className="mt-8 space-y-4">
@@ -776,7 +791,9 @@ export function Landing() {
                   <span className="size-3 rounded-full bg-red-500" />
                   <span className="size-3 rounded-full bg-amber-500" />
                   <span className="size-3 rounded-full bg-emerald-500" />
-                  <span className="ml-2 font-mono text-xs text-slate-400">whitfield-copilot-v1</span>
+                  <span className="ml-2 font-mono text-xs text-slate-400">
+                    whitfield-copilot-v1
+                  </span>
                 </div>
                 <span className="text-xs font-mono text-blue-400 font-semibold">ONLINE</span>
               </div>
@@ -784,7 +801,10 @@ export function Landing() {
               <div className="mt-5 space-y-4 text-sm">
                 <div className="rounded-2xl bg-slate-800/80 p-4 text-slate-200">
                   <p className="text-xs font-bold text-blue-400">CLIENT INQUIRY:</p>
-                  <p className="mt-1">"How many units of SKU-APEX-01 are sellable in Reno vs Columbus, and do we have pending orders?"</p>
+                  <p className="mt-1">
+                    "How many units of SKU-APEX-01 are sellable in Reno vs Columbus, and do we have
+                    pending orders?"
+                  </p>
                 </div>
 
                 <div className="rounded-2xl border border-blue-500/30 bg-blue-950/40 p-4 text-slate-100">
@@ -792,9 +812,11 @@ export function Landing() {
                     <Bot className="size-4" /> WHITFIELD AI RESPONSE:
                   </p>
                   <p className="mt-2 text-xs leading-relaxed text-slate-300">
-                    • <strong>Reno Hub (RNO):</strong> 1,240 Sellable units (180 Reserved for active wave picks).<br />
-                    • <strong>Columbus Hub (CMH):</strong> 3,100 Sellable units (45 Reserved).<br />
-                    • <strong>Total Available:</strong> 4,115 Sellable units ready for same-day dispatch.
+                    • <strong>Reno Hub (RNO):</strong> 1,240 Sellable units (180 Reserved for active
+                    wave picks).
+                    <br />• <strong>Columbus Hub (CMH):</strong> 3,100 Sellable units (45 Reserved).
+                    <br />• <strong>Total Available:</strong> 4,115 Sellable units ready for
+                    same-day dispatch.
                   </p>
                 </div>
               </div>
@@ -884,7 +906,11 @@ export function Landing() {
                   icon={<Lock className="size-4" />}
                 />
 
-                <Button type="submit" disabled={loginBusy} className="w-full py-3.5 font-bold text-base mt-2">
+                <Button
+                  type="submit"
+                  disabled={loginBusy}
+                  className="w-full py-3.5 font-bold text-base mt-2"
+                >
                   {loginBusy ? <Loader2 className="size-5 animate-spin" /> : null}
                   Sign in to Portal
                 </Button>
@@ -896,7 +922,9 @@ export function Landing() {
                     <CheckCircle2 className="mx-auto size-12 text-emerald-600" />
                     <h3 className="mt-3 text-lg font-bold">Onboarding Request Received</h3>
                     <p className="mt-2 text-sm text-emerald-800">
-                      Your seller tenant request for <strong>{regCompany}</strong> has been submitted. Our team will verify your catalog profile and activate your portal credentials shortly.
+                      Your seller tenant request for <strong>{regCompany}</strong> has been
+                      submitted. Our team will verify your catalog profile and activate your portal
+                      credentials shortly.
                     </p>
                   </div>
                 ) : (
@@ -939,7 +967,11 @@ export function Landing() {
                       placeholder="Minimum 6 characters"
                       icon={<Lock className="size-4" />}
                     />
-                    <Button type="submit" disabled={regBusy} className="w-full py-3.5 font-bold text-base mt-2">
+                    <Button
+                      type="submit"
+                      disabled={regBusy}
+                      className="w-full py-3.5 font-bold text-base mt-2"
+                    >
                       {regBusy ? <Loader2 className="size-5 animate-spin" /> : null}
                       Submit Seller Application
                     </Button>
@@ -963,11 +995,14 @@ export function Landing() {
                 <span className="font-bold text-foreground text-base">Whitfield Logistics</span>
               </div>
               <p className="mt-3 text-xs leading-relaxed">
-                High-precision multi-warehouse fulfillment and inventory ledger technology for modern commerce.
+                High-precision multi-warehouse fulfillment and inventory ledger technology for
+                modern commerce.
               </p>
               <div className="mt-4 flex items-center gap-2">
                 <span className="size-2 rounded-full bg-emerald-500" />
-                <span className="text-xs font-semibold text-emerald-700">All Facilities Operational</span>
+                <span className="text-xs font-semibold text-emerald-700">
+                  All Facilities Operational
+                </span>
               </div>
             </div>
 
@@ -1005,9 +1040,15 @@ export function Landing() {
           <div className="mt-12 border-t border-border/80 pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-xs">
             <p>© {new Date().getFullYear()} Whitfield Fulfillment Inc. All rights reserved.</p>
             <div className="flex gap-6">
-              <a href="#network" className="hover:text-primary">Facilities</a>
-              <a href="#capabilities" className="hover:text-primary">Services</a>
-              <a href="#access" className="hover:text-primary">Client Portal</a>
+              <a href="#network" className="hover:text-primary">
+                Facilities
+              </a>
+              <a href="#capabilities" className="hover:text-primary">
+                Services
+              </a>
+              <a href="#access" className="hover:text-primary">
+                Client Portal
+              </a>
             </div>
           </div>
         </div>
@@ -1035,7 +1076,9 @@ function InputField({
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold text-foreground uppercase tracking-wider">{label}</span>
+      <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
+        {label}
+      </span>
       <div className="relative mt-1.5">
         {icon ? (
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">

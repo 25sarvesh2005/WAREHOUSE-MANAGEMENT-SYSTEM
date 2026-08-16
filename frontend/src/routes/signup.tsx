@@ -70,7 +70,9 @@ function SignupPage() {
       });
       setSubmitted(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Registration request failed. Please try again.");
+      setError(
+        err instanceof Error ? err.message : "Registration request failed. Please try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -105,17 +107,33 @@ function SignupPage() {
             </h1>
 
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              Join leading e-commerce brands utilizing our Reno and Columbus distribution centers for 2-day delivery, real-time inventory synchronization, and AI logistics support.
+              Join leading e-commerce brands utilizing our Reno and Columbus distribution centers
+              for 2-day delivery, real-time inventory synchronization, and AI logistics support.
             </p>
 
             <div className="mt-8 space-y-3.5">
               {[
-                { title: "Bicoastal 2-Day Reach", desc: "Strategic hubs covering 98% of the US population" },
-                { title: "Unified Stock Portal", desc: "Live multi-warehouse balances with zero spreadsheet lag" },
-                { title: "Omnichannel Integrations", desc: "Ready for Shopify, Amazon FBA prep, Walmart, and EDI" },
-                { title: "Dedicated SLA Guarantee", desc: "99.98% pick accuracy and sub-12h dock-to-stock intake" },
+                {
+                  title: "Bicoastal 2-Day Reach",
+                  desc: "Strategic hubs covering 98% of the US population",
+                },
+                {
+                  title: "Unified Stock Portal",
+                  desc: "Live multi-warehouse balances with zero spreadsheet lag",
+                },
+                {
+                  title: "Omnichannel Integrations",
+                  desc: "Ready for Shopify, Amazon FBA prep, Walmart, and EDI",
+                },
+                {
+                  title: "Dedicated SLA Guarantee",
+                  desc: "99.98% pick accuracy and sub-12h dock-to-stock intake",
+                },
               ].map((item) => (
-                <div key={item.title} className="flex items-start gap-3 rounded-2xl bg-primary-tint/60 p-3.5">
+                <div
+                  key={item.title}
+                  className="flex items-start gap-3 rounded-2xl bg-primary-tint/60 p-3.5"
+                >
                   <CheckCircle2 className="size-5 shrink-0 text-primary mt-0.5" />
                   <div>
                     <p className="text-xs font-bold text-foreground">{item.title}</p>
@@ -136,7 +154,9 @@ function SignupPage() {
                   Application Submitted Successfully
                 </h2>
                 <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-                  Your seller account request for <strong>{companyName}</strong> has been received. Our onboarding specialist will verify your catalog setup and activate your account.
+                  Your seller account request for <strong>{companyName}</strong> has been received.
+                  Our onboarding specialist will verify your catalog setup and activate your
+                  account.
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                   <Link to="/login">
@@ -226,7 +246,11 @@ function SignupPage() {
                     />
                   </div>
 
-                  <Button type="submit" disabled={busy} className="w-full py-3.5 text-sm font-bold mt-2">
+                  <Button
+                    type="submit"
+                    disabled={busy}
+                    className="w-full py-3.5 text-sm font-bold mt-2"
+                  >
                     {busy ? <Loader2 className="size-5 animate-spin" /> : null}
                     Submit Merchant Application <ArrowRight className="size-4" />
                   </Button>
@@ -270,7 +294,9 @@ function TextField({
 }: TextFieldProps) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+        {label}
+      </span>
       <div className="relative mt-1.5">
         {icon ? (
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">

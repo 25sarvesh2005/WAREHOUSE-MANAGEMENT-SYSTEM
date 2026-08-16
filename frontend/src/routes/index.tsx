@@ -13,7 +13,10 @@ export const Route = createFileRoute("/")({
         content:
           "Bicoastal 3PL fulfillment network in Reno, NV and Columbus, OH. Real-time multi-channel inventory sync, AI-assisted supply chain analytics, and audit-grade ledger precision.",
       },
-      { property: "og:title", content: "Whitfield Logistics — Nationwide Fulfillment & Live Inventory Network" },
+      {
+        property: "og:title",
+        content: "Whitfield Logistics — Nationwide Fulfillment & Live Inventory Network",
+      },
       {
         property: "og:description",
         content: "2-Day delivery to 98% of the US from our Reno and Columbus fulfillment centers.",

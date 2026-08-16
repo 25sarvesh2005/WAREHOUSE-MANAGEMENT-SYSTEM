@@ -53,7 +53,9 @@ function LoginPage() {
       await signInAsync(email, password);
       navigate({ to: "/" });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Sign in failed. Please check your credentials.");
+      setError(
+        err instanceof Error ? err.message : "Sign in failed. Please check your credentials.",
+      );
     } finally {
       setBusy(false);
     }
@@ -104,7 +106,9 @@ function LoginPage() {
             </h1>
 
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Sign in to manage multi-channel orders, track dock-to-stock inbound receipts, monitor inter-facility inventory balances, and query the AI copilot across our Reno and Columbus hubs.
+              Sign in to manage multi-channel orders, track dock-to-stock inbound receipts, monitor
+              inter-facility inventory balances, and query the AI copilot across our Reno and
+              Columbus hubs.
             </p>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
@@ -113,9 +117,14 @@ function LoginPage() {
                 { label: "Columbus Hub (CMH)", status: "Online & Receiving" },
                 { label: "Ledger Core", status: "100% Real-Time Sync" },
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl bg-muted/60 p-3.5 border border-border/60">
+                <div
+                  key={item.label}
+                  className="rounded-2xl bg-muted/60 p-3.5 border border-border/60"
+                >
                   <p className="text-xs font-bold text-foreground">{item.label}</p>
-                  <p className="mt-0.5 text-[11px] font-semibold text-emerald-600">● {item.status}</p>
+                  <p className="mt-0.5 text-[11px] font-semibold text-emerald-600">
+                    ● {item.status}
+                  </p>
                 </div>
               ))}
             </div>
@@ -125,7 +134,9 @@ function LoginPage() {
         <section className="card-surface animate-rise w-full p-6 sm:p-10">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-primary">Portal Access</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-primary">
+                Portal Access
+              </p>
               <h2 className="mt-1 text-2xl font-bold tracking-tight">Sign In</h2>
             </div>
             <span className="flex size-10 items-center justify-center rounded-2xl bg-primary-tint text-primary">
@@ -248,7 +259,9 @@ function InputField({
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+        {label}
+      </span>
       <div className="relative mt-1.5">
         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
           {icon}
