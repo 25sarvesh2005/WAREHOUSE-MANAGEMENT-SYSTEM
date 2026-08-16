@@ -64,7 +64,7 @@ jobs:
           JWT_SECRET: replace-with-long-random-secret-for-ci-testing-purposes-only
           APP_ENV: test
         run: |
-          pytest -v
+          python -m pytest -v
 
       - name: Frontend Secret Audit
         working-directory: backend

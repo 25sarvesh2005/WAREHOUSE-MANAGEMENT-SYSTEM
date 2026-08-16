@@ -32,13 +32,16 @@ from core.constants import UserRole, VoiceInteractionStatus, VoiceReceivingDraft
 from core.controllers.voice_controller import VoiceController
 from core.cruds import voice_crud
 from core.database.database import close_database_connection, connect_to_database, transaction_session
+from core.database.seed import initialize_schema_for_development, seed_initial_data
 from core.services.voice.deepgram_provider import DeepgramSTTProvider
 
 
 @pytest.fixture(autouse=True)
 async def setup_db():
-    """Ensure database connection is initialized for async controller tests."""
+    """Ensure database connection is initialized and schema/seeds exist for controller tests."""
     await connect_to_database()
+    await initialize_schema_for_development()
+    await seed_initial_data()
     yield
     await close_database_connection()
 from core.services.voice.provider import (

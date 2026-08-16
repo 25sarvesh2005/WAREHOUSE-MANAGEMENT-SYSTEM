@@ -104,7 +104,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <p className="truncate text-[15px] font-bold tracking-tight text-foreground">
               Whitfield <span className="text-primary">Logistics</span>
             </p>
-            <p className="truncate text-xs text-muted-foreground font-medium">Client & Ops Portal</p>
+            <p className="truncate text-xs text-muted-foreground font-medium">
+              Client & Ops Portal
+            </p>
           </div>
         </Link>
       </div>

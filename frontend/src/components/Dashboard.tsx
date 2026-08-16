@@ -293,12 +293,15 @@ export function Dashboard({ user }: { user: User }) {
         <Card className="relative overflow-hidden p-7">
           <div className="absolute right-0 top-0 h-40 w-40 rounded-bl-[64px] bg-primary-tint" />
           <div className="relative">
-            <p className="text-sm font-semibold text-primary">Whitfield Operations Command Center</p>
+            <p className="text-sm font-semibold text-primary">
+              Whitfield Operations Command Center
+            </p>
             <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
               Welcome back, {user.name.split(" ")[0] || user.name}.
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Bicoastal operations overview for Reno (RNO) and Columbus (CMH) hubs: real-time stock balances, inbound receipts, active fulfillment, and hub transfers.
+              Bicoastal operations overview for Reno (RNO) and Columbus (CMH) hubs: real-time stock
+              balances, inbound receipts, active fulfillment, and hub transfers.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
@@ -324,7 +327,9 @@ export function Dashboard({ user }: { user: User }) {
             </span>
             <div>
               <h2 className="font-semibold text-foreground">Operational Overview</h2>
-              <p className="text-sm text-muted-foreground">Signed in as {user.role.replaceAll("_", " ")}</p>
+              <p className="text-sm text-muted-foreground">
+                Signed in as {user.role.replaceAll("_", " ")}
+              </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
