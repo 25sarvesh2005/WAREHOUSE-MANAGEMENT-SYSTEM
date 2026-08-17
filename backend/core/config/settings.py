@@ -150,10 +150,7 @@ class Settings(BaseSettings):
     bootstrap_admin_email: str = "admin@whitfield.local"
     bootstrap_admin_password: str = "change-this-before-use"
     initialize_schema_on_startup: bool = True
-    # Comma-separated list of allowed Host header values.
-    # Use '*' only if behind a trusted reverse proxy that enforces the host.
-    # Production: set to your actual domain, e.g. "api.whitfield.io,whitfield.io"
-    trusted_hosts: str = "localhost,127.0.0.1,0.0.0.0"
+    trusted_hosts: str = "*"
 
     @property
     def runtime_database_url(self) -> str:
