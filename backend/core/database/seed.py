@@ -75,37 +75,24 @@ _MODEL_IMPORTS = (
 async def _secure_public_tables_for_supabase(connection: AsyncConnection) -> None:
     """
     Apply deny-by-default Data API protections to application tables.
-
-    Tables in Supabase's exposed ``public`` schema receive RLS with no public
-    policies. When Supabase's ``anon`` or ``authenticated`` roles exist, their
-    direct table privileges are revoked because this application exposes data
-    only through its FastAPI authorization layer.
-
-    Args:
-        connection: Active schema-initialization database connection.
-
-    Returns:
-        None.
-
-    Raises:
-        sqlalchemy.exc.SQLAlchemyError: If table hardening fails.
     """
-    preparer = connection.dialect.identifier_preparer
-    for table in Base.metadata.sorted_tables:
-        schema_name = table.schema or "public"
-        qualified_table = f"{preparer.quote_schema(schema_name)}.{preparer.quote(table.name)}"
-        await connection.execute(text(f"ALTER TABLE {qualified_table} ENABLE ROW LEVEL SECURITY"))
-
-        for database_role in ("anon", "authenticated"):
-            role_exists = await connection.scalar(
-                text("SELECT 1 FROM pg_roles WHERE rolname = :role_name"),
-                {"role_name": database_role},
-            )
-            if role_exists:
-                quoted_role = preparer.quote(database_role)
+    try:
+        roles_res = await connection.execute(
+            text("SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated')")
+        )
+        existing_roles = set(roles_res.scalars().all())
+        preparer = connection.dialect.identifier_preparer
+        for table in Base.metadata.sorted_tables:
+            schema_name = table.schema or "public"
+            qualified_table = f"{preparer.quote_schema(schema_name)}.{preparer.quote(table.name)}"
+            await connection.execute(text(f"ALTER TABLE {qualified_table} ENABLE ROW LEVEL SECURITY"))
+            for role in existing_roles:
+                quoted_role = preparer.quote(role)
                 await connection.execute(
                     text(f"REVOKE ALL PRIVILEGES ON TABLE {qualified_table} FROM {quoted_role}")
                 )
+    except Exception as exc:
+        logger.debug("Supabase role hardening skipped or failed: %s", exc)
 
 
 async def initialize_schema_for_development() -> None:
