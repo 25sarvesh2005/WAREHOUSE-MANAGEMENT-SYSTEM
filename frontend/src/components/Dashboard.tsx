@@ -92,7 +92,13 @@ function MetricCard({
     </Card>
   );
 
-  return to ? <Link to={to} className="block h-full">{content}</Link> : content;
+  return to ? (
+    <Link to={to} className="block h-full">
+      {content}
+    </Link>
+  ) : (
+    content
+  );
 }
 
 function FacilityPanel({

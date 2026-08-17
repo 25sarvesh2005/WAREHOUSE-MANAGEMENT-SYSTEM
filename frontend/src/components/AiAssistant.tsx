@@ -106,9 +106,11 @@ const INTENTS: IntentConfig[] = [
     category: "inventory",
     title: "AI Warehouse Copilot & Stock Inquiry",
     shortLabel: "Stock & Quantities",
-    placeholder: "Ask any stock question (e.g., 'product with 0 quantity', 'which headphones are in stock?', 'lowest stock items', 'SKU-AURA-ANC100')...",
+    placeholder:
+      "Ask any stock question (e.g., 'product with 0 quantity', 'which headphones are in stock?', 'lowest stock items', 'SKU-AURA-ANC100')...",
     example: "product with 0 quantity",
-    description: "Natural language query of live warehouse stock, zero/low inventory levels, and facility distributions.",
+    description:
+      "Natural language query of live warehouse stock, zero/low inventory levels, and facility distributions.",
     allowedRoles: [],
     execute: (query, scope) => {
       const payload: AiInventoryAvailabilityRequest = { sku: query.trim() };
@@ -124,7 +126,8 @@ const INTENTS: IntentConfig[] = [
     shortLabel: "Ledger Audit",
     placeholder: "Enter Product SKU to explain stock variance & ledger journal",
     example: "SKU-AURA-ANC100",
-    description: "Natural language analysis of balance shifts, adjustments, receipts, and order reserves.",
+    description:
+      "Natural language analysis of balance shifts, adjustments, receipts, and order reserves.",
     allowedRoles: ["ADMINISTRATOR", "WAREHOUSE_MANAGER", "RECEIVER"],
     execute: (query, scope) => {
       const payload: AiLedgerExplanationRequest = { sku: query.trim() };
@@ -195,7 +198,8 @@ const INTENTS: IntentConfig[] = [
     shortLabel: "Exceptions Report",
     placeholder: "Leave blank or describe scope (e.g., 'Reno facility exceptions')",
     example: "Summarize active facility hold reasons and unfulfilled reserves",
-    description: "Aggregates quarantined stock, flagged receipts, and delayed pick tasks across warehouses.",
+    description:
+      "Aggregates quarantined stock, flagged receipts, and delayed pick tasks across warehouses.",
     allowedRoles: ["ADMINISTRATOR", "WAREHOUSE_MANAGER", "RECEIVER"],
     execute: (_query, scope) => {
       const payload: AiExceptionSummaryRequest = {};
@@ -211,11 +215,12 @@ const INTENTS: IntentConfig[] = [
     shortLabel: "Stock Rebalancing",
     placeholder: "Enter target SKU or leave blank to evaluate bicoastal fulfillment velocity",
     example: "Evaluate bicoastal stock velocity and draft transfer",
-    description: "AI-suggested stock transfer from Reno (surplus) to Columbus (deficit) to optimize shipping zone transit.",
+    description:
+      "AI-suggested stock transfer from Reno (surplus) to Columbus (deficit) to optimize shipping zone transit.",
     allowedRoles: ["ADMINISTRATOR", "WAREHOUSE_MANAGER"],
     execute: (_query, scope) => {
-      const payload: AiDraftRecommendationRequest = { draft_type: "REBALANCE" };
-      if (scope.warehouseCode) payload.target_warehouse_code = scope.warehouseCode;
+      const payload: AiDraftRecommendationRequest = { recommendation_type: "REBALANCE" };
+      if (scope.warehouseCode) payload.warehouse_code = scope.warehouseCode;
       if (scope.sellerCode) payload.seller_code = scope.sellerCode;
       return createAiDraftRecommendationApi(payload);
     },
@@ -254,7 +259,11 @@ function ProviderBadge({ providerName }: { providerName?: string }) {
           : "bg-slate-100 text-slate-700 border border-slate-200"
       }`}
     >
-      {isGemini ? <Sparkles className="size-3 text-indigo-600" /> : <Bot className="size-3 text-slate-500" />}
+      {isGemini ? (
+        <Sparkles className="size-3 text-indigo-600" />
+      ) : (
+        <Bot className="size-3 text-slate-500" />
+      )}
       {isGemini ? "Gemini 2.0 Flash" : "Rule Engine"}
     </span>
   );
@@ -465,14 +474,10 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
           : "";
 
   const auditId =
-    activeResult && "interaction_id" in activeResult
-      ? activeResult.interaction_id
-      : "";
+    activeResult && "interaction_id" in activeResult ? activeResult.interaction_id : "";
 
   const provider =
-    activeResult && "provider_name" in activeResult
-      ? activeResult.provider_name
-      : "google_genai";
+    activeResult && "provider_name" in activeResult ? activeResult.provider_name : "google_genai";
 
   const safety =
     activeResult && "safety_decision" in activeResult
@@ -502,7 +507,8 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
                 </span>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Ask questions about real-time inventory balances, trace order lifecycles, audit ledger shifts, or review facility bottlenecks.
+                Ask questions about real-time inventory balances, trace order lifecycles, audit
+                ledger shifts, or review facility bottlenecks.
               </p>
             </div>
           </div>
@@ -635,7 +641,10 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
       <div className="rounded-2xl border border-border bg-white p-5 shadow-card">
         <form onSubmit={handleFormSubmit} className="space-y-3">
           <div className="flex items-center justify-between">
-            <label htmlFor="ai-query-input" className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            <label
+              htmlFor="ai-query-input"
+              className="text-xs font-bold uppercase tracking-wider text-slate-500"
+            >
               {activeIntent.title}
             </label>
             <button
@@ -745,7 +754,9 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <button
               type="button"
-              onClick={() => handleQuickStarter("inventory-availability", "product with 0 quantity")}
+              onClick={() =>
+                handleQuickStarter("inventory-availability", "product with 0 quantity")
+              }
               className="group flex flex-col items-start rounded-xl border border-border bg-white p-4 text-left shadow-xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-primary-tint text-primary group-hover:bg-primary group-hover:text-white transition-colors">
@@ -761,7 +772,12 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
 
             <button
               type="button"
-              onClick={() => handleQuickStarter("inventory-availability", "which headphones do we have in stock?")}
+              onClick={() =>
+                handleQuickStarter(
+                  "inventory-availability",
+                  "which headphones do we have in stock?",
+                )
+              }
               className="group flex flex-col items-start rounded-xl border border-border bg-white p-4 text-left shadow-xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
@@ -825,7 +841,9 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
 
             <button
               type="button"
-              onClick={() => handleQuickStarter("exceptions-summary", "Summarize facility hold reasons")}
+              onClick={() =>
+                handleQuickStarter("exceptions-summary", "Summarize facility hold reasons")
+              }
               className="group flex flex-col items-start rounded-xl border border-border bg-white p-4 text-left shadow-xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
@@ -859,7 +877,10 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
                     {activeIntent.title} Response
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Inquiry: <span className="font-semibold text-foreground">{queryInput || activeIntent.title}</span>
+                    Inquiry:{" "}
+                    <span className="font-semibold text-foreground">
+                      {queryInput || activeIntent.title}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -878,41 +899,43 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             {/* ── Domain-Specific Structured Details ── */}
 
             {/* A. Inventory Availability Breakdown */}
-            {"rows" in activeResult && Array.isArray(activeResult.rows) && activeResult.rows.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Facility Stock Breakdown
-                </h4>
-                <div className="overflow-x-auto rounded-xl border border-border">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 border-b border-border text-slate-600 font-semibold">
-                      <tr>
-                        <th className="py-2.5 px-3.5">Facility</th>
-                        <th className="py-2.5 px-3.5">Product SKU</th>
-                        <th className="py-2.5 px-3.5">Product Name</th>
-                        <th className="py-2.5 px-3.5">Seller</th>
-                        <th className="py-2.5 px-3.5 text-right font-bold">Available Quantity</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border text-slate-800">
-                      {activeResult.rows.map((row: AiAvailabilityRow, idx: number) => (
-                        <tr key={`${row.warehouse_code}-${idx}`} className="hover:bg-slate-50/70">
-                          <td className="py-2.5 px-3.5 font-semibold text-foreground">
-                            {row.warehouse_code}
-                          </td>
-                          <td className="py-2.5 px-3.5 font-mono text-slate-600">{row.sku}</td>
-                          <td className="py-2.5 px-3.5 text-slate-700">{row.product_name}</td>
-                          <td className="py-2.5 px-3.5 text-slate-500">{row.seller_code}</td>
-                          <td className="py-2.5 px-3.5 text-right text-emerald-700 font-bold">
-                            {Number(row.available_quantity).toLocaleString()}
-                          </td>
+            {"rows" in activeResult &&
+              Array.isArray(activeResult.rows) &&
+              activeResult.rows.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Facility Stock Breakdown
+                  </h4>
+                  <div className="overflow-x-auto rounded-xl border border-border">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 border-b border-border text-slate-600 font-semibold">
+                        <tr>
+                          <th className="py-2.5 px-3.5">Facility</th>
+                          <th className="py-2.5 px-3.5">Product SKU</th>
+                          <th className="py-2.5 px-3.5">Product Name</th>
+                          <th className="py-2.5 px-3.5">Seller</th>
+                          <th className="py-2.5 px-3.5 text-right font-bold">Available Quantity</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-border text-slate-800">
+                        {activeResult.rows.map((row: AiAvailabilityRow, idx: number) => (
+                          <tr key={`${row.warehouse_code}-${idx}`} className="hover:bg-slate-50/70">
+                            <td className="py-2.5 px-3.5 font-semibold text-foreground">
+                              {row.warehouse_code}
+                            </td>
+                            <td className="py-2.5 px-3.5 font-mono text-slate-600">{row.sku}</td>
+                            <td className="py-2.5 px-3.5 text-slate-700">{row.product_name}</td>
+                            <td className="py-2.5 px-3.5 text-slate-500">{row.seller_code}</td>
+                            <td className="py-2.5 px-3.5 text-right text-emerald-700 font-bold">
+                              {Number(row.available_quantity).toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* B. Ledger Movements Breakdown */}
             {"movements" in activeResult && Array.isArray(activeResult.movements) && (
@@ -942,12 +965,18 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
                           <td className="py-2.5 px-3.5 font-mono text-[11px] text-slate-600">
                             {mov.inventory_state}
                           </td>
-                          <td className={`py-2.5 px-3.5 text-right font-bold ${
-                            Number(mov.quantity_delta) >= 0 ? "text-emerald-700" : "text-rose-700"
-                          }`}>
-                            {Number(mov.quantity_delta) >= 0 ? `+${mov.quantity_delta}` : mov.quantity_delta}
+                          <td
+                            className={`py-2.5 px-3.5 text-right font-bold ${
+                              Number(mov.quantity_delta) >= 0 ? "text-emerald-700" : "text-rose-700"
+                            }`}
+                          >
+                            {Number(mov.quantity_delta) >= 0
+                              ? `+${mov.quantity_delta}`
+                              : mov.quantity_delta}
                           </td>
-                          <td className="py-2.5 px-3.5 text-slate-500">{mov.reason_text || "Standard Movement"}</td>
+                          <td className="py-2.5 px-3.5 text-slate-500">
+                            {mov.reason_text || "Standard Movement"}
+                          </td>
                           <td className="py-2.5 px-3.5 text-right text-slate-400 font-mono text-[10px]">
                             {new Date(mov.recorded_at).toLocaleDateString()}
                           </td>
@@ -967,28 +996,36 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
                 </h4>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <div className="rounded-xl border border-border bg-slate-50/50 p-3">
-                    <span className="block text-[10px] font-bold uppercase text-slate-400">Reference #</span>
+                    <span className="block text-[10px] font-bold uppercase text-slate-400">
+                      Reference #
+                    </span>
                     <span className="mt-0.5 block text-xs font-bold font-mono text-foreground">
                       {activeResult.record.reference_number}
                     </span>
                   </div>
 
                   <div className="rounded-xl border border-border bg-slate-50/50 p-3">
-                    <span className="block text-[10px] font-bold uppercase text-slate-400">Status</span>
+                    <span className="block text-[10px] font-bold uppercase text-slate-400">
+                      Status
+                    </span>
                     <span className="mt-0.5 inline-block rounded bg-primary-tint px-2 py-0.5 text-xs font-bold text-primary">
                       {activeResult.record.status}
                     </span>
                   </div>
 
                   <div className="rounded-xl border border-border bg-slate-50/50 p-3">
-                    <span className="block text-[10px] font-bold uppercase text-slate-400">Seller</span>
+                    <span className="block text-[10px] font-bold uppercase text-slate-400">
+                      Seller
+                    </span>
                     <span className="mt-0.5 block text-xs font-semibold text-foreground">
                       {activeResult.record.seller_code}
                     </span>
                   </div>
 
                   <div className="rounded-xl border border-border bg-slate-50/50 p-3">
-                    <span className="block text-[10px] font-bold uppercase text-slate-400">Facilities</span>
+                    <span className="block text-[10px] font-bold uppercase text-slate-400">
+                      Facilities
+                    </span>
                     <span className="mt-0.5 block text-xs font-semibold text-foreground">
                       {activeResult.record.warehouse_codes?.join(", ") || "All"}
                     </span>
@@ -1005,9 +1042,14 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
                 </h4>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   {activeResult.categories.map((cat: AiExceptionCategorySummary) => (
-                    <div key={cat.category} className="rounded-xl border border-amber-200 bg-amber-50/50 p-3.5">
+                    <div
+                      key={cat.category}
+                      className="rounded-xl border border-amber-200 bg-amber-50/50 p-3.5"
+                    >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-amber-900">{cat.label || cat.category}</span>
+                        <span className="text-xs font-bold text-amber-900">
+                          {cat.label || cat.category}
+                        </span>
                         <span className="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-800">
                           {cat.count}
                         </span>
@@ -1036,7 +1078,8 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
                   </span>
                 </div>
                 <p className="text-xs text-purple-900">
-                  This draft is saved in staging and ready for manager review. No records or balances have been mutated.
+                  This draft is saved in staging and ready for manager review. No records or
+                  balances have been mutated.
                 </p>
               </div>
             )}
@@ -1077,7 +1120,8 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
                 </div>
                 <p className="font-mono text-[11px] text-slate-500 break-all">{auditId}</p>
                 <div className="text-[11px] text-slate-500 pt-1">
-                  Every query executed against the read-only AI engine produces an immutable audit record in PostgreSQL.
+                  Every query executed against the read-only AI engine produces an immutable audit
+                  record in PostgreSQL.
                 </div>
               </div>
             )}

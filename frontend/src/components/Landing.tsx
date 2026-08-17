@@ -214,7 +214,7 @@ export function Landing() {
   function handleQuickLogin(accountType: "ADMIN" | "MANAGER" | "RECEIVER" | "PICKER" | "SELLER") {
     if (accountType === "ADMIN") {
       setLoginEmail("admin@whitfield.local");
-      setLoginPassword("WhitfieldAdmin123!");
+      setLoginPassword("");
     } else if (accountType === "MANAGER") {
       setLoginEmail("manager@whitfield.local");
       setLoginPassword("Manager123!");
@@ -881,7 +881,9 @@ export function Landing() {
 
                 {/* 1-Click Demo Buttons */}
                 <div className="rounded-2xl border border-primary/20 bg-primary-tint/50 p-4 text-xs">
-                  <span className="font-bold text-primary uppercase tracking-wider text-[10px]">1-Click Quick Demo Login:</span>
+                  <span className="font-bold text-primary uppercase tracking-wider text-[10px]">
+                    1-Click Quick Demo Login:
+                  </span>
                   <div className="mt-2.5 flex flex-wrap gap-2">
                     <button
                       type="button"

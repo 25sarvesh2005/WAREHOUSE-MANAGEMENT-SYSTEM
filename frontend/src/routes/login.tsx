@@ -64,7 +64,7 @@ function LoginPage() {
   function handleQuickFill(type: "ADMIN" | "MANAGER" | "RECEIVER" | "PICKER" | "SELLER") {
     if (type === "ADMIN") {
       setEmail("admin@whitfield.local");
-      setPassword("WhitfieldAdmin123!");
+      setPassword("");
     } else if (type === "MANAGER") {
       setEmail("manager@whitfield.local");
       setPassword("Manager123!");
@@ -159,7 +159,9 @@ function LoginPage() {
 
           {/* 1-Click Quick Login Helpers */}
           <div className="mt-5 rounded-2xl border border-primary/20 bg-primary-tint/40 p-4 text-xs">
-            <p className="font-bold text-primary uppercase tracking-wider text-[10px]">1-Click Quick Demo Login:</p>
+            <p className="font-bold text-primary uppercase tracking-wider text-[10px]">
+              1-Click Quick Demo Login:
+            </p>
             <div className="mt-2.5 flex flex-wrap gap-2">
               <button
                 type="button"
