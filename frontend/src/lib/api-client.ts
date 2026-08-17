@@ -1,7 +1,13 @@
 import { clearSession, readAccessToken, readRefreshToken, storeTokens } from "./session";
 
-export const API_BASE_URL =
-  (import.meta.env["VITE_API_BASE_URL"] as string) || "http://127.0.0.1:8080/api/v1";
+function resolveBaseUrl(): string {
+  const raw =
+    (import.meta.env["VITE_API_BASE_URL"] as string | undefined) || "http://127.0.0.1:8080";
+  const trimmed = raw.trim().replace(/\/+$/, "");
+  return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
+}
+
+export const API_BASE_URL = resolveBaseUrl();
 
 export interface ApiErrorResponse {
   error?: {
