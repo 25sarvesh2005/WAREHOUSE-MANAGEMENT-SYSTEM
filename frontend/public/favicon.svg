@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="wfGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="50%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="cubeTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#818CF8"/>
+    </linearGradient>
+    <linearGradient id="cubeRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <linearGradient id="cubeLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1D4ED8"/>
+      <stop offset="100%" stop-color="#4338CA"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="#090D16"/>
+  <rect width="30" height="30" x="1" y="1" rx="7" stroke="url(#wfGradient)" stroke-width="1.5" stroke-opacity="0.7"/>
+  <polygon points="16,6 25,11 16,16 7,11" fill="url(#cubeTop)" />
+  <polygon points="7,11 16,16 16,26 7,21" fill="url(#cubeLeft)" opacity="0.95" />
+  <polygon points="16,16 25,11 25,21 16,26" fill="url(#cubeRight)" />
+  <circle cx="16" cy="16" r="1.75" fill="#FFFFFF" opacity="0.95"/>
+  <path d="M11 10 L16 13 L21 10" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+</svg>
