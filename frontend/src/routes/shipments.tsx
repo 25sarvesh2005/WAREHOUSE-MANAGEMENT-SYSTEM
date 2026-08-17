@@ -246,7 +246,7 @@ function ShipmentsPage() {
                 <select
                   value={newShipment.order_id}
                   onChange={(e) => setNewShipment({ ...newShipment, order_id: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                  className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                 >
                   <option value="">-- Choose Packed Order --</option>
                   {eligibleOrders.map((o) => (
@@ -265,7 +265,7 @@ function ShipmentsPage() {
                   <select
                     value={newShipment.carrier}
                     onChange={(e) => setNewShipment({ ...newShipment, carrier: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     <option value="UPS">UPS Ground / Air</option>
                     <option value="FEDEX">FedEx Express / Ground</option>
@@ -283,7 +283,7 @@ function ShipmentsPage() {
                     onChange={(e) =>
                       setNewShipment({ ...newShipment, service_level: e.target.value })
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     <option value="GROUND">Ground</option>
                     <option value="2DAY">2-Day Expedited</option>

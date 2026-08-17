@@ -161,11 +161,55 @@ async def seed_initial_data() -> None:
                 status=UserStatus.ACTIVE.value,
             )
             await identity_crud.create_user(session, admin)
+        else:
+            existing_admin.hashed_password = hash_password(settings.bootstrap_admin_password)
+            existing_admin.status = UserStatus.ACTIVE.value
+
+        # Seed enterprise seller tenant
+        aura_seller = await identity_crud.get_seller_by_code(session, "SL-AURA")
+        if aura_seller is None:
+            from core.models.identity_model import Seller
+            aura_seller = Seller(
+                code="SL-AURA",
+                name="Aura Electronics Corp",
+                status=BusinessStatus.ACTIVE.value,
+            )
+            await identity_crud.create_seller(session, aura_seller)
+
+        # Seed demo seller user
+        seller_email = "seller@whitfield.local"
+        existing_seller_user = await identity_crud.get_user_by_email(session, seller_email)
+        if existing_seller_user is None:
+            seller_user = User(
+                email=seller_email,
+                name="David Chen (Aura Electronics Merchant)",
+                hashed_password=hash_password("Seller123!"),
+                role=UserRole.SELLER.value,
+                status=UserStatus.ACTIVE.value,
+            )
+            created_seller_user = await identity_crud.create_user(session, seller_user)
+            await identity_crud.assign_user_to_seller(
+                session,
+                user_id=created_seller_user.id,
+                seller_id=aura_seller.id,
+                assignment_role="SELLER_PRIMARY",
+            )
+        else:
+            existing_seller_user.hashed_password = hash_password("Seller123!")
+            existing_seller_user.status = UserStatus.ACTIVE.value
+            if not existing_seller_user.seller_assignments:
+                await identity_crud.assign_user_to_seller(
+                    session,
+                    user_id=existing_seller_user.id,
+                    seller_id=aura_seller.id,
+                    assignment_role="SELLER_PRIMARY",
+                )
 
         warehouses = await identity_crud.list_warehouses(session, limit=200, offset=0)
         existing_codes = {warehouse.code for warehouse in warehouses}
+        wh_map = {warehouse.code: warehouse for warehouse in warehouses}
         if "RNO" not in existing_codes:
-            await identity_crud.create_warehouse(
+            rno_wh = await identity_crud.create_warehouse(
                 session,
                 Warehouse(
                     code="RNO",
@@ -176,8 +220,9 @@ async def seed_initial_data() -> None:
                     status=BusinessStatus.ACTIVE.value,
                 ),
             )
+            wh_map["RNO"] = rno_wh
         if "CMH" not in existing_codes:
-            await identity_crud.create_warehouse(
+            cmh_wh = await identity_crud.create_warehouse(
                 session,
                 Warehouse(
                     code="CMH",
@@ -188,3 +233,40 @@ async def seed_initial_data() -> None:
                     status=BusinessStatus.ACTIVE.value,
                 ),
             )
+            wh_map["CMH"] = cmh_wh
+
+        # Seed 1 canonical user per role category
+        staff_seeds = [
+            ("manager@whitfield.local", "Marcus Vance (Operations Manager)", UserRole.WAREHOUSE_MANAGER.value, "Manager123!"),
+            ("receiver@whitfield.local", "Elena Rostova (Inbound Receiver)", UserRole.RECEIVER.value, "Receiver123!"),
+            ("picker@whitfield.local", "John Doe (Lead Picker/Packer)", UserRole.PICKER_PACKER.value, "Picker123!"),
+        ]
+        for s_email, s_name, s_role, s_pwd in staff_seeds:
+            existing_staff = await identity_crud.get_user_by_email(session, s_email)
+            if existing_staff is None:
+                staff_user = User(
+                    email=s_email,
+                    name=s_name,
+                    hashed_password=hash_password(s_pwd),
+                    role=s_role,
+                    status=UserStatus.ACTIVE.value,
+                )
+                created_staff = await identity_crud.create_user(session, staff_user)
+                for wh in wh_map.values():
+                    await identity_crud.assign_user_to_warehouse(
+                        session,
+                        user_id=created_staff.id,
+                        warehouse_id=wh.id,
+                        assignment_role="PRIMARY",
+                    )
+            else:
+                existing_staff.hashed_password = hash_password(s_pwd)
+                existing_staff.status = UserStatus.ACTIVE.value
+                for wh in wh_map.values():
+                    if not any(a.warehouse_id == wh.id for a in existing_staff.warehouse_assignments):
+                        await identity_crud.assign_user_to_warehouse(
+                            session,
+                            user_id=existing_staff.id,
+                            warehouse_id=wh.id,
+                            assignment_role="PRIMARY",
+                        )

@@ -414,7 +414,7 @@ function TransfersPage() {
                 <select
                   value={form.seller_id}
                   onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 focus:outline-none"
+                  className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                 >
                   {sellers.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -432,7 +432,7 @@ function TransfersPage() {
                   <select
                     value={form.origin_warehouse_id}
                     onChange={(e) => setForm({ ...form, origin_warehouse_id: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     {warehouses.map((w) => (
                       <option key={w.id} value={w.id}>
@@ -449,7 +449,7 @@ function TransfersPage() {
                   <select
                     value={form.destination_warehouse_id}
                     onChange={(e) => setForm({ ...form, destination_warehouse_id: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     {warehouses.map((w) => (
                       <option key={w.id} value={w.id}>
@@ -469,7 +469,7 @@ function TransfersPage() {
                   <button
                     type="button"
                     onClick={addLine}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
+                    className="text-xs font-semibold text-primary hover:text-primary-dark cursor-pointer"
                   >
                     + Add Another SKU
                   </button>
@@ -479,12 +479,12 @@ function TransfersPage() {
                   {form.lines.map((line, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-2 rounded-lg bg-slate-50 p-2.5 border border-slate-200"
+                      className="flex items-center gap-2 rounded-xl bg-slate-50 p-2.5 border border-slate-200"
                     >
                       <select
                         value={line.product_id}
                         onChange={(e) => updateLine(idx, { product_id: e.target.value })}
-                        className="flex-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-mono text-xs font-semibold text-slate-900 focus:outline-none"
+                        className="flex-1 rounded-xl border border-input bg-white px-3 py-1.5 font-mono text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                       >
                         <option value="">-- Choose Product SKU --</option>
                         {products.map((p) => (

@@ -48,7 +48,7 @@ function AiAssistantPage() {
           </span>
         }
       />
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-4xl">
         <AiAssistant userRole={user.role} />
       </div>
     </AppShell>

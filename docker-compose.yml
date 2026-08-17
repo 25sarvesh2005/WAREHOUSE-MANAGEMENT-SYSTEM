@@ -1,0 +1,100 @@
+services:
+  # ─────────────────────────────────────────────────────────────────────────
+  # PostgreSQL — local development database
+  # In production use a managed DB (Supabase, RDS, Cloud SQL, etc.)
+  # ─────────────────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: warehouse_app
+      POSTGRES_PASSWORD: warehouse_dev_password
+      POSTGRES_DB: warehouse_ops
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U warehouse_app -d warehouse_ops"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Backend — FastAPI + Uvicorn
+  # ─────────────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: development
+      APP_HOST: 0.0.0.0
+      APP_PORT: "8080"
+      # Connects to the 'db' service defined above
+      DATABASE_URL: postgresql+asyncpg://warehouse_app:warehouse_dev_password@db:5432/warehouse_ops
+      MIGRATION_DATABASE_URL: postgresql+psycopg://warehouse_app:warehouse_dev_password@db:5432/warehouse_ops
+      DATABASE_POOL_SIZE: "5"
+      DATABASE_MAX_OVERFLOW: "10"
+      # !! Replace with a real secret before deploying !!
+      JWT_SECRET: replace-with-long-random-secret-min-32-chars
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_MINUTES: "60"
+      LOG_LEVEL: INFO
+      # Allow requests from the frontend container and localhost dev
+      FRONTEND_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:3000
+      AI_ENABLED: "true"
+      AI_PROVIDER: google_genai
+      AI_MODEL: gemini-3.5-flash
+      GOOGLE_GENAI_API_KEY: ${GOOGLE_GENAI_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      INITIALIZE_SCHEMA_ON_STARTUP: "true"
+      BOOTSTRAP_ADMIN_EMAIL: admin@whitfield.local
+      # !! Replace before first run !!
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-WhitfieldAdmin123!}
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount logs out of the container for debugging; remove in production
+      - ./backend/logs:/app/logs
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health/live')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Frontend — Vite dev server (development only)
+  # For production, build with `npm run build` and serve via nginx/CDN.
+  # ─────────────────────────────────────────────────────────────────────────
+  frontend:
+    image: node:24-alpine
+    working_dir: /app
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      # Vite proxy forwards /api calls to the backend service
+      VITE_API_BASE_URL: http://backend:8080
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Named volumes for data persistence across container restarts
+# ─────────────────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  frontend_node_modules:
+    driver: local

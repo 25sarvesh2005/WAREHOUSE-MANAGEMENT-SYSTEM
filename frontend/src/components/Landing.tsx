@@ -203,7 +203,7 @@ export function Landing() {
     setLoginBusy(true);
     try {
       await signInAsync(loginEmail, loginPassword);
-      navigate({ to: "/" });
+      navigate({ to: "/", replace: true });
     } catch (err: unknown) {
       setLoginError(err instanceof Error ? err.message : "Sign in failed. Check credentials.");
     } finally {
@@ -211,13 +211,22 @@ export function Landing() {
     }
   }
 
-  function handleQuickLogin(accountType: "SELLER" | "ADMIN") {
-    if (accountType === "SELLER") {
+  function handleQuickLogin(accountType: "ADMIN" | "MANAGER" | "RECEIVER" | "PICKER" | "SELLER") {
+    if (accountType === "ADMIN") {
+      setLoginEmail("admin@whitfield.local");
+      setLoginPassword("WhitfieldAdmin123!");
+    } else if (accountType === "MANAGER") {
+      setLoginEmail("manager@whitfield.local");
+      setLoginPassword("Manager123!");
+    } else if (accountType === "RECEIVER") {
+      setLoginEmail("receiver@whitfield.local");
+      setLoginPassword("Receiver123!");
+    } else if (accountType === "PICKER") {
+      setLoginEmail("picker@whitfield.local");
+      setLoginPassword("Picker123!");
+    } else if (accountType === "SELLER") {
       setLoginEmail("seller@whitfield.local");
       setLoginPassword("Seller123!");
-    } else {
-      setLoginEmail("admin@whitfield.local");
-      setLoginPassword("DemoAdminPass123!");
     }
     setLoginError(null);
   }
@@ -871,22 +880,43 @@ export function Landing() {
                 {loginError && <ErrorBox message={loginError} />}
 
                 {/* 1-Click Demo Buttons */}
-                <div className="rounded-2xl border border-primary/20 bg-primary-tint/50 p-3.5 text-xs">
-                  <span className="font-semibold text-primary">Quick Demo Access:</span>
-                  <div className="mt-2 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleQuickLogin("SELLER")}
-                      className="flex-1 rounded-xl bg-white px-3 py-2 font-bold text-primary shadow-sm border border-primary/20 hover:bg-primary hover:text-white transition-colors"
-                    >
-                      Fill Seller Demo
-                    </button>
+                <div className="rounded-2xl border border-primary/20 bg-primary-tint/50 p-4 text-xs">
+                  <span className="font-bold text-primary uppercase tracking-wider text-[10px]">1-Click Quick Demo Login:</span>
+                  <div className="mt-2.5 flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => handleQuickLogin("ADMIN")}
-                      className="flex-1 rounded-xl bg-white px-3 py-2 font-bold text-foreground shadow-sm border border-border hover:bg-primary-dark hover:text-white transition-colors"
+                      className="rounded-xl bg-white px-3 py-1.5 font-bold text-foreground shadow-xs border border-border hover:bg-primary-dark hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0 text-xs"
                     >
-                      Fill Admin Demo
+                      👑 Admin
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickLogin("MANAGER")}
+                      className="rounded-xl bg-white px-3 py-1.5 font-bold text-foreground shadow-xs border border-border hover:bg-primary hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0 text-xs"
+                    >
+                      📊 Manager
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickLogin("RECEIVER")}
+                      className="rounded-xl bg-white px-3 py-1.5 font-bold text-foreground shadow-xs border border-border hover:bg-primary hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0 text-xs"
+                    >
+                      📥 Receiver
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickLogin("PICKER")}
+                      className="rounded-xl bg-white px-3 py-1.5 font-bold text-foreground shadow-xs border border-border hover:bg-primary hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0 text-xs"
+                    >
+                      📦 Picker
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickLogin("SELLER")}
+                      className="rounded-xl bg-white px-3 py-1.5 font-bold text-primary shadow-xs border border-primary/30 hover:bg-primary hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0 text-xs"
+                    >
+                      🏢 Seller
                     </button>
                   </div>
                 </div>

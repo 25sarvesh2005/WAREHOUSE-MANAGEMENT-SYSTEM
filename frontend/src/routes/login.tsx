@@ -40,7 +40,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (ready && user) navigate({ to: "/" });
+    if (ready && user) navigate({ to: "/", replace: true });
   }, [ready, user, navigate]);
 
   async function submit(e?: React.FormEvent | React.MouseEvent) {
@@ -51,7 +51,7 @@ function LoginPage() {
     setBusy(true);
     try {
       await signInAsync(email, password);
-      navigate({ to: "/" });
+      navigate({ to: "/", replace: true });
     } catch (err: unknown) {
       setError(
         err instanceof Error ? err.message : "Sign in failed. Please check your credentials.",
@@ -61,13 +61,22 @@ function LoginPage() {
     }
   }
 
-  function handleQuickFill(type: "SELLER" | "ADMIN") {
-    if (type === "SELLER") {
+  function handleQuickFill(type: "ADMIN" | "MANAGER" | "RECEIVER" | "PICKER" | "SELLER") {
+    if (type === "ADMIN") {
+      setEmail("admin@whitfield.local");
+      setPassword("WhitfieldAdmin123!");
+    } else if (type === "MANAGER") {
+      setEmail("manager@whitfield.local");
+      setPassword("Manager123!");
+    } else if (type === "RECEIVER") {
+      setEmail("receiver@whitfield.local");
+      setPassword("Receiver123!");
+    } else if (type === "PICKER") {
+      setEmail("picker@whitfield.local");
+      setPassword("Picker123!");
+    } else if (type === "SELLER") {
       setEmail("seller@whitfield.local");
       setPassword("Seller123!");
-    } else {
-      setEmail("admin@whitfield.local");
-      setPassword("DemoAdminPass123!");
     }
     setError(null);
   }
@@ -149,22 +158,43 @@ function LoginPage() {
           </p>
 
           {/* 1-Click Quick Login Helpers */}
-          <div className="mt-5 rounded-2xl border border-primary/20 bg-primary-tint/40 p-3.5 text-xs">
-            <p className="font-semibold text-primary">Quick Demo Access:</p>
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickFill("SELLER")}
-                className="flex-1 rounded-xl bg-white px-3 py-2 font-bold text-primary shadow-sm border border-primary/20 hover:bg-primary hover:text-white transition-colors"
-              >
-                🏢 Fill Seller Demo
-              </button>
+          <div className="mt-5 rounded-2xl border border-primary/20 bg-primary-tint/40 p-4 text-xs">
+            <p className="font-bold text-primary uppercase tracking-wider text-[10px]">1-Click Quick Demo Login:</p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => handleQuickFill("ADMIN")}
-                className="flex-1 rounded-xl bg-white px-3 py-2 font-bold text-foreground shadow-sm border border-border hover:bg-primary-dark hover:text-white transition-colors"
+                className="rounded-xl bg-white px-3 py-1.5 font-bold text-foreground shadow-xs border border-border hover:bg-primary-dark hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0 text-xs"
               >
-                📦 Fill Admin Demo
+                👑 Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill("MANAGER")}
+                className="rounded-xl bg-white px-3 py-1.5 font-bold text-foreground shadow-xs border border-border hover:bg-primary hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0 text-xs"
+              >
+                📊 Manager
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill("RECEIVER")}
+                className="rounded-xl bg-white px-3 py-1.5 font-bold text-foreground shadow-xs border border-border hover:bg-primary hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0 text-xs"
+              >
+                📥 Receiver
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill("PICKER")}
+                className="rounded-xl bg-white px-3 py-1.5 font-bold text-foreground shadow-xs border border-border hover:bg-primary hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0 text-xs"
+              >
+                📦 Picker
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill("SELLER")}
+                className="rounded-xl bg-white px-3 py-1.5 font-bold text-primary shadow-xs border border-primary/30 hover:bg-primary hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0 text-xs"
+              >
+                🏢 Seller
               </button>
             </div>
           </div>

@@ -7,16 +7,15 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from common.logger import get_logger
 from core.config.settings import get_settings
 
 logger = get_logger(__name__)
-password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
@@ -24,8 +23,7 @@ def hash_password(plain: str) -> str:
     """
     Hash a plain-text password for storage.
 
-    Passwords are never stored or logged in plain text and are hashed using the
-    configured bcrypt context.
+    Passwords are never stored or logged in plain text and are hashed using bcrypt.
 
     Args:
         plain: Plain-text password provided by the user.
@@ -38,15 +36,13 @@ def hash_password(plain: str) -> str:
     """
     if not plain:
         raise ValueError("Password cannot be empty")
-    return password_context.hash(plain)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(plain.encode("utf-8"), salt).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """
     Verify a plain-text password against a stored hash.
-
-    Verification delegates to passlib and never logs the submitted password or
-    stored hash.
 
     Args:
         plain: Plain-text password submitted by the user.
@@ -54,11 +50,13 @@ def verify_password(plain: str, hashed: str) -> bool:
 
     Returns:
         bool: True when the password matches the hash.
-
-    Raises:
-        ValueError: If the hash cannot be evaluated by passlib.
     """
-    return password_context.verify(plain, hashed)
+    if not plain or not hashed:
+        return False
+    try:
+        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    except Exception:
+        return False
 
 
 def create_access_token(data: dict[str, Any]) -> str:

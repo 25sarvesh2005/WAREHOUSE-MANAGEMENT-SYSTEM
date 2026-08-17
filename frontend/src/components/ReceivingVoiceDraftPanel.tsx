@@ -238,6 +238,14 @@ export function ReceivingVoiceDraftPanel({
     setManualTranscript("");
   };
 
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
   return (
     <section className={`card-surface overflow-hidden ${className}`}>
       <audio ref={audioPlayerRef} className="hidden" />
@@ -245,15 +253,18 @@ export function ReceivingVoiceDraftPanel({
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border bg-white px-5 py-4">
         <div>
           <div className="flex items-center gap-2">
-            <Mic className="size-5 text-primary" />
-            <h3 className="text-base font-semibold text-foreground">
-              Voice receiving draft station
-            </h3>
+            <div className="flex size-8 items-center justify-center rounded-xl bg-primary-tint text-primary">
+              <Mic className="size-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-foreground">
+                Voice-Assisted Receiving Intake
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Powered by Sarvam AI Speech-to-Text & Bulbul Speech Synthesis
+              </p>
+            </div>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Capture quantities, condition, and notes. Product identity still comes from the scanned
-            SKU/UPC selected in the receipt line form.
-          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <select
@@ -262,34 +273,36 @@ export function ReceivingVoiceDraftPanel({
             disabled={isRecording || isBusy}
             className="rounded-full border border-input bg-white px-3 py-1.5 text-xs font-semibold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
           >
-            <option value="en-IN">English (India)</option>
-            <option value="hi-IN">Hindi (India)</option>
-            <option value="en-US">English (US)</option>
+            <option value="en-IN">English (India - en-IN)</option>
+            <option value="hi-IN">Hindi (India - hi-IN)</option>
+            <option value="en-US">English (US - en-US)</option>
           </select>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-tint px-3 py-1.5 text-xs font-semibold text-primary">
             <ShieldCheck className="size-3.5" />
-            Draft only
+            Safe Draft Intake
           </span>
         </div>
       </div>
 
-      <div className="grid gap-5 p-5 xl:grid-cols-[280px_1fr]">
-        <div className="rounded-3xl bg-primary-tint p-4">
+      <div className="grid gap-5 p-5 xl:grid-cols-[300px_1fr]">
+        <div className="rounded-3xl bg-primary-tint/60 border border-primary/20 p-4">
           <button
             type="button"
-            onMouseDown={startRecording}
-            onMouseUp={stopRecording}
-            onTouchStart={startRecording}
-            onTouchEnd={stopRecording}
+            onClick={toggleRecording}
             disabled={isBusy}
-            className={`flex h-24 w-full items-center justify-center gap-3 rounded-3xl text-sm font-semibold transition ${
+            className={`flex h-24 w-full flex-col items-center justify-center gap-1.5 rounded-2xl text-sm font-bold shadow-md transition-all ${
               isRecording
-                ? "bg-primary-dark text-white"
-                : "bg-primary text-white hover:bg-primary-dark"
-            } disabled:opacity-60`}
+                ? "bg-status-red text-white animate-pulse shadow-status-red/30"
+                : "bg-primary text-white hover:bg-primary-dark shadow-primary/25"
+            } disabled:opacity-60 cursor-pointer`}
           >
-            {isRecording ? <MicOff className="size-6" /> : <Mic className="size-6" />}
-            {isRecording ? `Recording ${recordingSeconds}s` : "Hold to speak"}
+            <div className="flex items-center gap-2 text-base">
+              {isRecording ? <MicOff className="size-5" /> : <Mic className="size-5" />}
+              <span>{isRecording ? `Recording... (${recordingSeconds}s)` : "Click / Tap to Speak"}</span>
+            </div>
+            <span className="text-[11px] font-medium opacity-90">
+              {isRecording ? "Click again to Stop & Parse" : "or Click an example phrase below"}
+            </span>
           </button>
 
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
@@ -298,9 +311,12 @@ export function ReceivingVoiceDraftPanel({
           </p>
 
           <div className="mt-4 space-y-2 border-t border-primary/10 pt-4">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-primary">1-Click Test Phrases:</p>
             {[
               "received 12 available and 2 damaged note box crushed",
-              "20 available, 3 quarantined note missing cert",
+              "10 available, 5 quarantined note quality inspection",
+              "50 sellable units in good condition",
+              "20 available, 1 damaged note seal broken",
             ].map((example) => (
               <button
                 key={example}
@@ -309,9 +325,9 @@ export function ReceivingVoiceDraftPanel({
                   setManualTranscript(example);
                   handleParseText(example);
                 }}
-                className="block w-full rounded-2xl bg-white px-3 py-2 text-left text-[11px] font-medium text-foreground transition hover:bg-blue-50"
+                className="block w-full rounded-xl bg-white px-3 py-2 text-left text-[11px] font-medium text-foreground transition hover:bg-primary-tint hover:text-primary border border-border shadow-xs cursor-pointer"
               >
-                "{example}"
+                🎙️ "{example}"
               </button>
             ))}
           </div>
@@ -371,33 +387,33 @@ export function ReceivingVoiceDraftPanel({
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-primary/10 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      <th className="px-4 py-2">Quantity</th>
-                      <th className="px-4 py-2">State</th>
-                      <th className="px-4 py-2">Condition note</th>
+                    <tr className="border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-white/50">
+                      <th className="px-4 py-2.5 whitespace-nowrap">Quantity</th>
+                      <th className="px-4 py-2.5 whitespace-nowrap">State</th>
+                      <th className="px-4 py-2.5 whitespace-nowrap">Condition note</th>
                     </tr>
                   </thead>
                   <tbody>
                     {activeDraft.lines.map((line, index) => (
                       <tr
                         key={`${line.inventory_state}-${index}`}
-                        className="border-b border-primary/10"
+                        className="border-b border-primary/10 hover:bg-white/40 transition-colors"
                       >
-                        <td className="px-4 py-3 font-mono font-semibold text-foreground">
+                        <td className="px-4 py-3 font-mono font-bold text-foreground">
                           {line.quantity}
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-black ${stateClass(
+                            className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-bold whitespace-nowrap ${stateClass(
                               line.inventory_state,
                             )}`}
                           >
                             {line.inventory_state.replaceAll("_", " ")}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-foreground">
+                        <td className="px-4 py-3 text-foreground font-medium">
                           {line.condition_note || (
-                            <span className="text-muted-foreground">None</span>
+                            <span className="text-muted-foreground font-normal italic">None</span>
                           )}
                         </td>
                       </tr>

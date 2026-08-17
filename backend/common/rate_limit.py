@@ -97,6 +97,14 @@ class RateLimiter:
             queue.append(now)
 
 
+# Global default: applied to ALL API routes via the api_router dependency.
+# Tighter per-route limiters (login, AI, voice) still apply on top of this.
+_global_rate_limiter = RateLimiter(
+    max_requests=120,
+    window_seconds=60,
+    error_message="Too many requests. Please slow down.",
+)
+
 _login_rate_limiter = RateLimiter(
     max_requests=10,
     window_seconds=60,
@@ -132,6 +140,25 @@ _voice_upload_rate_limiter = RateLimiter(
     window_seconds=60,
     error_message="Too many audio uploads. Please wait.",
 )
+
+
+async def global_rate_limiter(request: Request) -> None:
+    """Apply the global default rate limit to all API routes.
+
+    Acts as a safety net across all endpoints. Stricter per-route limiters
+    (login, AI, voice, migration) enforce tighter quotas on their own routes
+    in addition to this global check.
+
+    Args:
+        request: FastAPI request object.
+
+    Returns:
+        None.
+
+    Raises:
+        HTTPException: If the requester exceeds 120 requests per minute.
+    """
+    await _global_rate_limiter(request)
 
 
 async def login_rate_limiter(request: Request) -> None:

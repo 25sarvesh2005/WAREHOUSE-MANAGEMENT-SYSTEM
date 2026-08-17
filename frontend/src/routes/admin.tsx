@@ -317,20 +317,20 @@ function AdminPage() {
         </div>
       ) : null}
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-5 flex flex-wrap gap-2 overflow-x-auto pb-1">
         {visibleTabs.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`relative rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
               tab === t
-                ? "border-primary bg-primary-tint text-primary"
-                : "border-border text-muted-foreground hover:bg-muted"
+                ? "border-primary bg-primary text-white shadow-xs"
+                : "border-border bg-white text-muted-foreground hover:bg-slate-50 hover:text-foreground"
             }`}
           >
-            {t}
+            <span>{t}</span>
             {t === "Pending Sellers" && pendingSellers.length > 0 ? (
-              <span className="ml-1.5 rounded-full bg-status-amber px-1.5 py-0.5 text-[10px] font-bold text-white">
+              <span className="rounded-full bg-status-amber px-1.5 py-0.2 text-[10px] font-extrabold text-white">
                 {pendingSellers.length}
               </span>
             ) : null}

@@ -312,7 +312,7 @@ function ReturnsPage() {
                   <select
                     value={form.seller_id}
                     onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     {sellers.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -329,7 +329,7 @@ function ReturnsPage() {
                   <select
                     value={form.warehouse_id}
                     onChange={(e) => setForm({ ...form, warehouse_id: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     {warehouses.map((w) => (
                       <option key={w.id} value={w.id}>
@@ -340,33 +340,17 @@ function ReturnsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    RMA Reference #
-                  </label>
-                  <input
-                    type="text"
-                    value={form.rma_number}
-                    onChange={(e) => setForm({ ...form, rma_number: e.target.value })}
-                    placeholder="e.g. RMA-2026-991"
-                    disabled={form.is_unidentified}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-900 focus:outline-none disabled:bg-slate-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Inbound Tracking Number
-                  </label>
-                  <input
-                    type="text"
-                    value={form.inbound_tracking_number}
-                    onChange={(e) => setForm({ ...form, inbound_tracking_number: e.target.value })}
-                    placeholder="e.g. 1Z8888888888888888"
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-900 focus:outline-none"
-                  />
-                </div>
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                  Carrier Tracking # (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 1Z999AA10123456784"
+                  value={form.inbound_tracking_number}
+                  onChange={(e) => setForm({ ...form, inbound_tracking_number: e.target.value })}
+                  className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+                />
               </div>
 
               <div className="flex items-center gap-2">
@@ -386,12 +370,12 @@ function ReturnsPage() {
               <div className="border-t border-slate-100 pt-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-bold text-slate-700 uppercase text-[10px]">
-                    Returned Items
+                    Expected Return Items
                   </span>
                   <button
                     type="button"
                     onClick={addLine}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                    className="text-xs font-semibold text-primary hover:text-primary-dark cursor-pointer"
                   >
                     + Add Another SKU
                   </button>
@@ -401,12 +385,12 @@ function ReturnsPage() {
                   {form.lines.map((line, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-2 rounded-lg bg-slate-50 p-2.5 border border-slate-200"
+                      className="flex items-center gap-2 rounded-xl bg-slate-50 p-2.5 border border-slate-200"
                     >
                       <select
                         value={line.product_id}
                         onChange={(e) => updateLine(idx, { product_id: e.target.value })}
-                        className="flex-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-mono text-xs font-semibold text-slate-900 focus:outline-none"
+                        className="flex-1 rounded-xl border border-input bg-white px-3 py-1.5 font-mono text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                       >
                         <option value="">-- Choose Product SKU --</option>
                         {products.map((p) => (
@@ -421,7 +405,7 @@ function ReturnsPage() {
                         value={line.expected_quantity}
                         onChange={(e) => updateLine(idx, { expected_quantity: e.target.value })}
                         placeholder="Qty"
-                        className="w-16 rounded-md border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs font-bold text-right text-slate-900 focus:outline-none"
+                        className="w-16 rounded-xl border border-input bg-white px-2.5 py-1.5 font-mono text-xs font-bold text-right text-foreground focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none shadow-xs"
                       />
                       <button
                         type="button"

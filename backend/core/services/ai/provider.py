@@ -149,7 +149,7 @@ class GoogleGenAIProvider:
 
     def _generate_text_sync(self, request: AIProviderRequest) -> str:
         """
-        Execute the blocking Google Gen AI SDK request.
+        Execute the blocking Google Gen AI SDK request with multi-model resilience.
 
         Args:
             request: Provider-neutral generation request.
@@ -159,22 +159,38 @@ class GoogleGenAIProvider:
 
         Raises:
             ImportError: If google-genai is unavailable.
-            Exception: If the SDK request fails.
+            Exception: If all candidate models fail.
         """
         from google import genai
 
         client = genai.Client(api_key=self._api_key)
-        model_name = request.model_name or self._default_model_name
+        preferred_model = request.model_name or self._default_model_name
+        candidate_models = [preferred_model, "gemini-3.5-flash", "gemini-3.1-flash-lite-preview"]
+        # Deduplicate while preserving order
+        unique_models = list(dict.fromkeys(candidate_models))
+
         config: dict[str, Any] = {}
         if request.system_instruction:
             config["system_instruction"] = request.system_instruction
 
-        response = client.models.generate_content(
-            model=model_name,
-            contents=request.prompt,
-            config=config or None,
-        )
-        return str(getattr(response, "text", "") or "")
+        last_error: Exception | None = None
+        for model in unique_models:
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=request.prompt,
+                    config=config or None,
+                )
+                text = str(getattr(response, "text", "") or "").strip()
+                if text:
+                    return text
+            except Exception as error:
+                last_error = error
+                logger.warning("Gemini model %s failed, attempting fallback: %s", model, error)
+
+        if last_error:
+            raise last_error
+        return ""
 
 
 def build_ai_provider(settings: Any) -> AIProvider:

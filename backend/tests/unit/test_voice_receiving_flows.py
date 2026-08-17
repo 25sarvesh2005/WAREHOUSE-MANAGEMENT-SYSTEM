@@ -39,6 +39,7 @@ from core.services.voice.deepgram_provider import DeepgramSTTProvider
 @pytest.fixture(autouse=True)
 async def setup_db():
     """Ensure database connection is initialized and schema/seeds exist for controller tests."""
+    await close_database_connection()
     await connect_to_database()
     await initialize_schema_for_development()
     await seed_initial_data()

@@ -18,12 +18,23 @@ export default defineConfig({
   server: {
     host: "127.0.0.1",
     port: 5173,
+    watch: {
+      ignored: ["**/.output/**", "**/.wrangler/**", "**/dist/**"],
+    },
     proxy: {
       "/api": {
         target: "http://127.0.0.1:8080",
         changeOrigin: true,
       },
     },
+  },
+  optimizeDeps: {
+    include: [
+      "lucide-react",
+      "@tanstack/react-router",
+      "@tanstack/react-query",
+      "@tanstack/query-core",
+    ],
   },
   plugins: [
     tailwindcss(),

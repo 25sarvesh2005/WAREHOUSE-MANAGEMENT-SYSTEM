@@ -96,8 +96,17 @@ class VoiceController:
         Raises:
             HTTPException: On validation failure, safety refusal, or provider error.
         """
-        # 1. Authorize role
-        require_roles(scope, {UserRole.RECEIVER, UserRole.WAREHOUSE_MANAGER, UserRole.ADMINISTRATOR})
+        # 1. Authorize role (Allow all authenticated roles for sandbox receiving drafts)
+        require_roles(
+            scope,
+            {
+                UserRole.RECEIVER,
+                UserRole.WAREHOUSE_MANAGER,
+                UserRole.ADMINISTRATOR,
+                UserRole.PICKER_PACKER,
+                UserRole.SELLER,
+            },
+        )
         if warehouse_id:
             assert_warehouse_access(scope, str(warehouse_id))
 
@@ -266,7 +275,16 @@ class VoiceController:
         Raises:
             HTTPException: On authorization, safety refusal, or parsing errors.
         """
-        require_roles(scope, {UserRole.RECEIVER, UserRole.WAREHOUSE_MANAGER, UserRole.ADMINISTRATOR})
+        require_roles(
+            scope,
+            {
+                UserRole.RECEIVER,
+                UserRole.WAREHOUSE_MANAGER,
+                UserRole.ADMINISTRATOR,
+                UserRole.PICKER_PACKER,
+                UserRole.SELLER,
+            },
+        )
         if warehouse_id:
             assert_warehouse_access(scope, str(warehouse_id))
 
@@ -379,7 +397,16 @@ class VoiceController:
         Raises:
             HTTPException: If provider is unconfigured or synthesis fails.
         """
-        require_roles(scope, {UserRole.RECEIVER, UserRole.WAREHOUSE_MANAGER, UserRole.ADMINISTRATOR})
+        require_roles(
+            scope,
+            {
+                UserRole.RECEIVER,
+                UserRole.WAREHOUSE_MANAGER,
+                UserRole.ADMINISTRATOR,
+                UserRole.PICKER_PACKER,
+                UserRole.SELLER,
+            },
+        )
 
         tts_engine = self._get_tts_provider()
         try:
@@ -424,7 +451,16 @@ class VoiceController:
         Raises:
             HTTPException: If draft is not found or user lacks permission.
         """
-        require_roles(scope, {UserRole.RECEIVER, UserRole.WAREHOUSE_MANAGER, UserRole.ADMINISTRATOR})
+        require_roles(
+            scope,
+            {
+                UserRole.RECEIVER,
+                UserRole.WAREHOUSE_MANAGER,
+                UserRole.ADMINISTRATOR,
+                UserRole.PICKER_PACKER,
+                UserRole.SELLER,
+            },
+        )
         actor_user_id = UUID(str(scope["user_id"]))
         role = str(scope.get("role", ""))
 

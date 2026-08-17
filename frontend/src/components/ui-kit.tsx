@@ -261,7 +261,7 @@ export function TableShell({
 export function Th({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <th
-      className={`bg-[#F8FAFC] px-4 py-3 text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase ${className}`}
+      className={`bg-[#F8FAFC] px-4 py-3 text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase whitespace-nowrap align-middle ${className}`}
     >
       {children}
     </th>
@@ -270,7 +270,7 @@ export function Th({ children, className = "" }: { children: ReactNode; classNam
 
 export function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <td className={`border-t border-border px-4 py-3 text-foreground ${className}`}>{children}</td>
+    <td className={`border-t border-border px-4 py-3 text-foreground align-middle ${className}`}>{children}</td>
   );
 }
 

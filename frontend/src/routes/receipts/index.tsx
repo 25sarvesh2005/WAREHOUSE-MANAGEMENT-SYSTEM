@@ -4,6 +4,7 @@ import {
   Barcode,
   Boxes,
   FileCheck2,
+  Mic,
   PackageCheck,
   PackagePlus,
   Plus,
@@ -11,9 +12,11 @@ import {
   ShieldCheck,
   Truck,
   WifiOff,
+  X,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
+import { ReceivingVoiceDraftPanel } from "@/components/ReceivingVoiceDraftPanel";
 import {
   Button,
   Card,
@@ -94,6 +97,8 @@ function ReceiptsPage() {
       });
   }, []);
 
+  const [voiceOpen, setVoiceOpen] = useState(false);
+
   async function handleSync() {
     setIsSyncing(true);
     try {
@@ -107,15 +112,18 @@ function ReceiptsPage() {
     }
   }
 
-  async function create() {
+  async function handleCreate(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    setError(null);
     if (!form.source_reference.trim()) {
-      return setError(
+      setError(
         sourceType === "CARRIER_TRACKING"
           ? "Carrier tracking number is required."
           : "Seller drop-off ticket number is required.",
       );
+      return;
     }
-    setError(null);
+
     const sellerId = form.seller_id || sellers[0]?.id || "";
     const warehouseId = form.warehouse_id || warehouses[0]?.id || "";
 
@@ -177,6 +185,15 @@ function ReceiptsPage() {
         subtitle="Log carrier deliveries and seller drop-off shipments with UPC barcode scanning and physical condition separation."
         actions={
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => setVoiceOpen(true)}
+              className="gap-2 border-primary/40 bg-primary-tint/50 text-primary hover:bg-primary hover:text-white transition-colors"
+            >
+              <Mic className="size-4" />
+              <span>Voice AI Intake</span>
+            </Button>
             {offlineDrafts.length > 0 ? (
               <Button
                 variant="outline"
@@ -351,7 +368,7 @@ function ReceiptsPage() {
                   <select
                     value={form.warehouse_id}
                     onChange={(e) => setForm({ ...form, warehouse_id: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     {warehouses.map((w) => (
                       <option key={w.id} value={w.id}>
@@ -369,7 +386,7 @@ function ReceiptsPage() {
                   <select
                     value={form.seller_id}
                     onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     {sellers.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -395,7 +412,7 @@ function ReceiptsPage() {
               <Button
                 variant="primary"
                 size="md"
-                onClick={create}
+                onClick={() => handleCreate()}
                 disabled={createReceiptMutation.isPending}
               >
                 {createReceiptMutation.isPending ? "Creating Draft..." : "Create Inbound Draft"}
@@ -469,6 +486,24 @@ function ReceiptsPage() {
           </tbody>
         </TableShell>
       )}
+
+      {/* Voice AI Intake Station Modal */}
+      {voiceOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs animate-fade-in">
+          <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setVoiceOpen(false)}
+              className="absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+            >
+              <X className="size-5" />
+            </button>
+            <div className="p-2">
+              <ReceivingVoiceDraftPanel />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AppShell>
   );
 }

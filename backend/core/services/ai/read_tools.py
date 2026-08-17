@@ -138,11 +138,11 @@ async def lookup_available_inventory(
     warehouse_ids: Sequence[UUID] | None,
 ) -> list[AvailableInventoryEvidence]:
     """
-    Aggregate available inventory for a SKU by warehouse.
+    Aggregate available inventory for a SKU or natural language query by warehouse.
 
     Args:
         session: Transaction-scoped SQLAlchemy async session.
-        sku: Product SKU to inspect.
+        sku: Product SKU, product name, or freeform inventory question.
         seller_id: Optional exact seller filter.
         seller_ids: Optional permitted seller scope filter.
         warehouse_id: Optional exact warehouse filter.
@@ -154,7 +154,14 @@ async def lookup_available_inventory(
     Raises:
         sqlalchemy.exc.SQLAlchemyError: If the query fails.
     """
-    logger.debug("AI read tool lookup_available_inventory sku=%s", sku)
+    logger.debug("AI read tool lookup_available_inventory query=%s", sku)
+    clean_query = sku.strip()
+
+    # Check for exact SKU match
+    exact_prod = await session.scalar(
+        select(Product.id).where(func.upper(Product.sku) == clean_query.upper()).limit(1)
+    )
+
     quantity_sum = func.coalesce(func.sum(InventoryBalance.quantity), Decimal("0.00"))
     stmt = (
         select(
@@ -172,10 +179,35 @@ async def lookup_available_inventory(
         .join(Seller, InventoryBalance.seller_id == Seller.id)
         .join(Warehouse, InventoryBalance.warehouse_id == Warehouse.id)
         .where(
-            Product.sku == sku,
             InventoryBalance.inventory_state == InventoryState.AVAILABLE.value,
         )
-        .group_by(
+    )
+
+    if exact_prod:
+        stmt = stmt.where(func.upper(Product.sku) == clean_query.upper())
+    else:
+        # Check if query contains specific product keywords (e.g. "headphones", "hoodie", "ANC100")
+        stop_words = {
+            "product", "products", "with", "quantity", "quantities", "stock", "stocks",
+            "level", "levels", "have", "show", "list", "what", "which", "where",
+            "across", "total", "from", "in", "the", "and", "for", "item", "items"
+        }
+        tokens = [t for t in clean_query.split() if len(t) > 2 and t.lower() not in stop_words]
+        is_general_query = any(
+            phrase in clean_query.lower()
+            for phrase in ["0 quantity", "zero", "low stock", "all products", "all items", "no stock", "out of stock"]
+        )
+
+        if tokens and not is_general_query:
+            from sqlalchemy import or_
+            token_filters = []
+            for t in tokens:
+                token_filters.append(Product.sku.ilike(f"%{t}%"))
+                token_filters.append(Product.name.ilike(f"%{t}%"))
+            stmt = stmt.where(or_(*token_filters))
+
+    stmt = (
+        stmt.group_by(
             Product.seller_id,
             Seller.code,
             Product.id,
@@ -184,8 +216,9 @@ async def lookup_available_inventory(
             InventoryBalance.warehouse_id,
             Warehouse.code,
         )
-        .order_by(Seller.code, Warehouse.code)
+        .order_by(Seller.code, Product.sku, Warehouse.code)
     )
+
     if seller_id is not None:
         stmt = stmt.where(InventoryBalance.seller_id == seller_id)
     elif seller_ids:

@@ -5,7 +5,7 @@ FastAPI HTTP endpoints for customer/seller returns and inspection dispositions.
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from common.logger import get_logger
 from common.warehouse_scope import get_warehouse_scope
@@ -31,10 +31,22 @@ async def create_return(
     request: ReturnCreateRequest,
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> ReturnResponse:
-    """Create a new expected return RMA or unidentified inbound return."""
-    logger.info("Calling POST /v1/returns endpoint")
-    ret = await return_controller.create_return(request.model_dump(), scope)
-    return ReturnResponse.model_validate(ret)
+    """Create a new expected return RMA or unidentified inbound return.
+
+    Validates seller ownership and warehouse scope before creating the return record.
+    """
+    try:
+        logger.info("Calling POST /v1/returns endpoint")
+        ret = await return_controller.create_return(request.model_dump(), scope)
+        return ReturnResponse.model_validate(ret)
+    except HTTPException as http_error:
+        raise http_error
+    except Exception as error:
+        logger.error(f"Error in POST /v1/returns endpoint: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.get(
@@ -51,18 +63,30 @@ async def list_returns(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ) -> ReturnListResponse:
-    """List returns with optional query filters."""
-    logger.info("Calling GET /v1/returns endpoint")
-    returns, total = await return_controller.list_returns(
-        scope,
-        seller_id=seller_id,
-        warehouse_id=warehouse_id,
-        status_val=status_val,
-        limit=limit,
-        offset=offset,
-    )
-    items = [ReturnResponse.model_validate(r) for r in returns]
-    return ReturnListResponse(items=items, total=total, limit=limit, offset=offset)
+    """List returns with optional query filters.
+
+    Scopes results to accessible sellers and warehouses for the authenticated requester.
+    """
+    try:
+        logger.info("Calling GET /v1/returns endpoint")
+        returns, total = await return_controller.list_returns(
+            scope,
+            seller_id=seller_id,
+            warehouse_id=warehouse_id,
+            status_val=status_val,
+            limit=limit,
+            offset=offset,
+        )
+        items = [ReturnResponse.model_validate(r) for r in returns]
+        return ReturnListResponse(items=items, total=total, limit=limit, offset=offset)
+    except HTTPException as http_error:
+        raise http_error
+    except Exception as error:
+        logger.error(f"Error in GET /v1/returns endpoint: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.get(
@@ -75,10 +99,22 @@ async def get_return(
     return_id: UUID,
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> ReturnResponse:
-    """Retrieve single return details."""
-    logger.info("Calling GET /v1/returns/%s endpoint", return_id)
-    ret = await return_controller.get_return(return_id, scope)
-    return ReturnResponse.model_validate(ret)
+    """Retrieve single return details.
+
+    Enforces seller and warehouse scope access before returning the record.
+    """
+    try:
+        logger.info("Calling GET /v1/returns/%s endpoint", return_id)
+        ret = await return_controller.get_return(return_id, scope)
+        return ReturnResponse.model_validate(ret)
+    except HTTPException as http_error:
+        raise http_error
+    except Exception as error:
+        logger.error(f"Error in GET /v1/returns/{return_id} endpoint: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.post(
@@ -92,10 +128,22 @@ async def receive_return(
     request: ReturnReceiveRequest,
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> ReturnResponse:
-    """Receive return parcel, placing stock strictly into RETURN_INSPECTION state."""
-    logger.info("Calling POST /v1/returns/%s/receive endpoint", return_id)
-    ret = await return_controller.receive_return(return_id, request.model_dump(), scope)
-    return ReturnResponse.model_validate(ret)
+    """Receive return parcel, placing stock strictly into RETURN_INSPECTION state.
+
+    Posts a RETURN_RECEIVED inventory movement and transitions the return to IN_INSPECTION.
+    """
+    try:
+        logger.info("Calling POST /v1/returns/%s/receive endpoint", return_id)
+        ret = await return_controller.receive_return(return_id, request.model_dump(), scope)
+        return ReturnResponse.model_validate(ret)
+    except HTTPException as http_error:
+        raise http_error
+    except Exception as error:
+        logger.error(f"Error in POST /v1/returns/{return_id}/receive endpoint: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.post(
@@ -109,9 +157,21 @@ async def inspect_and_dispose_return(
     request: ReturnInspectRequest,
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> ReturnResponse:
-    """Inspect return and log disposition movements into final target inventory states."""
-    logger.info("Calling POST /v1/returns/%s/inspect endpoint", return_id)
-    ret = await return_controller.inspect_and_dispose_return(
-        return_id, request.model_dump(), scope
-    )
-    return ReturnResponse.model_validate(ret)
+    """Inspect return and log disposition movements into final target inventory states.
+
+    Routes return stock into AVAILABLE, DAMAGED, or QUARANTINE based on inspection outcome.
+    """
+    try:
+        logger.info("Calling POST /v1/returns/%s/inspect endpoint", return_id)
+        ret = await return_controller.inspect_and_dispose_return(
+            return_id, request.model_dump(), scope
+        )
+        return ReturnResponse.model_validate(ret)
+    except HTTPException as http_error:
+        raise http_error
+    except Exception as error:
+        logger.error(f"Error in POST /v1/returns/{return_id}/inspect endpoint: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )

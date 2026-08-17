@@ -317,12 +317,12 @@ function OrdersPage() {
                   placeholder="Search order #, customer, seller..."
                 />
               </div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+              <div className="flex items-center gap-2 text-xs font-bold text-foreground">
                 <span>Sort by:</span>
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
-                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-800 focus:outline-none"
+                  className="rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                 >
                   <option value="priority">Priority</option>
                   <option value="seller_order_number">Order Number</option>
@@ -552,7 +552,7 @@ function OrdersPage() {
                   <select
                     value={orderForm.seller_id}
                     onChange={(e) => setOrderForm({ ...orderForm, seller_id: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     {sellers.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -569,7 +569,7 @@ function OrdersPage() {
                   <select
                     value={orderForm.warehouse_id}
                     onChange={(e) => setOrderForm({ ...orderForm, warehouse_id: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     {warehouses.map((w) => (
                       <option key={w.id} value={w.id}>
@@ -586,69 +586,66 @@ function OrdersPage() {
                 </label>
                 <input
                   type="text"
+                  required
+                  placeholder="e.g. SO-2026-9041"
                   value={orderForm.seller_order_number}
                   onChange={(e) =>
                     setOrderForm({ ...orderForm, seller_order_number: e.target.value })
                   }
-                  placeholder="e.g. SO-2026-8831"
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs font-bold text-slate-900 focus:border-blue-600 focus:outline-none"
-                  required
+                  className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
                 />
               </div>
 
-              {/* Customer Shipping Address */}
-              <div className="rounded-lg bg-slate-50 p-3 border border-slate-200 space-y-3">
-                <span className="font-bold text-slate-700 uppercase text-[10px]">
-                  Customer Shipping Address
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                  Customer Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Jane Doe"
+                  value={orderForm.customer_name}
+                  onChange={(e) => setOrderForm({ ...orderForm, customer_name: e.target.value })}
+                  className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+                />
+              </div>
+
+              {/* Physical Delivery Address */}
+              <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-200 space-y-2.5">
+                <span className="font-bold text-slate-700 uppercase text-[10px] flex items-center gap-1.5">
+                  <Truck className="size-3.5 text-primary" /> Delivery Destination Address
                 </span>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <input
-                      type="text"
-                      value={orderForm.customer_name}
-                      onChange={(e) =>
-                        setOrderForm({ ...orderForm, customer_name: e.target.value })
-                      }
-                      placeholder="Customer Name"
-                      className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="text"
-                      value={orderForm.shipping_address_line1}
-                      onChange={(e) =>
-                        setOrderForm({ ...orderForm, shipping_address_line1: e.target.value })
-                      }
-                      placeholder="Street Address"
-                      className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="text"
-                      value={orderForm.city}
-                      onChange={(e) => setOrderForm({ ...orderForm, city: e.target.value })}
-                      placeholder="City"
-                      className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      value={orderForm.state}
-                      onChange={(e) => setOrderForm({ ...orderForm, state: e.target.value })}
-                      placeholder="State"
-                      className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      value={orderForm.postal_code}
-                      onChange={(e) => setOrderForm({ ...orderForm, postal_code: e.target.value })}
-                      placeholder="ZIP"
-                      className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none"
-                    />
-                  </div>
+                <input
+                  type="text"
+                  placeholder="Street Address Line 1"
+                  value={orderForm.shipping_address_line1}
+                  onChange={(e) =>
+                    setOrderForm({ ...orderForm, shipping_address_line1: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    placeholder="City"
+                    value={orderForm.city}
+                    onChange={(e) => setOrderForm({ ...orderForm, city: e.target.value })}
+                    className="rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
+                  <input
+                    type="text"
+                    placeholder="State"
+                    value={orderForm.state}
+                    onChange={(e) => setOrderForm({ ...orderForm, state: e.target.value })}
+                    className="rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
+                  <input
+                    type="text"
+                    placeholder="ZIP"
+                    value={orderForm.postal_code}
+                    onChange={(e) => setOrderForm({ ...orderForm, postal_code: e.target.value })}
+                    className="rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
                 </div>
               </div>
 
@@ -661,7 +658,7 @@ function OrdersPage() {
                   <select
                     value={lineForm.product_id}
                     onChange={(e) => setLineForm({ ...lineForm, product_id: e.target.value })}
-                    className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-mono font-semibold text-slate-900 focus:outline-none"
+                    className="flex-1 rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-mono font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
                     <option value="">-- Select Product SKU --</option>
                     {createProductOptions.map((p) => (
@@ -675,7 +672,7 @@ function OrdersPage() {
                     min="1"
                     value={lineForm.quantity}
                     onChange={(e) => setLineForm({ ...lineForm, quantity: e.target.value })}
-                    className="w-20 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 font-mono text-xs font-bold text-slate-900 text-right focus:outline-none"
+                    className="w-20 rounded-xl border border-input bg-white px-3 py-2 font-mono text-xs font-bold text-foreground text-right outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs"
                   />
                   <Button type="button" variant="secondary" size="sm" onClick={addOrderLine}>
                     Add Line

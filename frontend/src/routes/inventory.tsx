@@ -238,13 +238,13 @@ function InventoryPage() {
 
           {/* Facility Dropdown */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <label className="flex items-center gap-1.5 font-semibold text-slate-700">
-              <WarehouseIcon className="size-3.5 text-slate-500" />
+            <label className="flex items-center gap-1.5 font-bold text-foreground">
+              <WarehouseIcon className="size-3.5 text-primary" />
               <span>Facility:</span>
               <select
                 value={selectedWarehouseId}
                 onChange={(e) => setSelectedWarehouseId(e.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                className="rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
                 <option value="ALL">All Facilities (RNO & CMH)</option>
                 {warehouses.map((w) => (
@@ -256,12 +256,12 @@ function InventoryPage() {
             </label>
 
             {/* Seller Filter */}
-            <label className="flex items-center gap-1.5 font-semibold text-slate-700">
+            <label className="flex items-center gap-1.5 font-bold text-foreground">
               <span>Seller:</span>
               <select
                 value={selectedSellerId}
                 onChange={(e) => setSelectedSellerId(e.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                className="rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
                 <option value="ALL">All Sellers</option>
                 {sellers.map((s) => (

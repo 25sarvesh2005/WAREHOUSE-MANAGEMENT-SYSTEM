@@ -56,13 +56,13 @@ export function readUser(): User | null {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [ready, setReady] = useState(false);
+  const [user, setUser] = useState<User | null>(() =>
+    typeof window !== "undefined" ? readUser() : null,
+  );
+  const [ready, setReady] = useState(true);
 
   useEffect(() => {
     const sync = () => setUser(readUser());
-    sync();
-    setReady(true);
 
     if (readUser()) {
       getCurrentUserApi()
@@ -70,9 +70,15 @@ export function useAuth() {
           storeUser(serverUser);
           setUser(serverUser);
         })
-        .catch(() => {
-          clearSession();
-          setUser(null);
+        .catch((err: unknown) => {
+          // Only clear session on explicit 401 Unauthorized error from server.
+          // Never log out on history popstate, canceled requests, or transient network offline.
+          const status = (err as { status?: number; code?: string })?.status;
+          const code = (err as { status?: number; code?: string })?.code;
+          if (status === 401 || code === "UNAUTHORIZED") {
+            clearSession();
+            setUser(null);
+          }
         });
     }
 
