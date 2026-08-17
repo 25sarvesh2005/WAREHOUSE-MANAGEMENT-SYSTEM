@@ -1,35 +1,7 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/voice_controller.py
-Purpose     : Orchestrate voice-assisted receiving drafts, transcription, and speech synthesis.
+Voice Controller.
 
-Responsibilities:
-    - Authorize warehouse operators and enforce warehouse/seller scope.
-    - Validate audio payloads against size, MIME type, and duration limits.
-    - Run strict safety checks preventing direct mutations and unauthorized commands.
-    - Coordinate STT transcription (Deepgram/Sarvam) and transcript parsing (Gemini/rules).
-    - Persist audited voice interactions and drafts without mutating inventory or receipts.
-    - Provide text-to-speech audio summaries using Sarvam Bulbul.
-    - Convert domain and provider exceptions into safe, user-friendly HTTP responses.
-
-Flow:
-    Voice Route
-        ->
-    VoiceController method
-        ->
-    Safety check / Providers / transaction_session() -> voice_crud / audit_crud
-        ->
-    Response schemas
-
-Used By:
-    - core/apis/routes/voice_routes.py
-
-Returns:
-    VoiceReceivingDraftResponse, VoiceSynthesisResponse, VoiceInteractionListResponse
-
-Raises:
-    HTTPException: On authorization, validation, safety refusal, or provider failures.
---------------------------------------------------------------------------------
+Orchestrates voice-assisted receiving drafts, transcription, and speech synthesis.
 """
 
 from __future__ import annotations

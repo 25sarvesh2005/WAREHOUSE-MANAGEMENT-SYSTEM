@@ -1,27 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/migration_crud.py
-Purpose     : Perform database operations for import batches and staged opening inventory.
-
-Responsibilities:
-    - Persist import batch headers and handle status transitions.
-    - Submit staged rows with identity and content hash conflict checks.
-    - Update staged row validation error details and batch statistics.
-    - Execute transactional application of approved opening inventory rows to ledger.
-
-Flow:
-    MigrationController -> CRUD function -> SQLAlchemy session execution
-
-Used By:
-    - core/controllers/migration_controller.py
-
-Returns:
-    CRUD functions -> Model instances or sequences.
-
-Raises:
-    sqlalchemy.exc.SQLAlchemyError: On database failures.
-    ValueError: On domain conflict conditions (handled by controller).
---------------------------------------------------------------------------------
+Database CRUD operations for import batches and staged opening inventory.
 """
 
 from __future__ import annotations
@@ -503,18 +481,7 @@ async def apply_staged_rows_to_ledger(
             recorded_at=applied_at,
         )
 
-        persisted_movement = await inventory_crud.record_movement(session, movement)
-
-        await inventory_crud.update_balance_projection(
-            session,
-            seller_id=row.seller_id,
-            product_id=row.product_id,
-            warehouse_id=row.warehouse_id,
-            location_id=row.location_id,
-            inventory_state=row.inventory_state,
-            quantity_delta=row.quantity,
-        )
-
+        persisted_movement, _ = await inventory_crud.apply_movement(session, movement)
         row.applied_movement_id = persisted_movement.id
 
     batch.status = MigrationBatchStatus.APPLIED.value

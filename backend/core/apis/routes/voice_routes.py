@@ -1,33 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/apis/routes/voice_routes.py
-Purpose     : Expose voice-assisted receiving drafts, transcription, and speech synthesis routes.
-
-Responsibilities:
-    - Handle audio clip upload (multipart/form-data) and transcript parsing requests.
-    - Authenticate requesting operator and apply sliding-window rate limits.
-    - Delegate processing to VoiceController without querying the database in routes.
-    - Expose speech synthesis for reading back drafted receipt line summaries.
-    - Expose voice interaction audit listings for administrators and warehouse managers.
-
-Flow:
-    Client Voice UI
-        ->
-    FastAPI Route Validation & Rate Limiting
-        ->
-    VoiceController
-        ->
-    Response schemas
-
-Used By:
-    - core/apis/api.py
-
-Returns:
-    APIRouter - Registered voice receiving assistant routes.
-
-Raises:
-    HTTPException: On validation, safety refusal, or service errors.
---------------------------------------------------------------------------------
+FastAPI HTTP endpoints for voice-assisted receiving drafts, transcription, and speech synthesis.
 """
 
 from __future__ import annotations

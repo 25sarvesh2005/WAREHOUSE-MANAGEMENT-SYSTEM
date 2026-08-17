@@ -1,28 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/catalog_model.py
-Purpose     : Define catalog, warehouse location, and seller policy tables.
-
-Responsibilities:
-    - Store products and product identifiers by seller.
-    - Store warehouse locations and configurable seller order policies.
-
-Flow:
-    Admin request
-        ->
-    Catalog controller validates scope
-        ->
-    Catalog CRUD persists SQLAlchemy models
-
-Used By:
-    - core/cruds/catalog_crud.py
-
-Returns:
-    SQLAlchemy model instances - Catalog persistence records.
-
-Raises:
-    sqlalchemy.exc.IntegrityError: On uniqueness or foreign-key violations.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for catalog products, identifiers, warehouse locations, and seller order policies.
 """
 
 from __future__ import annotations

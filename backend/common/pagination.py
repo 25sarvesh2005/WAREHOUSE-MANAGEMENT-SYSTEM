@@ -1,28 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : common/pagination.py
-Purpose     : Provide shared pagination validation helpers.
-
-Responsibilities:
-    - Normalize limit and offset query parameters.
-    - Keep list endpoints bounded by default.
-
-Flow:
-    Route query parameters
-        ->
-    normalize_pagination()
-        ->
-    CRUD list query
-
-Used By:
-    - core/controllers
-
-Returns:
-    normalize_pagination() -> tuple[int, int] - Limit and offset.
-
-Raises:
-    ValueError: When pagination values are outside accepted bounds.
---------------------------------------------------------------------------------
+Pagination helpers for standard query parameter normalization.
 """
 
 from __future__ import annotations

@@ -1,27 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/receiving_controller.py
-Purpose     : Orchestrate receiving receipt drafts, line item breakdown, and atomic completion.
-
-Responsibilities:
-    - Validate receiving permissions and seller/warehouse scope.
-    - Prevent duplicate receipts unless explicit manager override is provided.
-    - Support offline client draft sync via unique client_draft_id.
-    - Atomically complete receipts and generate inventory ledger movements for sellable,
-      damaged, and quarantined quantities.
-
-Flow:
-    Receiving route -> ReceivingController method -> transaction_session() -> CRUDs
-
-Used By:
-    - core/apis/routes/receiving_routes.py
-
-Returns:
-    Controller methods -> Models or lists ready for response validation.
-
-Raises:
-    HTTPException: On authorization, duplicate, not-found, or validation failures.
---------------------------------------------------------------------------------
+Receiving controller managing inbound shipment workflows and quality disposition.
 """
 
 from __future__ import annotations
@@ -440,16 +418,7 @@ class ReceivingController:
                         idempotency_key=f"RCV-{receipt.id}-{line.id}-AVAILABLE",
                         actor_user_id=actor_id,
                     )
-                    await inventory_crud.record_movement(session, m_sellable)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=receipt.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=receipt.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.AVAILABLE.value,
-                        quantity_delta=line.sellable_quantity,
-                    )
+                    await inventory_crud.apply_movement(session, m_sellable)
 
                 # 2. Damaged -> DAMAGED
                 if line.damaged_quantity > Decimal("0.00"):
@@ -467,16 +436,7 @@ class ReceivingController:
                         idempotency_key=f"RCV-{receipt.id}-{line.id}-DAMAGED",
                         actor_user_id=actor_id,
                     )
-                    await inventory_crud.record_movement(session, m_damaged)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=receipt.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=receipt.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.DAMAGED.value,
-                        quantity_delta=line.damaged_quantity,
-                    )
+                    await inventory_crud.apply_movement(session, m_damaged)
 
                 # 3. Quarantined -> QUARANTINED
                 if line.quarantined_quantity > Decimal("0.00"):
@@ -494,16 +454,7 @@ class ReceivingController:
                         idempotency_key=f"RCV-{receipt.id}-{line.id}-QUARANTINED",
                         actor_user_id=actor_id,
                     )
-                    await inventory_crud.record_movement(session, m_quar)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=receipt.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=receipt.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.QUARANTINED.value,
-                        quantity_delta=line.quarantined_quantity,
-                    )
+                    await inventory_crud.apply_movement(session, m_quar)
 
             event = ReceiptEvent(
                 receipt_id=receipt.id,

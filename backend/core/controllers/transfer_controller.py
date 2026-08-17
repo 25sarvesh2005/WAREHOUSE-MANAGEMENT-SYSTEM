@@ -1,22 +1,8 @@
 """
-Transfer Controller.
-
-Business controller orchestrating multi-warehouse inventory transfer workflows:
-    - Create transfer requests between distinct warehouse facilities.
-    - Approval workflow enforcing segregation of duties.
-    - Atomic dispatch deducting origin AVAILABLE stock and moving to IN_TRANSIT.
-    - Destination receipt converting IN_TRANSIT into AVAILABLE or DAMAGED stock.
-    - Discrepancy detection and resolution for missing/overage variances.
-
-Flow:
-    Route -> TransferController -> Transaction Session
-        -> transfer_crud / inventory_crud -> Response
-
-Used By:
-    - core/apis/routes/transfer_routes.py
+Transfer controller orchestrating multi-warehouse inventory transfer workflows.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
@@ -206,57 +192,22 @@ class TransferController:
                         detail=f"Insufficient available stock at origin for product {line.product_id}. Requested={qty}, Available={avail_qty}",
                     )
 
-                # Deduct AVAILABLE at origin warehouse
-                m_out = InventoryMovement(
+                await inventory_crud.apply_state_transfer(
+                    session,
                     seller_id=transfer.seller_id,
                     product_id=line.product_id,
-                    warehouse_id=transfer.origin_warehouse_id,
-                    inventory_state=InventoryState.AVAILABLE.value,
-                    quantity_delta=-qty,
+                    from_warehouse_id=transfer.origin_warehouse_id,
+                    to_warehouse_id=transfer.destination_warehouse_id,
+                    from_state=InventoryState.AVAILABLE.value,
+                    to_state=InventoryState.IN_TRANSIT.value,
+                    quantity=qty,
                     movement_type=InventoryMovementType.TRANSFER_DISPATCH.value,
                     source_type="transfers",
                     source_id=transfer.id,
                     source_line_id=line.id,
-                    idempotency_key=f"trf-out-{transfer.id}-{line.id}",
+                    idempotency_prefix=f"trf-dispatch-{transfer.id}-{line.id}",
                     actor_user_id=actor_id,
-                    occurred_at=now,
                 )
-                session.add(m_out)
-
-                # Add IN_TRANSIT stock
-                m_in_transit = InventoryMovement(
-                    seller_id=transfer.seller_id,
-                    product_id=line.product_id,
-                    warehouse_id=transfer.destination_warehouse_id,
-                    inventory_state=InventoryState.IN_TRANSIT.value,
-                    quantity_delta=qty,
-                    movement_type=InventoryMovementType.TRANSFER_DISPATCH.value,
-                    source_type="transfers",
-                    source_id=transfer.id,
-                    source_line_id=line.id,
-                    idempotency_key=f"trf-transit-{transfer.id}-{line.id}",
-                    actor_user_id=actor_id,
-                    occurred_at=now,
-                )
-                session.add(m_in_transit)
-
-                await inventory_crud.update_balance_projection(
-                    session,
-                    seller_id=transfer.seller_id,
-                    product_id=line.product_id,
-                    warehouse_id=transfer.origin_warehouse_id,
-                    inventory_state=InventoryState.AVAILABLE.value,
-                    quantity_delta=-qty,
-                )
-                await inventory_crud.update_balance_projection(
-                    session,
-                    seller_id=transfer.seller_id,
-                    product_id=line.product_id,
-                    warehouse_id=transfer.destination_warehouse_id,
-                    inventory_state=InventoryState.IN_TRANSIT.value,
-                    quantity_delta=qty,
-                )
-
                 line.dispatched_quantity = qty
 
             transfer.status = TransferStatus.DISPATCHED.value
@@ -335,15 +286,7 @@ class TransferController:
                     actor_user_id=actor_id,
                     occurred_at=now,
                 )
-                session.add(m_transit_out)
-                await inventory_crud.update_balance_projection(
-                    session,
-                    seller_id=transfer.seller_id,
-                    product_id=line.product_id,
-                    warehouse_id=transfer.destination_warehouse_id,
-                    inventory_state=InventoryState.IN_TRANSIT.value,
-                    quantity_delta=-dispatched_qty,
-                )
+                await inventory_crud.apply_movement(session, m_transit_out)
 
                 # Add good qty to destination AVAILABLE
                 if good_qty > Decimal("0.00"):
@@ -361,15 +304,7 @@ class TransferController:
                         actor_user_id=actor_id,
                         occurred_at=now,
                     )
-                    session.add(m_avail_in)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=transfer.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=transfer.destination_warehouse_id,
-                        inventory_state=InventoryState.AVAILABLE.value,
-                        quantity_delta=good_qty,
-                    )
+                    await inventory_crud.apply_movement(session, m_avail_in)
 
                 # Add damaged qty to destination DAMAGED state
                 if damaged_qty > Decimal("0.00"):
@@ -387,24 +322,34 @@ class TransferController:
                         actor_user_id=actor_id,
                         occurred_at=now,
                     )
-                    session.add(m_dmg_in)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=transfer.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=transfer.destination_warehouse_id,
-                        inventory_state=InventoryState.DAMAGED.value,
-                        quantity_delta=damaged_qty,
-                    )
+                    await inventory_crud.apply_movement(session, m_dmg_in)
 
                 line.received_good_quantity = good_qty
                 line.received_damaged_quantity = damaged_qty
 
-                # Variance detection
+                # Variance detection & ledger tracking
                 total_received = good_qty + damaged_qty
                 if total_received < dispatched_qty:
-                    line.missing_quantity = dispatched_qty - total_received
+                    missing_qty = dispatched_qty - total_received
+                    line.missing_quantity = missing_qty
                     has_discrepancy = True
+                    m_shrinkage = InventoryMovement(
+                        seller_id=transfer.seller_id,
+                        product_id=line.product_id,
+                        warehouse_id=transfer.destination_warehouse_id,
+                        inventory_state=InventoryState.IN_TRANSIT.value,
+                        quantity_delta=Decimal("0.00"),
+                        movement_type=InventoryMovementType.ADJUSTMENT.value,
+                        source_type="transfers",
+                        source_id=transfer.id,
+                        source_line_id=line.id,
+                        idempotency_key=f"trf-shrinkage-{transfer.id}-{line.id}",
+                        reason_code="TRANSFER_MISSING_IN_TRANSIT",
+                        reason_text=f"Transit shortage: dispatched {dispatched_qty}, received {total_received}, missing {missing_qty}",
+                        actor_user_id=actor_id,
+                        occurred_at=now,
+                    )
+                    session.add(m_shrinkage)
                 elif total_received > dispatched_qty:
                     line.overage_quantity = total_received - dispatched_qty
                     has_discrepancy = True
@@ -445,10 +390,10 @@ class TransferController:
         """
         require_roles(
             scope,
-            [
+            {
                 UserRole.ADMINISTRATOR,
                 UserRole.WAREHOUSE_MANAGER,
-            ],
+            },
         )
         actor_id = UUID(str(scope["user_id"]))
 
@@ -516,3 +461,6 @@ class TransferController:
                 offset=offset,
             )
             return list(transfers), total
+
+
+transfer_controller = TransferController()

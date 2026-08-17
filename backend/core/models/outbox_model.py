@@ -1,28 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/outbox_model.py
-Purpose     : Define transactional outbox storage for future background jobs.
-
-Responsibilities:
-    - Persist deferred events within business transactions.
-    - Track dispatch attempts and failure details without provider coupling.
-
-Flow:
-    Controller transaction
-        ->
-    OutboxEvent persisted
-        ->
-    Worker dispatches after commit
-
-Used By:
-    - core/jobs/outbox_dispatch_job.py
-
-Returns:
-    OutboxEvent - Persisted outbox row.
-
-Raises:
-    sqlalchemy.exc.SQLAlchemyError: On persistence failures.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for transactional outbox event storage.
 """
 
 from __future__ import annotations

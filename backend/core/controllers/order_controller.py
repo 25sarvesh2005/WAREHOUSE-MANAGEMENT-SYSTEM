@@ -1,27 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/order_controller.py
-Purpose     : Controller handling order ingestion, policy reservations, and cancellations.
-
-Responsibilities:
-    - Authorize order creation, reservation, and cancellation requests.
-    - Snapshot applied seller order policies at confirmation time.
-    - Execute transactional inventory reservation using SELECT FOR UPDATE concurrency safety.
-    - Post ledger movements for AVAILABLE -> RESERVED stock allocation.
-    - Support order cancellation with compensating reservation releases.
-
-Flow:
-    Route -> OrderController -> Transaction Session -> order_crud / inventory_crud -> Response
-
-Used By:
-    - core/apis/routes/order_routes.py
-
-Returns:
-    Order model instances or HTTPExceptions on failure.
-
-Raises:
-    fastapi.HTTPException: 400 (Bad Request), 403 (Forbidden), 404 (Not Found), 409 (Conflict).
---------------------------------------------------------------------------------
+Order controller handling ingestion, policy reservations, and cancellations.
 """
 
 from __future__ import annotations
@@ -29,7 +7,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import HTTPException, status
 
@@ -403,59 +381,26 @@ class OrderController:
 
                 if allocatable > Decimal("0.00"):
                     any_reserved = True
-                    # 1. Post ledger movement: AVAILABLE -> RESERVED
-                    m_avail_out = InventoryMovement(
+                    res_id = uuid4()
+                    await inventory_crud.apply_state_transfer(
+                        session,
                         seller_id=order.seller_id,
                         product_id=line.product_id,
-                        warehouse_id=order.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.AVAILABLE.value,
-                        quantity_delta=-allocatable,
+                        from_warehouse_id=order.warehouse_id,
+                        from_state=InventoryState.AVAILABLE.value,
+                        to_state=InventoryState.RESERVED.value,
+                        quantity=allocatable,
                         movement_type=InventoryMovementType.RESERVATION.value,
                         source_type="ORDER_RESERVATION",
                         source_id=order.id,
                         source_line_id=line.id,
-                        idempotency_key=f"RES-{order.id}-{line.id}-AVAILABLE-OUT",
+                        idempotency_prefix=f"RES-{order.id}-{line.id}-{res_id}",
                         actor_user_id=actor_id,
                     )
-                    await inventory_crud.record_movement(session, m_avail_out)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=order.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=order.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.AVAILABLE.value,
-                        quantity_delta=-allocatable,
-                    )
 
-                    m_res_in = InventoryMovement(
-                        seller_id=order.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=order.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.RESERVED.value,
-                        quantity_delta=allocatable,
-                        movement_type=InventoryMovementType.RESERVATION.value,
-                        source_type="ORDER_RESERVATION",
-                        source_id=order.id,
-                        source_line_id=line.id,
-                        idempotency_key=f"RES-{order.id}-{line.id}-RESERVED-IN",
-                        actor_user_id=actor_id,
-                    )
-                    await inventory_crud.record_movement(session, m_res_in)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=order.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=order.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.RESERVED.value,
-                        quantity_delta=allocatable,
-                    )
-
-                    # 2. Persist inventory reservation record
+                    # Persist inventory reservation record
                     res_rec = InventoryReservation(
+                        id=res_id,
                         order_line_id=line.id,
                         warehouse_id=order.warehouse_id,
                         product_id=line.product_id,
@@ -465,7 +410,6 @@ class OrderController:
                         expires_at=expires_at,
                     )
                     await order_crud.create_reservation(session, res_rec)
-
                     line.reserved_quantity += allocatable
 
                 remaining_quantity = (
@@ -547,55 +491,20 @@ class OrderController:
             for line in order.lines:
                 if line.reserved_quantity > Decimal("0.00"):
                     rel_qty = line.reserved_quantity
-                    # Release RESERVED -> AVAILABLE
-                    m_res_out = InventoryMovement(
+                    await inventory_crud.apply_state_transfer(
+                        session,
                         seller_id=order.seller_id,
                         product_id=line.product_id,
-                        warehouse_id=order.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.RESERVED.value,
-                        quantity_delta=-rel_qty,
+                        from_warehouse_id=order.warehouse_id,
+                        from_state=InventoryState.RESERVED.value,
+                        to_state=InventoryState.AVAILABLE.value,
+                        quantity=rel_qty,
                         movement_type=InventoryMovementType.RESERVATION_RELEASE.value,
                         source_type="ORDER_CANCEL",
                         source_id=order.id,
                         source_line_id=line.id,
-                        idempotency_key=f"CNC-{order.id}-{line.id}-RESERVED-OUT",
+                        idempotency_prefix=f"CNC-{order.id}-{line.id}",
                         actor_user_id=actor_id,
-                    )
-                    await inventory_crud.record_movement(session, m_res_out)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=order.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=order.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.RESERVED.value,
-                        quantity_delta=-rel_qty,
-                    )
-
-                    m_avail_in = InventoryMovement(
-                        seller_id=order.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=order.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.AVAILABLE.value,
-                        quantity_delta=rel_qty,
-                        movement_type=InventoryMovementType.RESERVATION_RELEASE.value,
-                        source_type="ORDER_CANCEL",
-                        source_id=order.id,
-                        source_line_id=line.id,
-                        idempotency_key=f"CNC-{order.id}-{line.id}-AVAILABLE-IN",
-                        actor_user_id=actor_id,
-                    )
-                    await inventory_crud.record_movement(session, m_avail_in)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=order.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=order.warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.AVAILABLE.value,
-                        quantity_delta=rel_qty,
                     )
 
                     line.cancelled_quantity += rel_qty
@@ -619,3 +528,6 @@ class OrderController:
             reloaded_order = await order_crud.get_order_by_id(session, order.id)
             logger.info("Order %s cancelled successfully", order.id)
             return reloaded_order or order
+
+
+order_controller = OrderController()

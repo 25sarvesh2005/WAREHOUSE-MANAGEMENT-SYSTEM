@@ -1,21 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/apis/routes/order_routes.py
-Purpose     : FastAPI HTTP endpoints for customer order ingestion and policy reservations.
-
-Responsibilities:
-    - Expose order creation, lookup, policy reservation, and cancellation endpoints.
-    - Validate authorization bearer tokens and requester scope.
-
-Used By:
-    - core/apis/api.py
-
-Returns:
-    JSON responses conforming to OrderResponse schemas.
-
-Raises:
-    fastapi.HTTPException: On validation or business rule failures.
---------------------------------------------------------------------------------
+FastAPI HTTP endpoints for customer order ingestion and policy reservations.
 """
 
 from __future__ import annotations
@@ -25,16 +9,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 
-from common.logger import get_logger
 from common.pagination import normalize_pagination
 from common.warehouse_scope import get_warehouse_scope
 from core.apis.schemas.requests.order_request import OrderCreateRequest, OrderReserveRequest
 from core.apis.schemas.responses.order_response import OrderResponse
-from core.controllers.order_controller import OrderController
+from core.controllers.order_controller import order_controller
 
-logger = get_logger(__name__)
 router = APIRouter(prefix="/v1/orders", tags=["Orders & Reservations"])
-order_controller = OrderController()
 
 
 @router.post(
@@ -48,13 +29,8 @@ async def create_order(
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> OrderResponse:
     """Ingest a new customer order draft with line items."""
-    logger.info("Calling POST /v1/orders endpoint")
-    try:
-        response = await order_controller.create_order(request.model_dump(), scope)
-        return OrderResponse.model_validate(response)
-    except Exception as exc:
-        logger.error("Error in POST /v1/orders endpoint: %s", exc, exc_info=True)
-        raise
+    response = await order_controller.create_order(request.model_dump(), scope)
+    return OrderResponse.model_validate(response)
 
 
 @router.get(
@@ -76,21 +52,16 @@ async def list_orders(
     offset: int = Query(default=0, ge=0),
 ) -> list[OrderResponse]:
     """List customer orders matching filter parameters."""
-    logger.info("Calling GET /v1/orders endpoint")
-    try:
-        norm_limit, norm_offset = normalize_pagination(limit, offset)
-        orders = await order_controller.list_orders(
-            scope,
-            seller_id=seller_id,
-            warehouse_id=warehouse_id,
-            status=status_filter,
-            limit=norm_limit,
-            offset=norm_offset,
-        )
-        return [OrderResponse.model_validate(o) for o in orders]
-    except Exception as exc:
-        logger.error("Error in GET /v1/orders endpoint: %s", exc, exc_info=True)
-        raise
+    norm_limit, norm_offset = normalize_pagination(limit, offset)
+    orders = await order_controller.list_orders(
+        scope,
+        seller_id=seller_id,
+        warehouse_id=warehouse_id,
+        status=status_filter,
+        limit=norm_limit,
+        offset=norm_offset,
+    )
+    return [OrderResponse.model_validate(o) for o in orders]
 
 
 @router.get(
@@ -103,38 +74,25 @@ async def get_order(
     order_id: UUID,
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> OrderResponse:
-    """Retrieve an order by ID."""
-    logger.info("Calling GET /v1/orders/%s endpoint", order_id)
-    try:
-        order = await order_controller.get_order(order_id, scope)
-        return OrderResponse.model_validate(order)
-    except Exception as exc:
-        logger.error("Error in GET /v1/orders/%s endpoint: %s", order_id, exc, exc_info=True)
-        raise
+    """Retrieve an order record with line items and reservations."""
+    order = await order_controller.get_order_by_id(order_id, scope)
+    return OrderResponse.model_validate(order)
 
 
 @router.post(
     "/{order_id}/reserve",
     response_model=OrderResponse,
     status_code=status.HTTP_200_OK,
-    summary="Reserve inventory for an order",
+    summary="Execute inventory reservation against order",
 )
 async def reserve_order(
     order_id: UUID,
     scope: Annotated[dict, Depends(get_warehouse_scope)],
     request: OrderReserveRequest | None = None,
 ) -> OrderResponse:
-    """Execute transactional inventory reservation for an order."""
-    logger.info("Calling POST /v1/orders/%s/reserve endpoint", order_id)
-    try:
-        data = request.model_dump() if request else None
-        order = await order_controller.reserve_order(order_id, scope, reserve_data=data)
-        return OrderResponse.model_validate(order)
-    except Exception as exc:
-        logger.error(
-            "Error in POST /v1/orders/%s/reserve endpoint: %s", order_id, exc, exc_info=True
-        )
-        raise
+    """Reserve available inventory for all lines in the order."""
+    response = await order_controller.reserve_order(order_id, scope)
+    return OrderResponse.model_validate(response)
 
 
 @router.post(
@@ -147,13 +105,6 @@ async def cancel_order(
     order_id: UUID,
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> OrderResponse:
-    """Cancel an order and release active reservations."""
-    logger.info("Calling POST /v1/orders/%s/cancel endpoint", order_id)
-    try:
-        order = await order_controller.cancel_order(order_id, scope)
-        return OrderResponse.model_validate(order)
-    except Exception as exc:
-        logger.error(
-            "Error in POST /v1/orders/%s/cancel endpoint: %s", order_id, exc, exc_info=True
-        )
-        raise
+    """Cancel an unfulfilled order and release active inventory reservations."""
+    response = await order_controller.cancel_order(order_id, scope)
+    return OrderResponse.model_validate(response)

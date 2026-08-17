@@ -1,31 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : common/auth.py
-Purpose     : Provide JWT and password helpers for authenticated API access.
-
-Responsibilities:
-    - Hash and verify passwords with bcrypt.
-    - Create and decode access tokens with the required warehouse JWT contract.
-    - Expose FastAPI dependencies for authenticated users.
-
-Flow:
-    Login controller verifies password
-        ->
-    create_access_token() emits JWT
-        ->
-    Protected route uses get_current_user()
-
-Used By:
-    - core/controllers/identity_controller.py
-    - core/apis/routes
-
-Returns:
-    create_access_token() -> str - Signed JWT access token.
-    get_current_user() -> dict[str, object] - Authenticated JWT payload.
-
-Raises:
-    HTTPException: When token validation fails.
---------------------------------------------------------------------------------
+Authentication and JWT helpers for token creation, password hashing, and user dependencies.
 """
 
 from __future__ import annotations

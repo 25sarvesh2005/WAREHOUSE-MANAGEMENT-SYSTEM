@@ -1,25 +1,7 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/inventory_controller.py
-Purpose     : Orchestrate inventory balance, ledger, and reconciliation workflows.
+Inventory Controller.
 
-Responsibilities:
-    - Enforce seller and warehouse scope permissions for inventory reads.
-    - Query operational balances and append-only movement ledger.
-    - Execute inventory reconciliation variance calculation and auditing.
-
-Flow:
-    Inventory route -> InventoryController method -> transaction_session() -> inventory_crud
-
-Used By:
-    - core/apis/routes/inventory_routes.py
-
-Returns:
-    Controller methods -> Models or lists ready for response validation.
-
-Raises:
-    HTTPException: On authorization, not-found, or validation failures.
---------------------------------------------------------------------------------
+Orchestrates inventory balances, movement ledger queries, and reconciliations.
 """
 
 from __future__ import annotations

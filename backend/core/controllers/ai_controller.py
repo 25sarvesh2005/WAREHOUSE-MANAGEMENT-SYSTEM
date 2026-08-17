@@ -1,29 +1,7 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/ai_controller.py
-Purpose     : Orchestrate read-only AI operations assistance workflows.
+AI Operations Controller.
 
-Responsibilities:
-    - Enforce AI safety guardrails before provider or tool execution.
-    - Apply seller and warehouse scope to every read-only AI tool call.
-    - Audit AI interactions, read-tool calls, retrieved references, and responses.
-
-Flow:
-    AI route
-        ->
-    AIController
-        ->
-    safety guard -> transaction_session -> read-only AI service tool -> provider
-
-Used By:
-    - core/apis/routes/ai_routes.py
-
-Returns:
-    dict[str, object] - Response-ready read-only AI answer payloads.
-
-Raises:
-    HTTPException: On authorization, validation, or safe server failures.
---------------------------------------------------------------------------------
+Orchestrates read-only AI operations assistance, intent safety guardrails, and audit tracking.
 """
 
 from __future__ import annotations

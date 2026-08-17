@@ -1,27 +1,7 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/migration_controller.py
-Purpose     : Orchestrate opening inventory migration workflows.
+Migration Controller.
 
-Responsibilities:
-    - Handle import batch creation and raw row staging with strict conflict detection.
-    - Enforce thorough multi-rule validation over staged opening inventory rows.
-    - Enforce role-based access and warehouse scope guards for batch approval and application.
-    - Atomically apply approved batches to the ledger and projections.
-    - Generate migration rehearsal reconciliation reports comparing staged vs ledger position.
-
-Flow:
-    MigrationRoute -> MigrationController -> transaction_session() -> CRUD
-
-Used By:
-    - core/apis/routes/migration_routes.py
-
-Returns:
-    Controller methods -> Domain model instances or response dictionaries.
-
-Raises:
-    HTTPException: On authorization, validation, conflict, or not-found errors.
---------------------------------------------------------------------------------
+Orchestrates opening inventory migration batches, staging, validation, and ledger application.
 """
 
 from __future__ import annotations

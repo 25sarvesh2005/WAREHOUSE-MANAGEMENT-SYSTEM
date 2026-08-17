@@ -1,28 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/catalog_crud.py
-Purpose     : Perform pure database operations for catalog and policy records.
-
-Responsibilities:
-    - Create and list products, identifiers, locations, and seller policies.
-    - Keep master-data persistence separate from authorization and workflow rules.
-
-Flow:
-    Catalog controller
-        ->
-    CRUD function receives AsyncSession
-        ->
-    SQLAlchemy executes PostgreSQL query
-
-Used By:
-    - core/controllers/catalog_controller.py
-
-Returns:
-    CRUD functions -> SQLAlchemy model instances or collections.
-
-Raises:
-    sqlalchemy.exc.SQLAlchemyError: On database failures.
---------------------------------------------------------------------------------
+Database persistence operations for catalog products, identifiers, and locations.
 """
 
 from __future__ import annotations

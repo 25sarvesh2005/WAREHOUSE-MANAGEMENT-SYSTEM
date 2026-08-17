@@ -1,26 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/receiving_crud.py
-Purpose     : Perform database operations for receiving receipts, lines, and events.
-
-Responsibilities:
-    - Persist receiving receipt drafts, line items, and audit events.
-    - Read receipts by ID, client draft ID, or source reference.
-    - Check for duplicate completed receipts.
-    - Update receipt status and lines upon completion or cancellation.
-
-Flow:
-    ReceivingController -> CRUD functions receive AsyncSession -> Execute SQLAlchemy query
-
-Used By:
-    - core/controllers/receiving_controller.py
-
-Returns:
-    CRUD functions -> Model instances or collections.
-
-Raises:
-    sqlalchemy.exc.SQLAlchemyError: On database failures.
---------------------------------------------------------------------------------
+Database persistence operations for receiving receipts, lines, and receipt events.
 """
 
 from __future__ import annotations

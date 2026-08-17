@@ -1,28 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/audit_model.py
-Purpose     : Define append-only audit event storage.
-
-Responsibilities:
-    - Capture actor, action, source record, and safe metadata.
-    - Support initial identity and master-data auditing.
-
-Flow:
-    Controller workflow
-        ->
-    audit_crud.create_audit_event()
-        ->
-    audit_events table
-
-Used By:
-    - core/cruds/audit_crud.py
-
-Returns:
-    AuditEvent - Persisted audit row.
-
-Raises:
-    sqlalchemy.exc.SQLAlchemyError: On persistence failures.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for append-only audit trail event storage.
 """
 
 from __future__ import annotations

@@ -1,30 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/migration_model.py
-Purpose     : Define import batches and staged opening inventory models.
-
-Responsibilities:
-    - Persist import batch headers, status, and validation statistics.
-    - Persist staged opening inventory rows with raw evidence, resolved FKs, and validation errors.
-    - Guarantee idempotency by batch and source row identity/hash.
-
-Flow:
-    Import request
-        ->
-    Persist ImportBatch and StagedOpeningInventoryRow (staged)
-        ->
-    Validate -> Approve -> Apply (create immutable MIGRATION_OPENING_BALANCE movements)
-
-Used By:
-    - core/cruds/migration_crud.py
-    - core/controllers/migration_controller.py
-
-Returns:
-    SQLAlchemy model instances - Migration persistence records.
-
-Raises:
-    sqlalchemy.exc.IntegrityError: On uniqueness or constraint violations.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for opening inventory import batches and staged rows.
 """
 
 from __future__ import annotations

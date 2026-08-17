@@ -1,34 +1,11 @@
 """
---------------------------------------------------------------------------------
-File        : common/warehouse_scope.py
-Purpose     : Provide permission-scope helpers for seller and warehouse access.
-
-Responsibilities:
-    - Derive effective scope from authenticated JWT assignments.
-    - Expose role and scope guard helpers for route/controller use.
-
-Flow:
-    get_current_user()
-        ->
-    get_warehouse_scope()
-        ->
-    Controllers check seller and warehouse access
-
-Used By:
-    - core/apis/routes
-    - core/controllers
-
-Returns:
-    get_warehouse_scope() -> dict[str, object] - Effective authenticated scope.
-
-Raises:
-    HTTPException: When a scoped role lacks required assignments.
---------------------------------------------------------------------------------
+Permission scope and access control assertions for seller and warehouse tenancies.
 """
 
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 
@@ -136,7 +113,7 @@ def require_roles(scope: dict[str, Any], allowed_roles: set[UserRole]) -> None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
 
 
-def assert_seller_access(scope: dict[str, Any], seller_id: str) -> None:
+def assert_seller_access(scope: dict[str, Any], seller_id: str | UUID) -> None:
     """
     Require access to a seller unless the user is an administrator.
 
@@ -145,7 +122,7 @@ def assert_seller_access(scope: dict[str, Any], seller_id: str) -> None:
 
     Args:
         scope: Effective authenticated scope.
-        seller_id: Seller ID being accessed.
+        seller_id: Seller ID being accessed (str or UUID).
 
     Returns:
         None.
@@ -155,12 +132,13 @@ def assert_seller_access(scope: dict[str, Any], seller_id: str) -> None:
     """
     if scope.get("role") == UserRole.ADMINISTRATOR.value:
         return
-    if seller_id not in set(scope.get("seller_ids", [])):
-        logger.warning("User %s denied seller %s", scope.get("user_id"), seller_id)
+    normalized_id = str(seller_id)
+    if normalized_id not in set(scope.get("seller_ids", [])):
+        logger.warning("User %s denied seller %s", scope.get("user_id"), normalized_id)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
 
 
-def assert_warehouse_access(scope: dict[str, Any], warehouse_id: str) -> None:
+def assert_warehouse_access(scope: dict[str, Any], warehouse_id: str | UUID) -> None:
     """
     Require access to a warehouse unless the user is an administrator.
 
@@ -169,7 +147,7 @@ def assert_warehouse_access(scope: dict[str, Any], warehouse_id: str) -> None:
 
     Args:
         scope: Effective authenticated scope.
-        warehouse_id: Warehouse ID being accessed.
+        warehouse_id: Warehouse ID being accessed (str or UUID).
 
     Returns:
         None.
@@ -179,6 +157,8 @@ def assert_warehouse_access(scope: dict[str, Any], warehouse_id: str) -> None:
     """
     if scope.get("role") == UserRole.ADMINISTRATOR.value:
         return
-    if warehouse_id not in set(scope.get("warehouse_ids", [])):
-        logger.warning("User %s denied warehouse %s", scope.get("user_id"), warehouse_id)
+    normalized_id = str(warehouse_id)
+    if normalized_id not in set(scope.get("warehouse_ids", [])):
+        logger.warning("User %s denied warehouse %s", scope.get("user_id"), normalized_id)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+

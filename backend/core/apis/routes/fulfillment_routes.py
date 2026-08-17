@@ -1,21 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/apis/routes/fulfillment_routes.py
-Purpose     : FastAPI HTTP endpoints for pick tasks, packages, and manual shipment dispatch.
-
-Responsibilities:
-    - Expose pick task creation, worker pick completion, and shipment creation routes.
-    - Validate authorization bearer tokens and warehouse scopes.
-
-Used By:
-    - core/apis/api.py
-
-Returns:
-    JSON responses conforming to PickTaskResponse and ShipmentResponse schemas.
-
-Raises:
-    fastapi.HTTPException: On validation or business rule failures.
---------------------------------------------------------------------------------
+FastAPI HTTP endpoints for pick tasks, packages, and manual shipment dispatch.
 """
 
 from __future__ import annotations
@@ -25,7 +9,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 
-from common.logger import get_logger
 from common.pagination import normalize_pagination
 from common.warehouse_scope import get_warehouse_scope
 from core.apis.schemas.requests.fulfillment_request import (
@@ -34,11 +17,9 @@ from core.apis.schemas.requests.fulfillment_request import (
     ShipmentCreateRequest,
 )
 from core.apis.schemas.responses.fulfillment_response import PickTaskResponse, ShipmentResponse
-from core.controllers.fulfillment_controller import FulfillmentController
+from core.controllers.fulfillment_controller import fulfillment_controller
 
-logger = get_logger(__name__)
 router = APIRouter(prefix="/v1", tags=["Fulfillment & Shipments"])
-fulfillment_controller = FulfillmentController()
 
 
 @router.post(
@@ -52,13 +33,8 @@ async def create_pick_task(
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> PickTaskResponse:
     """Generate a warehouse worker pick task for a reserved order."""
-    logger.info("Calling POST /v1/pick-tasks endpoint")
-    try:
-        task = await fulfillment_controller.create_pick_task(request.model_dump(), scope)
-        return PickTaskResponse.model_validate(task)
-    except Exception as exc:
-        logger.error("Error in POST /v1/pick-tasks endpoint: %s", exc, exc_info=True)
-        raise
+    task = await fulfillment_controller.create_pick_task(request.model_dump(), scope)
+    return PickTaskResponse.model_validate(task)
 
 
 @router.get(
@@ -78,21 +54,16 @@ async def list_pick_tasks(
     offset: int = Query(default=0, ge=0),
 ) -> list[PickTaskResponse]:
     """List warehouse pick tasks matching search filters."""
-    logger.info("Calling GET /v1/pick-tasks endpoint")
-    try:
-        norm_limit, norm_offset = normalize_pagination(limit, offset)
-        tasks = await fulfillment_controller.list_pick_tasks(
-            scope,
-            warehouse_id=warehouse_id,
-            assigned_user_id=assigned_user_id,
-            status=status_filter,
-            limit=norm_limit,
-            offset=norm_offset,
-        )
-        return [PickTaskResponse.model_validate(t) for t in tasks]
-    except Exception as exc:
-        logger.error("Error in GET /v1/pick-tasks endpoint: %s", exc, exc_info=True)
-        raise
+    norm_limit, norm_offset = normalize_pagination(limit, offset)
+    tasks = await fulfillment_controller.list_pick_tasks(
+        scope,
+        warehouse_id=warehouse_id,
+        assigned_user_id=assigned_user_id,
+        status=status_filter,
+        limit=norm_limit,
+        offset=norm_offset,
+    )
+    return [PickTaskResponse.model_validate(t) for t in tasks]
 
 
 @router.get(
@@ -106,15 +77,8 @@ async def get_pick_task(
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> PickTaskResponse:
     """Retrieve pick task details by ID."""
-    logger.info("Calling GET /v1/pick-tasks/%s endpoint", pick_task_id)
-    try:
-        task = await fulfillment_controller.get_pick_task(pick_task_id, scope)
-        return PickTaskResponse.model_validate(task)
-    except Exception as exc:
-        logger.error(
-            "Error in GET /v1/pick-tasks/%s endpoint: %s", pick_task_id, exc, exc_info=True
-        )
-        raise
+    task = await fulfillment_controller.get_pick_task(pick_task_id, scope)
+    return PickTaskResponse.model_validate(task)
 
 
 @router.post(
@@ -129,20 +93,10 @@ async def complete_pick_task(
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> PickTaskResponse:
     """Complete a pick task (handles normal picks & short-pick exceptions)."""
-    logger.info("Calling POST /v1/pick-tasks/%s/complete endpoint", pick_task_id)
-    try:
-        task = await fulfillment_controller.complete_pick_task(
-            pick_task_id, request.model_dump(), scope
-        )
-        return PickTaskResponse.model_validate(task)
-    except Exception as exc:
-        logger.error(
-            "Error in POST /v1/pick-tasks/%s/complete endpoint: %s",
-            pick_task_id,
-            exc,
-            exc_info=True,
-        )
-        raise
+    task = await fulfillment_controller.complete_pick_task(
+        pick_task_id, request.model_dump(), scope
+    )
+    return PickTaskResponse.model_validate(task)
 
 
 @router.post(
@@ -156,13 +110,8 @@ async def create_shipment(
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> ShipmentResponse:
     """Create order shipment, attach packages, and post SHIPPED inventory movements."""
-    logger.info("Calling POST /v1/shipments endpoint")
-    try:
-        shipment = await fulfillment_controller.create_shipment(request.model_dump(), scope)
-        return ShipmentResponse.model_validate(shipment)
-    except Exception as exc:
-        logger.error("Error in POST /v1/shipments endpoint: %s", exc, exc_info=True)
-        raise
+    shipment = await fulfillment_controller.create_shipment(request.model_dump(), scope)
+    return ShipmentResponse.model_validate(shipment)
 
 
 @router.get(
@@ -179,20 +128,15 @@ async def list_shipments(
     offset: int = Query(default=0, ge=0),
 ) -> list[ShipmentResponse]:
     """List order shipment records matching filters."""
-    logger.info("Calling GET /v1/shipments endpoint")
-    try:
-        norm_limit, norm_offset = normalize_pagination(limit, offset)
-        shipments = await fulfillment_controller.list_shipments(
-            scope,
-            order_id=order_id,
-            warehouse_id=warehouse_id,
-            limit=norm_limit,
-            offset=norm_offset,
-        )
-        return [ShipmentResponse.model_validate(s) for s in shipments]
-    except Exception as exc:
-        logger.error("Error in GET /v1/shipments endpoint: %s", exc, exc_info=True)
-        raise
+    norm_limit, norm_offset = normalize_pagination(limit, offset)
+    shipments = await fulfillment_controller.list_shipments(
+        scope,
+        order_id=order_id,
+        warehouse_id=warehouse_id,
+        limit=norm_limit,
+        offset=norm_offset,
+    )
+    return [ShipmentResponse.model_validate(s) for s in shipments]
 
 
 @router.get(
@@ -206,10 +150,5 @@ async def get_shipment(
     scope: Annotated[dict, Depends(get_warehouse_scope)],
 ) -> ShipmentResponse:
     """Retrieve shipment record by ID."""
-    logger.info("Calling GET /v1/shipments/%s endpoint", shipment_id)
-    try:
-        shipment = await fulfillment_controller.get_shipment(shipment_id, scope)
-        return ShipmentResponse.model_validate(shipment)
-    except Exception as exc:
-        logger.error("Error in GET /v1/shipments/%s endpoint: %s", shipment_id, exc, exc_info=True)
-        raise
+    shipment = await fulfillment_controller.get_shipment(shipment_id, scope)
+    return ShipmentResponse.model_validate(shipment)

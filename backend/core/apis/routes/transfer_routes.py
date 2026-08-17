@@ -1,14 +1,5 @@
 """
-Transfer Routes.
-
-FastAPI endpoints for multi-warehouse transfers:
-    - POST /v1/transfers: Create transfer draft/request.
-    - GET /v1/transfers: List transfers.
-    - GET /v1/transfers/{transfer_id}: Retrieve single transfer.
-    - POST /v1/transfers/{transfer_id}/approve: Approve transfer.
-    - POST /v1/transfers/{transfer_id}/dispatch: Dispatch transfer.
-    - POST /v1/transfers/{transfer_id}/receive: Receive transfer.
-    - POST /v1/transfers/{transfer_id}/resolve-discrepancy: Resolve discrepancy.
+FastAPI HTTP endpoints for multi-warehouse transfers.
 """
 
 from typing import Annotated
@@ -24,11 +15,10 @@ from core.apis.schemas.requests.transfer_request import (
     TransferResolveDiscrepancyRequest,
 )
 from core.apis.schemas.responses.transfer_response import TransferListResponse, TransferResponse
-from core.controllers.transfer_controller import TransferController
+from core.controllers.transfer_controller import transfer_controller
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/v1/transfers", tags=["Transfers"])
-transfer_controller = TransferController()
 
 
 @router.post(

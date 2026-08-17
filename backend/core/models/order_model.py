@@ -1,26 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/order_model.py
-Purpose     : Define order header, line item, and inventory reservation models.
-
-Responsibilities:
-    - Persist customer order headers and line item breakdowns.
-    - Snapshot applied seller order policy at confirmation time.
-    - Track active, fulfilled, and expired inventory reservations.
-
-Flow:
-    Create Order -> Reserve Inventory -> Create Pick Task -> Ship Order
-
-Used By:
-    - core/cruds/order_crud.py
-    - core/controllers/order_controller.py
-
-Returns:
-    SQLAlchemy model instances - Order persistence records.
-
-Raises:
-    sqlalchemy.exc.IntegrityError: On uniqueness or foreign key violations.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for customer orders, order lines, and reservations.
 """
 
 from __future__ import annotations

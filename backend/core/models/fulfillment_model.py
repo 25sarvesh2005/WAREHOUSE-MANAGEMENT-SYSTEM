@@ -1,26 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/fulfillment_model.py
-Purpose     : Define pick task, package, shipment, and shipment event models.
-
-Responsibilities:
-    - Track warehouse pick task generation and execution.
-    - Handle short-pick exception reporting.
-    - Store package dimensions and manual shipment tracking information.
-
-Flow:
-    Reserved Order -> PickTask -> Package -> Shipment -> Post Ledger Movements
-
-Used By:
-    - core/cruds/fulfillment_crud.py
-    - core/controllers/fulfillment_controller.py
-
-Returns:
-    SQLAlchemy model instances - Fulfillment persistence records.
-
-Raises:
-    sqlalchemy.exc.IntegrityError: On constraint or foreign key violations.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for pick tasks, packages, shipments, and shipment events.
 """
 
 from __future__ import annotations
