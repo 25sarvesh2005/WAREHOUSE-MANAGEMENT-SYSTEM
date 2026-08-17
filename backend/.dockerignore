@@ -1,0 +1,53 @@
+# Whitfield WMS — backend .dockerignore
+# Keeps the Docker build context lean by excluding files that should never
+# enter the image.
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+*.xml
+
+# Environment secrets — injected at runtime, never baked into the image
+.env
+.env.*
+!.env.example
+
+# Editor / OS noise
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+tools/
+
+# Node (should not be in backend but guard anyway)
+node_modules/
+
+# Docker files themselves
+Dockerfile
+.dockerignore

@@ -78,12 +78,12 @@ function MetricCard({
   const content = (
     <Card className="group h-full p-5 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-panel">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="mt-2 font-mono text-3xl font-semibold tracking-tight text-foreground">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-muted-foreground truncate">{label}</p>
+          <p className="mt-2 font-mono text-3xl font-bold tracking-tight text-foreground">
             {value}
           </p>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">{description}</p>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{description}</p>
         </div>
         <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary-tint text-primary transition-colors group-hover:bg-primary group-hover:text-white">
           <Icon className="size-6" />
@@ -92,7 +92,7 @@ function MetricCard({
     </Card>
   );
 
-  return to ? <Link to={to}>{content}</Link> : content;
+  return to ? <Link to={to} className="block h-full">{content}</Link> : content;
 }
 
 function FacilityPanel({
@@ -126,16 +126,16 @@ function FacilityPanel({
   return (
     <Card className="p-5">
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <FacilityBadge code={warehouse.code} />
-          <h3 className="mt-3 text-lg font-semibold tracking-tight text-foreground">
+          <h3 className="mt-3 text-lg font-bold tracking-tight text-foreground truncate">
             {warehouse.name}
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {warehouse.city ?? "Warehouse"}, {warehouse.state ?? "US"}
           </p>
         </div>
-        <span className="flex size-12 items-center justify-center rounded-2xl bg-primary-tint text-primary">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary-tint text-primary">
           <Warehouse className="size-6" />
         </span>
       </div>
@@ -149,9 +149,9 @@ function FacilityPanel({
           ["In transit", inTransit],
           ["Open work", openOrders + pendingReceipts],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-2xl bg-primary-tint px-4 py-3">
-            <p className="text-xs font-medium text-primary">{label}</p>
-            <p className="mt-1 font-mono text-xl font-semibold text-foreground">
+          <div key={label} className="rounded-2xl bg-primary-tint/70 px-4 py-3">
+            <p className="text-xs font-semibold text-primary">{label}</p>
+            <p className="mt-1 font-mono text-xl font-bold text-foreground">
               {Number(value).toLocaleString()}
             </p>
           </div>
@@ -177,18 +177,18 @@ function OptionCard({
   return (
     <Link
       to={to}
-      className="group flex items-center justify-between gap-4 rounded-3xl border border-border bg-white p-4 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-panel"
+      className="group flex items-center justify-between gap-4 rounded-3xl border border-border bg-white p-4 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-panel min-w-0"
     >
-      <span className="flex items-center gap-3">
+      <span className="flex items-center gap-3 min-w-0 flex-1">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-tint text-primary transition-colors group-hover:bg-primary group-hover:text-white">
           <Icon className="size-5" />
         </span>
-        <span>
-          <span className="block text-sm font-semibold text-foreground">{label}</span>
-          <span className="block text-xs text-muted-foreground">{detail}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-foreground truncate">{label}</span>
+          <span className="block text-xs text-muted-foreground truncate">{detail}</span>
         </span>
       </span>
-      <span className="font-mono text-2xl font-semibold text-primary">{count}</span>
+      <span className="font-mono text-2xl font-bold text-primary shrink-0 pl-2">{count}</span>
     </Link>
   );
 }

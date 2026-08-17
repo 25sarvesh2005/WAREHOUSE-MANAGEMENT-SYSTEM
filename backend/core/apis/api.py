@@ -6,6 +6,7 @@ Purpose     : Aggregate versioned API routers.
 Responsibilities:
     - Create the `/api` router boundary.
     - Register domain route modules in one place.
+    - Apply the global default rate limit to all routes.
 
 Flow:
     main.py
@@ -27,8 +28,9 @@ Raises:
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from common.rate_limit import global_rate_limiter
 from core.apis.routes.ai_routes import router as ai_router
 from core.apis.routes.catalog_routes import router as catalog_router
 from core.apis.routes.fulfillment_routes import router as fulfillment_router
@@ -43,7 +45,11 @@ from core.apis.routes.seller_routes import router as seller_router
 from core.apis.routes.transfer_routes import router as transfer_router
 from core.apis.routes.voice_routes import router as voice_router
 
-api_router = APIRouter(prefix="/api")
+# The global_rate_limiter dependency is applied here at the aggregator level
+# so every route in every domain router inherits the 120 req/min default.
+# Routes that need stricter limits (auth, AI, voice, migration) declare their
+# own tighter dependencies on top of this baseline.
+api_router = APIRouter(prefix="/api", dependencies=[Depends(global_rate_limiter)])
 api_router.include_router(ai_router)
 api_router.include_router(voice_router)
 api_router.include_router(identity_router)

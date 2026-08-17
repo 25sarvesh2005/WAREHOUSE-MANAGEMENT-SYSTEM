@@ -5,7 +5,7 @@
 
 export interface ErrorContext {
   boundary?: string;
-  componentStack?: string;
+  componentStack?: string | null;
   metadata?: Record<string, unknown>;
 }
 

@@ -101,9 +101,13 @@ class AIController:
             HTTPException: If scope or validation checks fail.
         """
         settings = get_settings()
-        prompt = request.prompt or (
-            f"Answer available quantity for SKU {request.sku} by warehouse."
-        )
+        raw_query = (request.sku or "").strip()
+        if request.prompt:
+            prompt = request.prompt
+        elif raw_query.upper().startswith("SKU-") or raw_query.upper().startswith("PROD-"):
+            prompt = f"Answer available quantity for SKU {raw_query} by warehouse."
+        else:
+            prompt = raw_query
         safety = self._safety_guard.evaluate_prompt(prompt)
         if not safety.allowed:
             return await self._record_refusal(
@@ -1853,12 +1857,13 @@ class AIController:
             TypeError: If evidence cannot be JSON serialized.
         """
         return (
-            "User question:\n"
-            f"{prompt}\n\n"
-            "Deterministic application answer:\n"
-            f"{fallback_answer}\n\n"
-            "Application evidence JSON:\n"
-            f"{json.dumps(evidence_payload, default=str)}"
+            f"User inquiry:\n{prompt}\n\n"
+            f"Warehouse evidence (live records):\n{json.dumps(evidence_payload, default=str)}\n\n"
+            f"Guidance/Fallback context:\n{fallback_answer}\n\n"
+            "Instructions for AI:\n"
+            "- Answer the user's inquiry directly, conversationally, and accurately based on the supplied warehouse evidence.\n"
+            "- If the user asks for items with 0 quantity, low stock, or category breakdowns (e.g. headphones, hoodies, sellers), analyze the evidence and give a clear, direct answer.\n"
+            "- Keep your response professional, well-formatted (using bolding and bullet points where helpful), and strictly grounded in the live evidence."
         )
 
     def _availability_fallback_answer(
@@ -1870,7 +1875,7 @@ class AIController:
         Build deterministic available inventory answer text.
 
         Args:
-            sku: Product SKU.
+            sku: Product SKU or search query.
             rows: Available inventory evidence rows.
 
         Returns:
@@ -1880,13 +1885,20 @@ class AIController:
             None.
         """
         if not rows:
-            return f"No AVAILABLE inventory balance rows were found for SKU {sku}."
+            return f"No AVAILABLE inventory balance records were found matching '{sku}'."
+        unique_skus = {row.sku for row in rows}
+        if len(unique_skus) > 1:
+            total_units = sum(row.available_quantity for row in rows)
+            return (
+                f"Found available inventory across {len(rows)} facility balance record(s) for {len(unique_skus)} product(s). "
+                f"Total available stock is {total_units:.2f} units across warehouses."
+            )
         parts = [
             f"{row.available_quantity} units at warehouse {row.warehouse_code} "
             f"for seller {row.seller_code}"
             for row in rows
         ]
-        return f"SKU {sku} has " + "; ".join(parts) + "."
+        return f"Product {rows[0].sku} ({rows[0].product_name}) has " + "; ".join(parts) + "."
 
     def _ledger_fallback_answer(
         self,

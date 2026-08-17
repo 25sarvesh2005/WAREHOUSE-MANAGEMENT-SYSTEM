@@ -50,8 +50,9 @@ async def transcribe_receiving_audio(
     language_code: str = Form(default="en-IN", description="BCP-47 language tag."),
     scope: dict[str, Any] = Depends(get_warehouse_scope),
 ) -> VoiceReceivingDraftResponse:
-    """
-    Upload recorded speech audio, transcribe via Deepgram/Sarvam, and generate receiving draft.
+    """Upload recorded speech audio, transcribe via Deepgram/Sarvam, and generate receiving draft.
+
+    Runs STT, extracts structured receiving lines, and persists a reviewable voice draft record.
 
     Args:
         file: Multipart audio file payload.
@@ -67,44 +68,54 @@ async def transcribe_receiving_audio(
     Raises:
         HTTPException: If audio is invalid, safety is violated, or STT fails.
     """
-    audio_bytes = await file.read()
-    mime_type = file.content_type or "audio/webm"
+    try:
+        logger.info("Calling POST /v1/voice/receiving/transcribe endpoint")
+        audio_bytes = await file.read()
+        mime_type = file.content_type or "audio/webm"
 
-    draft_record, interaction, parsed_draft = (
-        await voice_controller.transcribe_and_draft_receiving_audio(
-            scope=scope,
-            audio_bytes=audio_bytes,
-            mime_type=mime_type,
-            warehouse_id=warehouse_id,
-            product_id=product_id,
-            receipt_id=receipt_id,
-            language_code=language_code,
-        )
-    )
-
-    return VoiceReceivingDraftResponse(
-        draft_id=draft_record.id,
-        interaction_id=interaction.id,
-        transcript=parsed_draft.raw_transcript,
-        confidence=float(interaction.transcript_confidence) if interaction.transcript_confidence else None,
-        lines=[
-            VoiceParsedLineResponse(
-                quantity=line.quantity,
-                inventory_state=line.inventory_state,
-                condition_note=line.condition_note,
+        draft_record, interaction, parsed_draft = (
+            await voice_controller.transcribe_and_draft_receiving_audio(
+                scope=scope,
+                audio_bytes=audio_bytes,
+                mime_type=mime_type,
+                warehouse_id=warehouse_id,
+                product_id=product_id,
+                receipt_id=receipt_id,
+                language_code=language_code,
             )
-            for line in parsed_draft.lines
-        ],
-        general_notes=parsed_draft.general_notes,
-        needs_manual_review=parsed_draft.needs_manual_review,
-        warnings=parsed_draft.warnings,
-        product_id=draft_record.product_id,
-        warehouse_id=draft_record.warehouse_id,
-        receipt_id=draft_record.receipt_id,
-        status=draft_record.status,
-        safety_decision="ALLOW_DRAFT_ONLY",
-        created_at=draft_record.created_at,
-    )
+        )
+
+        return VoiceReceivingDraftResponse(
+            draft_id=draft_record.id,
+            interaction_id=interaction.id,
+            transcript=parsed_draft.raw_transcript,
+            confidence=float(interaction.transcript_confidence) if interaction.transcript_confidence else None,
+            lines=[
+                VoiceParsedLineResponse(
+                    quantity=line.quantity,
+                    inventory_state=line.inventory_state,
+                    condition_note=line.condition_note,
+                )
+                for line in parsed_draft.lines
+            ],
+            general_notes=parsed_draft.general_notes,
+            needs_manual_review=parsed_draft.needs_manual_review,
+            warnings=parsed_draft.warnings,
+            product_id=draft_record.product_id,
+            warehouse_id=draft_record.warehouse_id,
+            receipt_id=draft_record.receipt_id,
+            status=draft_record.status,
+            safety_decision="ALLOW_DRAFT_ONLY",
+            created_at=draft_record.created_at,
+        )
+    except HTTPException as http_error:
+        raise http_error
+    except Exception as error:
+        logger.error(f"Error in POST /v1/voice/receiving/transcribe endpoint: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.post(
@@ -117,8 +128,9 @@ async def parse_receiving_transcript_endpoint(
     request: ParseReceivingTranscriptRequest,
     scope: dict[str, Any] = Depends(get_warehouse_scope),
 ) -> VoiceReceivingDraftResponse:
-    """
-    Parse a text transcript directly into structured receiving lines.
+    """Parse a text transcript directly into structured receiving lines.
+
+    Applies the same NLU pipeline as audio transcription without the STT step.
 
     Args:
         request: Transcript parsing payload.
@@ -130,40 +142,50 @@ async def parse_receiving_transcript_endpoint(
     Raises:
         HTTPException: If transcript violates safety rules or fails parsing.
     """
-    draft_record, interaction, parsed_draft = (
-        await voice_controller.parse_receiving_transcript(
-            scope=scope,
-            transcript=request.transcript,
-            warehouse_id=request.warehouse_id,
-            product_id=request.product_id,
-            receipt_id=request.receipt_id,
-            language_code=request.language_code,
-        )
-    )
-
-    return VoiceReceivingDraftResponse(
-        draft_id=draft_record.id,
-        interaction_id=interaction.id,
-        transcript=parsed_draft.raw_transcript,
-        confidence=1.0,
-        lines=[
-            VoiceParsedLineResponse(
-                quantity=line.quantity,
-                inventory_state=line.inventory_state,
-                condition_note=line.condition_note,
+    try:
+        logger.info("Calling POST /v1/voice/receiving/parse-transcript endpoint")
+        draft_record, interaction, parsed_draft = (
+            await voice_controller.parse_receiving_transcript(
+                scope=scope,
+                transcript=request.transcript,
+                warehouse_id=request.warehouse_id,
+                product_id=request.product_id,
+                receipt_id=request.receipt_id,
+                language_code=request.language_code,
             )
-            for line in parsed_draft.lines
-        ],
-        general_notes=parsed_draft.general_notes,
-        needs_manual_review=parsed_draft.needs_manual_review,
-        warnings=parsed_draft.warnings,
-        product_id=draft_record.product_id,
-        warehouse_id=draft_record.warehouse_id,
-        receipt_id=draft_record.receipt_id,
-        status=draft_record.status,
-        safety_decision="ALLOW_DRAFT_ONLY",
-        created_at=draft_record.created_at,
-    )
+        )
+
+        return VoiceReceivingDraftResponse(
+            draft_id=draft_record.id,
+            interaction_id=interaction.id,
+            transcript=parsed_draft.raw_transcript,
+            confidence=1.0,
+            lines=[
+                VoiceParsedLineResponse(
+                    quantity=line.quantity,
+                    inventory_state=line.inventory_state,
+                    condition_note=line.condition_note,
+                )
+                for line in parsed_draft.lines
+            ],
+            general_notes=parsed_draft.general_notes,
+            needs_manual_review=parsed_draft.needs_manual_review,
+            warnings=parsed_draft.warnings,
+            product_id=draft_record.product_id,
+            warehouse_id=draft_record.warehouse_id,
+            receipt_id=draft_record.receipt_id,
+            status=draft_record.status,
+            safety_decision="ALLOW_DRAFT_ONLY",
+            created_at=draft_record.created_at,
+        )
+    except HTTPException as http_error:
+        raise http_error
+    except Exception as error:
+        logger.error(f"Error in POST /v1/voice/receiving/parse-transcript endpoint: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.post(
@@ -176,8 +198,9 @@ async def synthesize_voice_endpoint(
     request: SynthesizeVoiceRequest,
     scope: dict[str, Any] = Depends(get_warehouse_scope),
 ) -> VoiceSynthesisResponse:
-    """
-    Synthesize text into speech audio bytes (base64) using Sarvam AI Bulbul.
+    """Synthesize text into speech audio bytes (base64) using Sarvam AI Bulbul.
+
+    Returns base64-encoded audio and MIME type for direct playback in the browser client.
 
     Args:
         request: Voice synthesis text payload.
@@ -189,20 +212,30 @@ async def synthesize_voice_endpoint(
     Raises:
         HTTPException: If TTS service is unconfigured or synthesis fails.
     """
-    audio_base64, mime_type, provider_name, lang = (
-        await voice_controller.synthesize_voice_response(
-            scope=scope,
-            text=request.text,
-            language_code=request.language_code,
+    try:
+        logger.info("Calling POST /v1/voice/speak endpoint")
+        audio_base64, mime_type, provider_name, lang = (
+            await voice_controller.synthesize_voice_response(
+                scope=scope,
+                text=request.text,
+                language_code=request.language_code,
+            )
         )
-    )
 
-    return VoiceSynthesisResponse(
-        audio_base64=audio_base64,
-        mime_type=mime_type,
-        provider_name=provider_name,
-        language_code=lang,
-    )
+        return VoiceSynthesisResponse(
+            audio_base64=audio_base64,
+            mime_type=mime_type,
+            provider_name=provider_name,
+            language_code=lang,
+        )
+    except HTTPException as http_error:
+        raise http_error
+    except Exception as error:
+        logger.error(f"Error in POST /v1/voice/speak endpoint: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.post(
@@ -216,8 +249,9 @@ async def discard_voice_draft_endpoint(
     request: DiscardVoiceDraftRequest | None = None,
     scope: dict[str, Any] = Depends(get_warehouse_scope),
 ) -> VoiceReceivingDraftResponse:
-    """
-    Mark a voice receiving draft proposal as discarded.
+    """Mark a voice receiving draft proposal as discarded.
+
+    Transitions the draft to DISCARDED status without posting any inventory movements.
 
     Args:
         draft_id: Voice draft UUID.
@@ -230,40 +264,50 @@ async def discard_voice_draft_endpoint(
     Raises:
         HTTPException: If draft is not found or user lacks permission.
     """
-    reason = request.reason if request else None
-    draft = await voice_controller.discard_voice_draft(
-        scope=scope,
-        draft_id=draft_id,
-        reason=reason,
-    )
-
-    lines_raw = draft.structured_lines if isinstance(draft.structured_lines, list) else []
-    lines_parsed = [
-        VoiceParsedLineResponse(
-            quantity=str(item.get("quantity", "0.00")),
-            inventory_state=str(item.get("inventory_state", "AVAILABLE")),
-            condition_note=item.get("condition_note"),
+    try:
+        logger.info(f"Calling POST /v1/voice/drafts/{draft_id}/discard endpoint")
+        reason = request.reason if request else None
+        draft = await voice_controller.discard_voice_draft(
+            scope=scope,
+            draft_id=draft_id,
+            reason=reason,
         )
-        for item in lines_raw
-        if isinstance(item, dict)
-    ]
 
-    return VoiceReceivingDraftResponse(
-        draft_id=draft.id,
-        interaction_id=draft.voice_interaction_id,
-        transcript="",
-        confidence=None,
-        lines=lines_parsed,
-        general_notes=draft.notes,
-        needs_manual_review=False,
-        warnings=[],
-        product_id=draft.product_id,
-        warehouse_id=draft.warehouse_id,
-        receipt_id=draft.receipt_id,
-        status=draft.status,
-        safety_decision="DISCARDED",
-        created_at=draft.created_at,
-    )
+        lines_raw = draft.structured_lines if isinstance(draft.structured_lines, list) else []
+        lines_parsed = [
+            VoiceParsedLineResponse(
+                quantity=str(item.get("quantity", "0.00")),
+                inventory_state=str(item.get("inventory_state", "AVAILABLE")),
+                condition_note=item.get("condition_note"),
+            )
+            for item in lines_raw
+            if isinstance(item, dict)
+        ]
+
+        return VoiceReceivingDraftResponse(
+            draft_id=draft.id,
+            interaction_id=draft.voice_interaction_id,
+            transcript="",
+            confidence=None,
+            lines=lines_parsed,
+            general_notes=draft.notes,
+            needs_manual_review=False,
+            warnings=[],
+            product_id=draft.product_id,
+            warehouse_id=draft.warehouse_id,
+            receipt_id=draft.receipt_id,
+            status=draft.status,
+            safety_decision="DISCARDED",
+            created_at=draft.created_at,
+        )
+    except HTTPException as http_error:
+        raise http_error
+    except Exception as error:
+        logger.error(f"Error in POST /v1/voice/drafts/{draft_id}/discard endpoint: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.get(
@@ -278,8 +322,9 @@ async def list_voice_interactions_endpoint(
     status_filter: str | None = Query(default=None, alias="status"),
     scope: dict[str, Any] = Depends(get_warehouse_scope),
 ) -> VoiceInteractionListResponse:
-    """
-    List voice interaction audit records for administrators and warehouse managers.
+    """List voice interaction audit records for administrators and warehouse managers.
+
+    Returns paginated interaction records including transcript confidence and provider details.
 
     Args:
         limit: Max items.
@@ -293,30 +338,40 @@ async def list_voice_interactions_endpoint(
     Raises:
         HTTPException: If user is not administrator or warehouse manager.
     """
-    items, total = await voice_controller.list_voice_interactions(
-        scope=scope,
-        limit=limit,
-        offset=offset,
-        status=status_filter,
-    )
+    try:
+        logger.info("Calling GET /v1/voice/interactions endpoint")
+        items, total = await voice_controller.list_voice_interactions(
+            scope=scope,
+            limit=limit,
+            offset=offset,
+            status=status_filter,
+        )
 
-    return VoiceInteractionListResponse(
-        total=total,
-        items=[
-            VoiceInteractionItemResponse(
-                id=item.id,
-                actor_user_id=item.actor_user_id,
-                warehouse_id=item.warehouse_id,
-                receipt_id=item.receipt_id,
-                provider_name=item.provider_name,
-                stt_provider=item.stt_provider,
-                tts_provider=item.tts_provider,
-                language_code=item.language_code,
-                transcript_text=item.transcript_text,
-                transcript_confidence=float(item.transcript_confidence) if item.transcript_confidence else None,
-                status=item.status,
-                created_at=item.created_at,
-            )
-            for item in items
-        ],
-    )
+        return VoiceInteractionListResponse(
+            total=total,
+            items=[
+                VoiceInteractionItemResponse(
+                    id=item.id,
+                    actor_user_id=item.actor_user_id,
+                    warehouse_id=item.warehouse_id,
+                    receipt_id=item.receipt_id,
+                    provider_name=item.provider_name,
+                    stt_provider=item.stt_provider,
+                    tts_provider=item.tts_provider,
+                    language_code=item.language_code,
+                    transcript_text=item.transcript_text,
+                    transcript_confidence=float(item.transcript_confidence) if item.transcript_confidence else None,
+                    status=item.status,
+                    created_at=item.created_at,
+                )
+                for item in items
+            ],
+        )
+    except HTTPException as http_error:
+        raise http_error
+    except Exception as error:
+        logger.error(f"Error in GET /v1/voice/interactions endpoint: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )

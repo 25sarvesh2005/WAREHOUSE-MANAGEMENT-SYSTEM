@@ -37,6 +37,7 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 load_dotenv()
 
@@ -44,6 +45,7 @@ from datetime import UTC, datetime
 import time
 
 from common.logger import get_logger
+from common.request_id import RequestIDMiddleware
 from core.apis.api import api_router
 from core.config.settings import get_settings, validate_production_configuration
 import asyncio
@@ -55,8 +57,32 @@ from core.database.database import (
 )
 from core.database.seed import initialize_schema_for_development, seed_initial_data
 from core.jobs.reservation_expiry_job import release_expired_reservations
+from sqlalchemy import text
 
 logger = get_logger(__name__)
+
+
+async def _get_alembic_head() -> str:
+    """Return the current applied Alembic migration revision from the database.
+
+    Queries the alembic_version table directly so the health status reflects
+    the real migration state rather than a hardcoded constant.
+
+    Returns:
+        str: Current applied revision hash, or 'unknown' if unavailable.
+
+    Raises:
+        None: Errors are swallowed and 'unknown' is returned to keep the
+            health endpoint available even on schema issues.
+    """
+    try:
+        async with transaction_session() as session:
+            result = await session.execute(text("SELECT version_num FROM alembic_version LIMIT 1"))
+            row = result.fetchone()
+            return str(row[0]) if row else "no_migrations_applied"
+    except Exception as error:
+        logger.warning("Could not read alembic_version: %s", error)
+        return "unknown"
 
 
 async def _periodic_reservation_expiry_worker(interval_seconds: int = 60) -> None:
@@ -100,7 +126,16 @@ async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
         logger.warning("Configuration Warning: %s", warning)
 
     await connect_to_database()
-    await initialize_schema_for_development()
+
+    if runtime_settings.initialize_schema_on_startup:
+        logger.info("Schema auto-init enabled (INITIALIZE_SCHEMA_ON_STARTUP=true)")
+        await initialize_schema_for_development()
+    else:
+        logger.info(
+            "Schema auto-init skipped (INITIALIZE_SCHEMA_ON_STARTUP=false) "
+            "— Alembic migrations are expected to be applied externally."
+        )
+
     await seed_initial_data()
     expiry_task = asyncio.create_task(_periodic_reservation_expiry_worker())
     try:
@@ -116,20 +151,39 @@ async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
 
 
 settings = get_settings()
+_is_production = settings.app_env == "production"
+
 app = FastAPI(
     title="Whitfield Fulfillment Warehouse Operations API",
     description="Transactional warehouse operations and seller visibility platform.",
     version="0.1.0",
     lifespan=lifespan,
+    # Hide interactive API docs in production to prevent surface disclosure.
+    docs_url=None if _is_production else "/docs",
+    redoc_url=None if _is_production else "/redoc",
+    openapi_url=None if _is_production else "/openapi.json",
+)
+
+# TrustedHostMiddleware is outermost — rejects spoofed Host headers before
+# CORS or any business logic runs. Returns 400 for untrusted hosts.
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=settings.trusted_hosts_list,
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    # Explicit verbs only — wildcards accept any HTTP method including DELETE on open origins.
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    # Restrict to headers actually consumed by the frontend and standard browser headers.
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Request-ID"],
 )
+
+# RequestIDMiddleware runs inside CORS: reads/generates X-Request-ID, sets
+# request.state.request_id and REQUEST_ID_CTX_VAR for log correlation.
+app.add_middleware(RequestIDMiddleware)
 
 app.include_router(api_router)
 
@@ -248,7 +302,7 @@ async def operational_status() -> dict[str, object]:
             "status": db_status,
             "latency_ms": db_latency_ms,
         },
-        "alembic_head": "d2e3f4a5b6c7",
+        "alembic_head": await _get_alembic_head(),
         "ai": {
             "enabled": current_settings.ai_enabled,
             "provider": current_settings.ai_provider,

@@ -6,9 +6,9 @@ export function StatusBadge({ value, className = "" }: { value: string; classNam
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs tracking-tight whitespace-nowrap ${badgeStyle} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-semibold tracking-normal whitespace-nowrap shrink-0 ${badgeStyle} ${className}`}
     >
-      <span className="size-1.5 rounded-full bg-current opacity-80" />
+      <span className="size-1.5 rounded-full bg-current opacity-80 shrink-0" />
       <span>{value.replaceAll("_", " ")}</span>
     </span>
   );
@@ -21,9 +21,9 @@ export function FacilityBadge({ code, className = "" }: { code: string; classNam
   if (isReno) {
     return (
       <span
-        className={`inline-flex items-center gap-1 rounded-md bg-cyan-50 px-2 py-0.5 text-xs font-semibold text-cyan-800 border border-cyan-200 ${className}`}
+        className={`inline-flex items-center gap-1.5 rounded-md bg-cyan-50 px-2.5 py-0.5 text-xs font-semibold text-cyan-800 border border-cyan-200 whitespace-nowrap shrink-0 ${className}`}
       >
-        <span className="size-1.5 rounded-full bg-cyan-600" />
+        <span className="size-1.5 rounded-full bg-cyan-600 shrink-0" />
         {code} (Reno, NV)
       </span>
     );
@@ -32,9 +32,9 @@ export function FacilityBadge({ code, className = "" }: { code: string; classNam
   if (isColumbus) {
     return (
       <span
-        className={`inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200 ${className}`}
+        className={`inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200 whitespace-nowrap shrink-0 ${className}`}
       >
-        <span className="size-1.5 rounded-full bg-amber-600" />
+        <span className="size-1.5 rounded-full bg-amber-600 shrink-0" />
         {code} (Columbus, OH)
       </span>
     );
@@ -42,9 +42,9 @@ export function FacilityBadge({ code, className = "" }: { code: string; classNam
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200 ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200 whitespace-nowrap shrink-0 ${className}`}
     >
-      <span className="size-1.5 rounded-full bg-slate-500" />
+      <span className="size-1.5 rounded-full bg-slate-500 shrink-0" />
       {code}
     </span>
   );

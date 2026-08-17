@@ -123,9 +123,9 @@ class Settings(BaseSettings):
         "http://localhost:5173,http://127.0.0.1:5173,"
         "http://localhost:5174,http://127.0.0.1:5174"
     )
-    ai_enabled: bool = False
-    ai_provider: Literal["disabled", "google_genai"] = "disabled"
-    ai_model: str = "gemini-3.1-flash-lite-preview"
+    ai_enabled: bool = True
+    ai_provider: Literal["disabled", "google_genai"] = "google_genai"
+    ai_model: str = "gemini-3.5-flash"
     ai_log_prompt_excerpts: bool = False
     ai_prompt_excerpt_chars: int = 500
     ai_response_excerpt_chars: int = 2000
@@ -150,6 +150,10 @@ class Settings(BaseSettings):
     bootstrap_admin_email: str = "admin@whitfield.local"
     bootstrap_admin_password: str = "change-this-before-use"
     initialize_schema_on_startup: bool = True
+    # Comma-separated list of allowed Host header values.
+    # Use '*' only if behind a trusted reverse proxy that enforces the host.
+    # Production: set to your actual domain, e.g. "api.whitfield.io,whitfield.io"
+    trusted_hosts: str = "localhost,127.0.0.1,0.0.0.0"
 
     @property
     def runtime_database_url(self) -> str:
@@ -207,6 +211,21 @@ class Settings(BaseSettings):
             None.
         """
         return [origin.strip() for origin in self.frontend_origins.split(",") if origin.strip()]
+
+    @property
+    def trusted_hosts_list(self) -> list[str]:
+        """Return configured trusted host values as a list.
+
+        The comma-separated environment value is trimmed and empty entries are
+        discarded before being passed to TrustedHostMiddleware.
+
+        Returns:
+            list[str]: Allowed Host header values.
+
+        Raises:
+            None.
+        """
+        return [host.strip() for host in self.trusted_hosts.split(",") if host.strip()]
 
 
 @lru_cache(maxsize=1)
@@ -290,6 +309,26 @@ def validate_production_configuration(settings: Settings) -> list[str]:
         msg = "VOICE_TTS_PROVIDER is set to sarvam, but no SARVAM_API_KEY is configured."
         if is_prod:
             raise ValueError(f"CRITICAL PRODUCTION CONFIGURATION ERROR: {msg}")
+        warnings.append(msg)
+
+    # 5. Schema auto-initialization must be disabled in production.
+    #    Production databases should only be modified via Alembic migrations.
+    if is_prod and settings.initialize_schema_on_startup:
+        raise ValueError(
+            "CRITICAL PRODUCTION CONFIGURATION ERROR: "
+            "INITIALIZE_SCHEMA_ON_STARTUP must be set to false in production. "
+            "Run Alembic migrations explicitly before starting the server."
+        )
+
+    # 6. Trusted hosts left as localhost default in production will reject all
+    #    real traffic — warn operators to set their actual domain.
+    localhost_defaults = {"localhost", "127.0.0.1", "0.0.0.0"}
+    configured_hosts = set(settings.trusted_hosts_list)
+    if is_prod and configured_hosts.issubset(localhost_defaults):
+        msg = (
+            "TRUSTED_HOSTS is set to localhost/127.0.0.1 — this will reject all "
+            "production traffic. Set TRUSTED_HOSTS to your real domain."
+        )
         warnings.append(msg)
 
     return warnings
