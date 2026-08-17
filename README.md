@@ -1,23 +1,36 @@
 <div align="center">
 
 # 🏭 Whitfield Warehouse Management System (WMS)
-### **Enterprise Bicoastal Fulfillment, Multi-Tenant Logistics & Natural Language AI Copilot**
+### **Enterprise Bicoastal Fulfillment, Multi-Tenant Logistics, AI Copilot & Voice-Guided Receiving**
 
+[![Live App on Vercel](https://img.shields.io/badge/Live_Deployment-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)](https://warehouse-management-system-jade-seven.vercel.app)
+[![API on Render](https://img.shields.io/badge/Live_API-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://whitfield-wms-api.onrender.com/docs)
+[![CI Tests](https://img.shields.io/badge/Pytest_Suite-110_Passed_%E2%9C%94-2ea44f?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/25sarvesh2005/WAREHOUSE-MANAGEMENT-SYSTEM/actions)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React 19](https://img.shields.io/badge/React_19-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![React 19](https://img.shields.io/badge/React_19-Vite_8-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16_Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.5_Flash-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
-[![Docker](https://img.shields.io/badge/Docker-Compose_Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 <br />
 
-**Whitfield WMS** is a mission-critical, bicoastal fulfillment and warehouse operations platform. Engineered to eliminate spreadsheet fragmentation, it combines an **immutable double-entry inventory ledger**, **strict concurrency row-locking**, a **multilingual hands-free voice intake dock**, and a **Google Gemini-powered conversational AI copilot** across nationwide logistics centers.
+**Whitfield WMS** is a mission-critical, bicoastal fulfillment and warehouse operations platform. Engineered to eliminate spreadsheet fragmentation, it combines an **immutable double-entry inventory ledger**, **strict concurrency row-locking (`SELECT FOR UPDATE`)**, a **multilingual hands-free voice intake station (Web Speech API / Sarvam)**, and a **Google Gemini-powered conversational AI copilot** across nationwide logistics centers.
 
-[Explore Live Demo](#-quick-start) • [Architecture](#-architecture--system-design) • [AI Copilot](#-conversational-ai-copilot) • [API Documentation](#-api-endpoints--swagger) • [Deployment](#-cloud-deployment-guide)
+[🚀 Explore Live Web App](https://warehouse-management-system-jade-seven.vercel.app) • [📖 Interactive Swagger API Docs](https://whitfield-wms-api.onrender.com/docs) • [🏗️ Architecture](#-architecture--system-design) • [👥 Demo Personas](#-role-based-access-control-rbac) • [🧪 Test Verification](#-automated-testing--ci-verification)
 
 </div>
+
+---
+
+## 🌟 Live Cloud Deployment
+
+| Service | Host | Status | Direct Link |
+|---|---|:---:|---|
+| **Frontend Web Portal** | Vercel | 🟢 **Live** | [warehouse-management-system-jade-seven.vercel.app](https://warehouse-management-system-jade-seven.vercel.app) |
+| **Backend REST API** | Render | 🟢 **Live** | [whitfield-wms-api.onrender.com](https://whitfield-wms-api.onrender.com) |
+| **Swagger Interactive Docs** | Render | 🟢 **Live** | [whitfield-wms-api.onrender.com/docs](https://whitfield-wms-api.onrender.com/docs) |
+| **Relational Database** | Supabase (AWS) | 🟢 **Live** | PostgreSQL 16 with Connection Pooling & Async Engine |
 
 ---
 
@@ -36,13 +49,14 @@
 ```
 
 ### 1. 🤖 Conversational AI Warehouse Copilot (Google Gemini 2.5 Flash)
-- **Natural Language Warehouse Inquiries:** Ask anything in plain English (e.g., *"What products have 0 quantity?"*, *"Which headphones are in stock across Reno and Columbus?"*, *"Show lowest stock items"*).
+- **Natural Language Warehouse Inquiries:** Ask anything in plain English (e.g., query `SKU-AURA-ANC100` or *"Show inventory across Reno and Columbus facilities"*).
 - **Grounded Read-Only RAG:** Grounded strictly in live PostgreSQL ledger evidence with safety guardrails — zero hallucination, zero unauthorized mutations.
 - **Automated Rebalance Drafting:** Detects regional stock imbalances and drafts transfer orders between facilities for manager review.
 
-### 2. 🎙️ Hands-Free Voice Receiving Dock (Sarvam & Deepgram STT/TTS)
+### 2. 🎙️ Hands-Free Voice Receiving Dock (Web Speech API / Sarvam STT)
 - **Multilingual Dock Voice Intake:** Allows dock workers wearing headsets to dictate inbound deliveries hands-free while unloading trucks and scanning pallets.
-- **Structured Draft Synthesis:** Extracts supplier barcodes, carrier tracking numbers, and damage notes automatically into verified receiving drafts.
+- **Native Browser Speech Fallback:** Works seamlessly across modern browsers using native Web Speech API with zero API key configuration needed.
+- **Structured Draft Synthesis:** Extracts supplier quantities, damage notes, and condition codes automatically into verified receiving drafts.
 
 ### 3. 🛡️ Concurrency-Safe Double-Entry Inventory Ledger
 - **Race Condition Prevention:** Powered by pessimistic `SELECT ... FOR UPDATE` row-level locks on inventory balance records to prevent double-allocation during flash sales.
@@ -58,6 +72,20 @@
   - **`SL-NORD`**: Nordic Apparel Co *(Organic cotton hoodies, ripstop anoraks)*
   - **`SL-VITA`**: Vitality Nutrition Labs *(Electrolyte packs, isolate protein, magnesium)*
   - **`SL-APEX`**: Apex Workspace Innovations *(Mechanical keyboards, desk mats, precision mice)*
+
+---
+
+## 👥 Role-Based Access Control (RBAC)
+
+The system comes pre-configured with 5 distinct personas. You can use either `.com` or `.local` credentials, or click the **1-Click Quick Demo Login** buttons on the sign-in page:
+
+| Role | Email ID | Password | Scope & Responsibilities |
+|---|---|---|---|
+| 👑 **Administrator** | `admin@whitfield.com` | `WhitfieldAdmin123!` | Global tenant provisioning, facility control, system & AI audit logs |
+| 🏬 **Warehouse Manager** | `manager@whitfield.com` | `WhitfieldManager123!` | Multi-facility inventory management (Reno & Columbus), transfers & exceptions |
+| 📥 **Dock Receiver** | `receiver@whitfield.com` | `WhitfieldReceiver123!` | Inbound dock deliveries, pallet verification, Voice AI intake station |
+| 📦 **Lead Picker/Packer** | `picker@whitfield.com` | `WhitfieldPicker123!` | Pick waves, short-pick quarantine, carrier dispatch, tracking generation |
+| 🏷️ **Seller Partner** | `seller@whitfield.com` | `WhitfieldSeller123!` | Aura Electronics merchant portal (`SL-AURA`), dedicated SKU stock & RMAs |
 
 ---
 
@@ -78,7 +106,7 @@ flowchart TB
         
         subgraph AIService["AI & Voice Operations Subsystem"]
             Gemini["Google Gemini 2.5 Flash RAG"]
-            Voice["Sarvam & Deepgram Audio Pipeline"]
+            Voice["Web Speech API & Sarvam Audio Pipeline"]
         end
     end
 
@@ -100,6 +128,21 @@ flowchart TB
 
 ---
 
+## 🧪 Automated Testing & CI Verification
+
+The entire backend and frontend pipelines are continuously verified with GitHub Actions CI:
+
+```bash
+============================ 110 passed in 36.63s =============================
+```
+
+- **Backend Pytest Suite:** **110 / 110 tests passed (100% GREEN)**
+- **Coverage Areas:** Multi-facility routing, pessimistic row locking, idempotency reservation safety, short-pick quarantine transfers, Voice NLP parsing, Gemini RAG safety, and token revocation.
+- **Frontend Secret Audit:** Verified 0 backend credentials or database URLs leaked into client bundles.
+- **TypeScript & ESLint:** 0 errors, 0 warnings.
+
+---
+
 ## 💻 Tech Stack
 
 | Layer | Technology | Purpose |
@@ -109,23 +152,9 @@ flowchart TB
 | **Backend** | Python 3.11+, FastAPI, Uvicorn | Async ASGI backend, OpenAPI 3.1 schema auto-generation |
 | **Database** | PostgreSQL 16, Async SQLAlchemy 2.x, `asyncpg`, Alembic | Relational storage, async connection pooling, schema migrations |
 | **AI Intelligence**| Google Gemini 2.5 Flash (`google-genai`) | Grounded natural language warehouse queries & recommendations |
-| **Speech Audio** | Sarvam AI & Deepgram STT/TTS | Multilingual voice intake processing for receiving docks |
+| **Speech Audio** | Web Speech API & Sarvam STT/TTS | Multilingual voice intake processing for receiving docks |
 | **Authentication**| JWT (HS256), Passlib (Bcrypt) | Scoped Role-Based Access Control across 5 granular personas |
 | **Containerization**| Docker, Docker Compose | Production-ready multi-stage container packaging |
-
----
-
-## 👥 Role-Based Access Control (RBAC)
-
-The system comes pre-configured with 5 distinct personas:
-
-| Role | Default Email | Password | Scope & Responsibilities |
-|---|---|---|---|
-| 👑 **Administrator** | `admin@whitfield.local` | `WhitfieldAdmin123!` | Global access, tenant provisioning, system logs, full visibility |
-| 🏬 **Warehouse Manager** | `manager@whitfield.local` | `Manager123!` | Multi-facility management (Reno & Columbus), inter-facility transfers, exceptions |
-| 📥 **Dock Receiver** | `receiver@whitfield.local` | `Receiver123!` | Inbound dock deliveries, pallet verification, voice intake station |
-| 📦 **Lead Picker/Packer** | `picker@whitfield.local` | `Picker123!` | Pick waves, packing validation, carrier dispatch, tracking generation |
-| 🏷️ **Seller Partner** | `seller@whitfield.local` | `Seller123!` | Aura Electronics tenant portal (`SL-AURA`), dedicated SKU stock & RMA tracking |
 
 ---
 
@@ -190,36 +219,6 @@ Access the services:
 
 ---
 
-## 🚀 Cloud Deployment Guide
-
-### Deploying Backend on Render / Railway
-1. Create a new **Web Service** on [Render.com](https://render.com) from this repository.
-2. Set Environment Variables:
-   ```ini
-   DATABASE_URL=postgresql+asyncpg://user:password@host:5432/dbname
-   MIGRATION_DATABASE_URL=postgresql+psycopg://user:password@host:5432/dbname
-   JWT_SECRET=your_32_char_random_jwt_secret
-   AI_ENABLED=true
-   AI_PROVIDER=google_genai
-   AI_MODEL=gemini-2.5-flash
-   GOOGLE_GENAI_API_KEY=your_gemini_api_key
-   INITIALIZE_SCHEMA_ON_STARTUP=true
-   FRONTEND_ORIGINS=https://your-frontend.vercel.app,http://localhost:5173
-   ```
-3. Deploy!
-
-### Deploying Frontend on Vercel
-1. Import repository into [Vercel.com](https://vercel.com).
-2. Set **Root Directory** to `frontend`.
-3. Set **Framework Preset** to `Vite`.
-4. Add Environment Variable:
-   ```ini
-   VITE_API_BASE_URL=https://your-backend-service.onrender.com
-   ```
-5. Click **Deploy**!
-
----
-
 ## 📡 API Endpoints & Modules
 
 The platform exposes **95+ structured REST endpoints** organized under `/api/v1/`:
@@ -253,9 +252,10 @@ WAREHOUSE-MANAGEMENT-SYSTEM/
 │   │   ├── cruds/                  # SQLAlchemy persistence with row locking
 │   │   ├── models/                 # SQLAlchemy 2.x ORM models
 │   │   ├── services/ai/            # Gemini RAG provider & read-only tools
-│   │   ├── services/voice/         # Sarvam & Deepgram audio pipeline
+│   │   ├── services/voice/         # Web Speech API & Sarvam audio pipeline
 │   │   ├── database/               # Database engine, session, & seeders
 │   │   └── jobs/                   # Background tasks (reservation expiry)
+│   ├── tests/                      # 110+ Pytest unit and E2E test suites
 │   ├── tools/                      # Data seeders & enterprise verification scripts
 │   ├── Dockerfile                  # Production backend container build
 │   └── requirements.txt            # Python dependencies
