@@ -155,7 +155,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     }
     const isFetchFail = error instanceof Error && error.message === "Failed to fetch";
     const message = isFetchFail
-      ? `Cannot connect to API at ${API_BASE_URL}. Ensure your Render backend is running and CORS is allowed.`
+      ? `Cannot connect to API at ${getApiBaseUrl()}. Ensure your Render backend is running and CORS is allowed.`
       : error instanceof Error
         ? error.message
         : "Network error occurred";
