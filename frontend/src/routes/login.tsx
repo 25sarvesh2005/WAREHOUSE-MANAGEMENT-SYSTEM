@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui-kit";
+import { getApiBaseUrl, setCustomApiBaseUrl } from "@/lib/api-client";
 import { signInAsync, useAuth } from "@/lib/auth";
 import { clearSession } from "@/lib/session";
 
@@ -38,6 +39,8 @@ function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showApiConfig, setShowApiConfig] = useState(false);
+  const [apiUrlInput, setApiUrlInput] = useState(() => getApiBaseUrl().replace(/\/api\/v1$/, ""));
 
   useEffect(() => {
     if (ready && user) navigate({ to: "/", replace: true });
@@ -262,13 +265,54 @@ function LoginPage() {
                 Open a Seller Account
               </Link>
             </p>
-            <button
-              type="button"
-              onClick={resetLocalSession}
-              className="font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              Having issues? Reset local session cache
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={resetLocalSession}
+                className="font-medium text-muted-foreground transition-colors hover:text-primary"
+              >
+                Reset session
+              </button>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={() => setShowApiConfig((v) => !v)}
+                className="font-medium text-primary hover:underline"
+              >
+                {showApiConfig ? "Hide API Server" : "API Server Settings"}
+              </button>
+            </div>
+
+            {showApiConfig && (
+              <div className="mt-3 rounded-xl border border-border bg-muted/40 p-3 text-left">
+                <label className="block text-[11px] font-semibold text-foreground">
+                  Backend API URL (Render / Cloud):
+                  <input
+                    type="url"
+                    value={apiUrlInput}
+                    onChange={(e) => setApiUrlInput(e.target.value)}
+                    placeholder="https://your-service.onrender.com"
+                    className="mt-1 w-full rounded-lg border border-input bg-white px-2.5 py-1.5 font-mono text-xs outline-none focus:border-primary"
+                  />
+                </label>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="text-[10px] text-muted-foreground">
+                    Active: <code className="font-mono text-foreground">{getApiBaseUrl()}</code>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomApiBaseUrl(apiUrlInput);
+                      setError(null);
+                      alert(`API Backend updated to: ${getApiBaseUrl()}`);
+                    }}
+                    className="rounded-md bg-primary px-2.5 py-1 text-xs font-semibold text-white hover:bg-primary-dark"
+                  >
+                    Save & Reconnect
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </div>
