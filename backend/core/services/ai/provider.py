@@ -217,7 +217,11 @@ def build_ai_provider(settings: Any) -> AIProvider:
 
     google_genai_api_key = str(getattr(settings, "google_genai_api_key", "")).strip()
     fallback_google_api_key = str(getattr(settings, "google_api_key", "")).strip()
+    active_key = google_genai_api_key or fallback_google_api_key
+    if not active_key:
+        return DisabledAIProvider()
+
     return GoogleGenAIProvider(
-        api_key=google_genai_api_key or fallback_google_api_key,
-        default_model_name=str(getattr(settings, "ai_model", "gemini-3.1-flash-lite-preview")),
+        api_key=active_key,
+        default_model_name=str(getattr(settings, "ai_model", "gemini-2.5-flash")),
     )
