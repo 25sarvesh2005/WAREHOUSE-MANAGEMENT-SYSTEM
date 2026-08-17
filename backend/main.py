@@ -164,12 +164,12 @@ app = FastAPI(
     openapi_url=None if _is_production else "/openapi.json",
 )
 
-# TrustedHostMiddleware is outermost — rejects spoofed Host headers before
-# CORS or any business logic runs. Returns 400 for untrusted hosts.
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=settings.trusted_hosts_list,
-)
+# TrustedHostMiddleware only enforces explicit host whitelists when not wildcard
+if settings.trusted_hosts.strip() != "*":
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=settings.trusted_hosts_list,
+    )
 
 app.add_middleware(
     CORSMiddleware,
