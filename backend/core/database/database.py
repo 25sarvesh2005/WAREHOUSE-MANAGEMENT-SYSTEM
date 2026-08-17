@@ -31,10 +31,12 @@ Raises:
 
 from __future__ import annotations
 
+import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from sqlalchemy import text
+from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -70,13 +72,20 @@ async def connect_to_database() -> None:
 
     settings = get_settings()
     logger.info("Connecting to PostgreSQL database")
-    _engine = create_async_engine(
-        settings.runtime_database_url,
-        pool_size=settings.database_pool_size,
-        max_overflow=settings.database_max_overflow,
-        pool_pre_ping=True,
-        connect_args={"prepared_statement_cache_size": 0},
-    )
+    if settings.app_env in ("test", "testing") or "pytest" in sys.modules:
+        _engine = create_async_engine(
+            settings.runtime_database_url,
+            poolclass=NullPool,
+            connect_args={"prepared_statement_cache_size": 0},
+        )
+    else:
+        _engine = create_async_engine(
+            settings.runtime_database_url,
+            pool_size=settings.database_pool_size,
+            max_overflow=settings.database_max_overflow,
+            pool_pre_ping=True,
+            connect_args={"prepared_statement_cache_size": 0},
+        )
     _session_factory = async_sessionmaker(_engine, expire_on_commit=False)
 
 

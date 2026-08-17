@@ -15,7 +15,14 @@ import pytest
 from fastapi import HTTPException
 
 from common.warehouse_scope import assert_seller_access, assert_warehouse_access
-from core.constants import BusinessStatus, InventoryState, OrderStatus, PickTaskStatus, TransferStatus, UserRole
+from core.constants import (
+    BusinessStatus,
+    InventoryState,
+    OrderStatus,
+    PickTaskStatus,
+    TransferStatus,
+    UserRole,
+)
 from core.controllers.fulfillment_controller import fulfillment_controller
 from core.controllers.order_controller import order_controller
 from core.controllers.transfer_controller import transfer_controller
@@ -24,6 +31,7 @@ from core.database.database import close_database_connection, connect_to_databas
 from core.database.seed import initialize_schema_for_development, seed_initial_data
 from core.models.catalog_model import Product
 from core.models.identity_model import Seller, Warehouse
+from core.models.inventory_model import InventoryMovement
 
 
 
@@ -181,14 +189,19 @@ async def test_short_pick_moves_stock_to_quarantined_not_available():
         session.add(product)
         await session.flush()
 
-        await inventory_crud.update_balance_projection(
-            session,
+        m_init = InventoryMovement(
             seller_id=seller.id,
             product_id=product.id,
             warehouse_id=warehouse.id,
             inventory_state=InventoryState.AVAILABLE.value,
             quantity_delta=Decimal("10.00"),
+            movement_type="RECEIPT",
+            source_type="INITIAL_SEED",
+            source_id=uuid4(),
+            idempotency_key=f"SEED-SP-{uuid4()}",
+            actor_user_id=admin_id,
         )
+        await inventory_crud.apply_movement(session, m_init)
         seller_id = seller.id
         warehouse_id = warehouse.id
         product_id = product.id
