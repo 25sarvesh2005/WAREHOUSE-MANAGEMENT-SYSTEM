@@ -166,7 +166,12 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     letter-spacing: -0.015em;
     line-height: 1.25;
     text-wrap: balance;
@@ -177,7 +182,9 @@
   }
 
   /* Monospace for barcodes, SKUs, and quantities */
-  code, pre, .font-mono {
+  code,
+  pre,
+  .font-mono {
     font-family: var(--font-mono);
     letter-spacing: 0.01em;
   }
@@ -188,7 +195,8 @@
     width: 100%;
   }
 
-  th, td {
+  th,
+  td {
     vertical-align: middle;
   }
 
@@ -209,7 +217,10 @@
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;
+    transition:
+      border-color 0.15s ease-in-out,
+      box-shadow 0.15s ease-in-out,
+      background-color 0.15s ease-in-out;
   }
 
   select:hover {

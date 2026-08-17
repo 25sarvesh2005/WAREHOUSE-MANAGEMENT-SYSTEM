@@ -1898,7 +1898,7 @@ class AIController:
             f"for seller {row.seller_code}"
             for row in rows
         ]
-        return f"Product {rows[0].sku} ({rows[0].product_name}) has " + "; ".join(parts) + "."
+        return f"SKU {rows[0].sku} has " + "; ".join(parts) + "."
 
     def _ledger_fallback_answer(
         self,

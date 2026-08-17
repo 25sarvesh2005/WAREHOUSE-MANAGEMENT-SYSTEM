@@ -298,7 +298,9 @@ export function ReceivingVoiceDraftPanel({
           >
             <div className="flex items-center gap-2 text-base">
               {isRecording ? <MicOff className="size-5" /> : <Mic className="size-5" />}
-              <span>{isRecording ? `Recording... (${recordingSeconds}s)` : "Click / Tap to Speak"}</span>
+              <span>
+                {isRecording ? `Recording... (${recordingSeconds}s)` : "Click / Tap to Speak"}
+              </span>
             </div>
             <span className="text-[11px] font-medium opacity-90">
               {isRecording ? "Click again to Stop & Parse" : "or Click an example phrase below"}
@@ -311,7 +313,9 @@ export function ReceivingVoiceDraftPanel({
           </p>
 
           <div className="mt-4 space-y-2 border-t border-primary/10 pt-4">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-primary">1-Click Test Phrases:</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-primary">
+              1-Click Test Phrases:
+            </p>
             {[
               "received 12 available and 2 damaged note box crushed",
               "10 available, 5 quarantined note quality inspection",
