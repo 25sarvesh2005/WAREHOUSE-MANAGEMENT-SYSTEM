@@ -1,26 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/fulfillment_crud.py
-Purpose     : Async CRUD operations for pick tasks, packages, and manual shipments.
-
-Responsibilities:
-    - Persist warehouse pick tasks and pick lines.
-    - Fetch pick tasks by ID or warehouse scope filters.
-    - Save package measurements and manual shipment records.
-    - Log shipment event history streams.
-
-Flow:
-    Controller -> fulfillment_crud -> AsyncSession -> PostgreSQL
-
-Used By:
-    - core/controllers/fulfillment_controller.py
-
-Returns:
-    PickTask / Package / Shipment model instances or sequences.
-
-Raises:
-    Does NOT raise HTTPException. Returns None or model instances.
---------------------------------------------------------------------------------
+Database persistence operations for pick tasks, packages, and manual shipments.
 """
 
 from __future__ import annotations

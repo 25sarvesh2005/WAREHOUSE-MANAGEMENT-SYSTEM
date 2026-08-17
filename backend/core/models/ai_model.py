@@ -1,30 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/ai_model.py
-Purpose     : Define audited AI interaction persistence models.
-
-Responsibilities:
-    - Persist AI interaction summaries without storing unnecessary prompt secrets.
-    - Persist permission-aware read-tool call evidence and draft-action records.
-    - Keep AI audit storage separate from operational mutation workflows.
-
-Flow:
-    AI controller or service boundary
-        ->
-    ai_crud persistence functions
-        ->
-    ai_interactions, ai_tool_calls, and ai_draft_actions tables
-
-Used By:
-    - core/cruds/ai_crud.py
-    - future read-only AI controllers and tools
-
-Returns:
-    SQLAlchemy model instances - Audited AI persistence records.
-
-Raises:
-    sqlalchemy.exc.IntegrityError: On uniqueness or foreign key violations.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for audited AI interaction persistence, tool calls, and draft actions.
 """
 
 from __future__ import annotations

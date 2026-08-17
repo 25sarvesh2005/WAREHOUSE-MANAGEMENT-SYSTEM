@@ -1,30 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/inventory_model.py
-Purpose     : Define inventory movement ledger, balance projections, and adjustment models.
-
-Responsibilities:
-    - Persist append-only inventory movements (authoritative ledger).
-    - Maintain fast operational balance projections by location and state.
-    - Track inventory adjustments and reconciliation records.
-
-Flow:
-    Receiving / Order / Adjustment action
-        ->
-    Persist InventoryMovement (append-only)
-        ->
-    Update InventoryBalance projection (same transaction)
-
-Used By:
-    - core/cruds/inventory_crud.py
-    - core/controllers/inventory_controller.py
-
-Returns:
-    SQLAlchemy model instances - Inventory persistence records.
-
-Raises:
-    sqlalchemy.exc.IntegrityError: On constraint or uniqueness violations.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for inventory movement ledger, balance projections, and reconciliations.
 """
 
 from __future__ import annotations

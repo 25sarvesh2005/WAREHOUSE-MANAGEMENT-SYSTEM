@@ -1,12 +1,5 @@
 """
-Return Routes.
-
-FastAPI endpoints for customer / seller returns and inspection dispositions:
-    - POST /v1/returns: Create return draft/expected RMA.
-    - GET /v1/returns: List returns.
-    - GET /v1/returns/{return_id}: Retrieve single return details.
-    - POST /v1/returns/{return_id}/receive: Register parcel receipt into RETURN_INSPECTION.
-    - POST /v1/returns/{return_id}/inspect: Log inspection outcome dispositions.
+FastAPI HTTP endpoints for customer/seller returns and inspection dispositions.
 """
 
 from typing import Annotated
@@ -22,11 +15,10 @@ from core.apis.schemas.requests.return_request import (
     ReturnReceiveRequest,
 )
 from core.apis.schemas.responses.return_response import ReturnListResponse, ReturnResponse
-from core.controllers.return_controller import ReturnController
+from core.controllers.return_controller import return_controller
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/v1/returns", tags=["Returns & Dispositions"])
-return_controller = ReturnController()
 
 
 @router.post(

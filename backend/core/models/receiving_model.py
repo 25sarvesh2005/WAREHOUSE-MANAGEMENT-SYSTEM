@@ -1,26 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/receiving_model.py
-Purpose     : Define receiving header, line item, and workflow event models.
-
-Responsibilities:
-    - Persist receiving receipts (draft, progress, completion, duplicate override).
-    - Track expected, sellable, damaged, quarantined, shortage, and overage counts.
-    - Record audit trail of receiving events.
-
-Flow:
-    Create draft receipt -> Add/Update line items -> Complete receipt -> Emit movements
-
-Used By:
-    - core/cruds/receiving_crud.py
-    - core/controllers/receiving_controller.py
-
-Returns:
-    SQLAlchemy model instances - Receiving persistence records.
-
-Raises:
-    sqlalchemy.exc.IntegrityError: On constraint or duplicate violations.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for receiving receipts, lines, and receipt events.
 """
 
 from __future__ import annotations

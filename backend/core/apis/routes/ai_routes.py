@@ -440,7 +440,9 @@ async def get_ai_provider_health(
     except HTTPException:
         raise
     except Exception as error:
-        logger.error("Error in GET /v1/ai/admin/provider-health: %s", error, exc_info=True)
+        logger.error(
+            "Error in GET /v1/ai/admin/provider-health: %s", error, exc_info=True
+        )
         raise HTTPException(status_code=500, detail="Internal Server Error") from error
 
 
@@ -470,7 +472,9 @@ async def submit_ai_feedback(
         HTTPException: For not-found or server errors.
     """
     try:
-        logger.info("Calling POST /v1/ai/interactions/%s/feedback endpoint", interaction_id)
+        logger.info(
+            "Calling POST /v1/ai/interactions/%s/feedback endpoint", interaction_id
+        )
         response = await ai_controller.submit_feedback(scope, interaction_id, request)
         return AIFeedbackResponse.model_validate(response)
     except HTTPException:
@@ -515,7 +519,9 @@ async def summarize_operational_exceptions(
     except HTTPException:
         raise
     except Exception as error:
-        logger.error("Error in POST /v1/ai/exceptions/summary: %s", error, exc_info=True)
+        logger.error(
+            "Error in POST /v1/ai/exceptions/summary: %s", error, exc_info=True
+        )
         raise HTTPException(status_code=500, detail="Internal Server Error") from error
 
 
@@ -645,4 +651,3 @@ async def reject_draft_action(
             exc_info=True,
         )
         raise HTTPException(status_code=500, detail="Internal Server Error") from error
-

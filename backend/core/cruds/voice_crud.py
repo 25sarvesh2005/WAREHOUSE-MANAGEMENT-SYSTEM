@@ -1,31 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/voice_crud.py
-Purpose     : Provide database persistence operations for voice interactions and drafts.
-
-Responsibilities:
-    - Persist voice interaction records and transcription results.
-    - Persist voice-generated receiving drafts with proposed lines.
-    - Update interaction and draft statuses (e.g. APPLIED, DISCARDED).
-    - List and retrieve voice audit interactions with pagination.
-    - Never raise HTTPException directly; accept AsyncSession as the first parameter.
-
-Flow:
-    Voice Controller
-        ->
-    voice_crud functions
-        ->
-    Database session queries
-
-Used By:
-    - core/controllers/voice_controller.py
-
-Returns:
-    VoiceInteraction, VoiceReceivingDraft, or sequences of models.
-
-Raises:
-    SQLAlchemyError: On low-level database failure.
---------------------------------------------------------------------------------
+Database persistence operations for voice interactions and drafts.
 """
 
 from __future__ import annotations

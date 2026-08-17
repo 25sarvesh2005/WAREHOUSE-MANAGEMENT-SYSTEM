@@ -1,29 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/ai_crud.py
-Purpose     : Persist audited AI interaction records.
-
-Responsibilities:
-    - Insert and update AI interaction audit records inside caller-owned transactions.
-    - Record read-tool calls and draft actions without executing operational mutations.
-    - Keep AI persistence free of HTTP exceptions and business authorization policy.
-
-Flow:
-    Controller or approved service boundary
-        ->
-    ai_crud function
-        ->
-    SQLAlchemy session flush
-
-Used By:
-    - future read-only AI controllers and services
-
-Returns:
-    AIInteraction, AIToolCall, or AIDraftAction persistence records.
-
-Raises:
-    sqlalchemy.exc.SQLAlchemyError: On database failures.
---------------------------------------------------------------------------------
+Database persistence operations for AI interaction audits, tool calls, and draft actions.
 """
 
 from __future__ import annotations

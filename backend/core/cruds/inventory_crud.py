@@ -1,27 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/inventory_crud.py
-Purpose     : Perform database operations for inventory movements and balance projections.
-
-Responsibilities:
-    - Insert append-only inventory movement ledger records.
-    - Atomically update or insert operational balance projections.
-    - Query movement ledger and balance views with scope filters.
-    - Provide balance reconstruction calculation from movements.
-
-Flow:
-    Controller -> record_movement() & update_balance_projection() in same transaction
-
-Used By:
-    - core/controllers/inventory_controller.py
-    - core/controllers/receiving_controller.py
-
-Returns:
-    CRUD functions -> Model instances or scalar query results.
-
-Raises:
-    sqlalchemy.exc.SQLAlchemyError: On database operation failures.
---------------------------------------------------------------------------------
+Database CRUD operations for inventory movements and balance projections.
 """
 
 from __future__ import annotations
@@ -216,6 +194,86 @@ async def update_balance_projection(
     await session.flush()
     await session.refresh(balance)
     return balance
+
+
+async def apply_movement(
+    session: AsyncSession,
+    movement: InventoryMovement,
+) -> tuple[InventoryMovement, InventoryBalance]:
+    """Atomically record an inventory movement and update the balance projection."""
+    persisted_movement = await record_movement(session, movement)
+    balance = await update_balance_projection(
+        session,
+        seller_id=movement.seller_id,
+        product_id=movement.product_id,
+        warehouse_id=movement.warehouse_id,
+        location_id=movement.location_id,
+        inventory_state=movement.inventory_state,
+        quantity_delta=movement.quantity_delta,
+    )
+    return persisted_movement, balance
+
+
+async def apply_state_transfer(
+    session: AsyncSession,
+    *,
+    seller_id: UUID,
+    product_id: UUID,
+    from_warehouse_id: UUID,
+    to_warehouse_id: UUID | None = None,
+    from_location_id: UUID | None = None,
+    to_location_id: UUID | None = None,
+    from_state: str,
+    to_state: str,
+    quantity: Decimal,
+    movement_type: str,
+    source_type: str,
+    source_id: UUID,
+    source_line_id: UUID | None = None,
+    idempotency_prefix: str,
+    reason_code: str | None = None,
+    reason_text: str | None = None,
+    actor_user_id: UUID | None = None,
+) -> tuple[InventoryMovement, InventoryMovement]:
+    """Atomically transfer inventory between buckets/states in a double-entry debit/credit."""
+    dest_wh = to_warehouse_id if to_warehouse_id is not None else from_warehouse_id
+    m_out = InventoryMovement(
+        seller_id=seller_id,
+        product_id=product_id,
+        warehouse_id=from_warehouse_id,
+        location_id=from_location_id,
+        inventory_state=from_state,
+        quantity_delta=-quantity,
+        movement_type=movement_type,
+        source_type=source_type,
+        source_id=source_id,
+        source_line_id=source_line_id,
+        idempotency_key=f"{idempotency_prefix}-{from_state}-OUT",
+        reason_code=reason_code,
+        reason_text=reason_text,
+        actor_user_id=actor_user_id,
+    )
+    await apply_movement(session, m_out)
+
+    m_in = InventoryMovement(
+        seller_id=seller_id,
+        product_id=product_id,
+        warehouse_id=dest_wh,
+        location_id=to_location_id,
+        inventory_state=to_state,
+        quantity_delta=quantity,
+        movement_type=movement_type,
+        source_type=source_type,
+        source_id=source_id,
+        source_line_id=source_line_id,
+        idempotency_key=f"{idempotency_prefix}-{to_state}-IN",
+        reason_code=reason_code,
+        reason_text=reason_text,
+        actor_user_id=actor_user_id,
+    )
+    await apply_movement(session, m_in)
+
+    return m_out, m_in
 
 
 async def list_balances(

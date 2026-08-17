@@ -1,13 +1,7 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/seller_portal_controller.py
-Purpose     : Domain controller powering seller portal read-only views.
+Seller Portal Controller.
 
-Responsibilities:
-    - Enforce seller scope isolation across inventory, orders, receipts, shipments,
-      returns, and transfers.
-    - Guarantee sellers view only their authorized records.
---------------------------------------------------------------------------------
+Enforces seller scope isolation across inventory, orders, receipts, shipments, returns, and transfers.
 """
 
 from __future__ import annotations

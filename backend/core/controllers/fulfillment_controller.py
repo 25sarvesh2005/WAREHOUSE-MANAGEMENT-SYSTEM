@@ -1,27 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/fulfillment_controller.py
-Purpose     : Controller owning picking tasks, packaging, and manual shipment dispatch.
-
-Responsibilities:
-    - Authorize pick task creation, worker pick execution, and shipment dispatch.
-    - Generate pick tasks for reserved customer orders.
-    - Handle worker short-pick exceptions with compensating inventory releases.
-    - Create shipments and post ledger movements converting RESERVED inventory to SHIPPED.
-
-Flow:
-    Route -> FulfillmentController -> Transaction Session
-        -> fulfillment_crud / inventory_crud -> Response
-
-Used By:
-    - core/apis/routes/fulfillment_routes.py
-
-Returns:
-    PickTask / Shipment model instances or HTTPExceptions on failure.
-
-Raises:
-    fastapi.HTTPException: 400 (Bad Request), 403 (Forbidden), 404 (Not Found), 409 (Conflict).
---------------------------------------------------------------------------------
+Fulfillment controller owning picking tasks, packaging, and shipment dispatch.
 """
 
 from __future__ import annotations
@@ -301,55 +279,24 @@ class FulfillmentController:
                             has_short_pick = True
                             ol.reserved_quantity -= short_qty
                             ol.backordered_quantity += short_qty
-                            # Release shortage stock from RESERVED -> AVAILABLE
-                            m_short_res = InventoryMovement(
+                            await inventory_crud.apply_state_transfer(
+                                session,
                                 seller_id=order.seller_id,
                                 product_id=ol.product_id,
-                                warehouse_id=order.warehouse_id,
-                                location_id=task_line.location_id,
-                                inventory_state=InventoryState.RESERVED.value,
-                                quantity_delta=-short_qty,
+                                from_warehouse_id=order.warehouse_id,
+                                from_location_id=task_line.location_id,
+                                to_location_id=task_line.location_id,
+                                from_state=InventoryState.RESERVED.value,
+                                to_state=InventoryState.QUARANTINED.value,
+                                quantity=short_qty,
                                 movement_type=InventoryMovementType.SHORT_PICK_CORRECTION.value,
                                 source_type="SHORT_PICK",
                                 source_id=task.id,
                                 source_line_id=task_line.id,
-                                idempotency_key=f"SHORT-{task.id}-{task_line.id}-RESERVED-OUT",
+                                idempotency_prefix=f"SHORT-{task.id}-{task_line.id}",
+                                reason_code="SHORT_PICK_MISSING_STOCK",
+                                reason_text="Physical item missing from bin during picking; moved to quarantine for cycle count",
                                 actor_user_id=actor_id,
-                            )
-                            await inventory_crud.record_movement(session, m_short_res)
-                            await inventory_crud.update_balance_projection(
-                                session,
-                                seller_id=order.seller_id,
-                                product_id=ol.product_id,
-                                warehouse_id=order.warehouse_id,
-                                location_id=task_line.location_id,
-                                inventory_state=InventoryState.RESERVED.value,
-                                quantity_delta=-short_qty,
-                            )
-
-                            m_short_avail = InventoryMovement(
-                                seller_id=order.seller_id,
-                                product_id=ol.product_id,
-                                warehouse_id=order.warehouse_id,
-                                location_id=task_line.location_id,
-                                inventory_state=InventoryState.AVAILABLE.value,
-                                quantity_delta=short_qty,
-                                movement_type=InventoryMovementType.SHORT_PICK_CORRECTION.value,
-                                source_type="SHORT_PICK",
-                                source_id=task.id,
-                                source_line_id=task_line.id,
-                                idempotency_key=f"SHORT-{task.id}-{task_line.id}-AVAILABLE-IN",
-                                actor_user_id=actor_id,
-                            )
-                            await inventory_crud.record_movement(session, m_short_avail)
-                            await inventory_crud.update_balance_projection(
-                                session,
-                                seller_id=order.seller_id,
-                                product_id=ol.product_id,
-                                warehouse_id=order.warehouse_id,
-                                location_id=task_line.location_id,
-                                inventory_state=InventoryState.AVAILABLE.value,
-                                quantity_delta=short_qty,
                             )
 
             if has_short_pick:
@@ -479,58 +426,21 @@ class FulfillmentController:
                     else line.reserved_quantity
                 )
                 if ship_qty > Decimal("0.00"):
-                    # Deduct from RESERVED bucket
-                    m_res_out = InventoryMovement(
+                    await inventory_crud.apply_state_transfer(
+                        session,
                         seller_id=order.seller_id,
                         product_id=line.product_id,
-                        warehouse_id=warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.RESERVED.value,
-                        quantity_delta=-ship_qty,
+                        from_warehouse_id=warehouse_id,
+                        from_state=InventoryState.RESERVED.value,
+                        to_state=InventoryState.SHIPPED.value,
+                        quantity=ship_qty,
                         movement_type=InventoryMovementType.SHIPMENT.value,
                         source_type="SHIPMENT",
                         source_id=order.id,
                         source_line_id=line.id,
-                        idempotency_key=f"SHP-{order.id}-{line.id}-RESERVED-OUT",
+                        idempotency_prefix=f"SHP-{order.id}-{line.id}",
                         actor_user_id=actor_id,
                     )
-                    await inventory_crud.record_movement(session, m_res_out)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=order.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.RESERVED.value,
-                        quantity_delta=-ship_qty,
-                    )
-
-                    # Historical SHIPPED movement (does not affect physical on-hand)
-                    m_ship = InventoryMovement(
-                        seller_id=order.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.SHIPPED.value,
-                        quantity_delta=ship_qty,
-                        movement_type=InventoryMovementType.SHIPMENT.value,
-                        source_type="SHIPMENT",
-                        source_id=order.id,
-                        source_line_id=line.id,
-                        idempotency_key=f"SHP-{order.id}-{line.id}-SHIPPED-IN",
-                        actor_user_id=actor_id,
-                    )
-                    await inventory_crud.record_movement(session, m_ship)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=order.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=warehouse_id,
-                        location_id=None,
-                        inventory_state=InventoryState.SHIPPED.value,
-                        quantity_delta=ship_qty,
-                    )
-
                     line.shipped_quantity += ship_qty
                     line.reserved_quantity = Decimal("0.00")
 
@@ -652,3 +562,6 @@ class FulfillmentController:
                 offset=offset,
             )
             return list(shipments)
+
+
+fulfillment_controller = FulfillmentController()

@@ -1,14 +1,7 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/reporting_controller.py
-Purpose     : Domain controller powering manager dashboards and exception queues.
+Reporting Controller.
 
-Responsibilities:
-    - Aggregate real-time warehouse metrics across inventory states and queues.
-    - Expose active operational exception queues (short picks, transfer discrepancies,
-      unidentified returns, duplicate overrides).
-    - Provide reconciliation report data.
---------------------------------------------------------------------------------
+Aggregates manager operational metrics, exception queues, and reconciliation reports.
 """
 
 from __future__ import annotations

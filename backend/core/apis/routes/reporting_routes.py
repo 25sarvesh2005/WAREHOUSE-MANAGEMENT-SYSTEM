@@ -1,26 +1,17 @@
 """
---------------------------------------------------------------------------------
-File        : core/apis/routes/reporting_routes.py
-Purpose     : Expose manager operational dashboard, exception queue, and reconciliation APIs.
-
-Responsibilities:
-    - Route requests to ReportingController.
-    - Authorize manager & administrator access.
---------------------------------------------------------------------------------
+FastAPI HTTP endpoints for operational dashboards, exception queues, and reports.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
-from common.logger import get_logger
 from common.warehouse_scope import get_warehouse_scope
 from core.controllers.reporting_controller import reporting_controller
 
-logger = get_logger(__name__)
 router = APIRouter(tags=["Manager Dashboard & Reports"])
 
 
@@ -30,18 +21,11 @@ router = APIRouter(tags=["Manager Dashboard & Reports"])
     summary="Get manager operational dashboard metrics",
 )
 async def get_manager_dashboard(
+    scope: Annotated[dict, Depends(get_warehouse_scope)],
     warehouse_id: UUID | None = Query(default=None),
-    scope: dict = Depends(get_warehouse_scope),
 ) -> dict[str, Any]:
     """Fetch aggregate warehouse operational metrics."""
-    try:
-        logger.info("Calling GET /v1/manager/dashboard endpoint")
-        return await reporting_controller.get_manager_dashboard(scope, warehouse_id=warehouse_id)
-    except HTTPException:
-        raise
-    except Exception as error:
-        logger.error("Error in GET /v1/manager/dashboard: %s", error, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal Server Error") from error
+    return await reporting_controller.get_manager_dashboard(scope, warehouse_id=warehouse_id)
 
 
 @router.get(
@@ -50,18 +34,11 @@ async def get_manager_dashboard(
     summary="Get active operational exception queues",
 )
 async def get_manager_exceptions(
+    scope: Annotated[dict, Depends(get_warehouse_scope)],
     warehouse_id: UUID | None = Query(default=None),
-    scope: dict = Depends(get_warehouse_scope),
 ) -> dict[str, Any]:
     """Fetch operational exception items requiring manager intervention."""
-    try:
-        logger.info("Calling GET /v1/manager/exceptions endpoint")
-        return await reporting_controller.get_manager_exceptions(scope, warehouse_id=warehouse_id)
-    except HTTPException:
-        raise
-    except Exception as error:
-        logger.error("Error in GET /v1/manager/exceptions: %s", error, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal Server Error") from error
+    return await reporting_controller.get_manager_exceptions(scope, warehouse_id=warehouse_id)
 
 
 @router.get(
@@ -70,18 +47,12 @@ async def get_manager_exceptions(
     summary="Get inventory ledger vs balance reconciliation report",
 )
 async def get_reconciliation_report(
+    scope: Annotated[dict, Depends(get_warehouse_scope)],
     warehouse_id: UUID | None = Query(default=None),
-    scope: dict = Depends(get_warehouse_scope),
 ) -> dict[str, Any]:
     """Execute inventory balance projection vs movement ledger reconciliation audit."""
-    try:
-        logger.info("Calling GET /v1/reports/inventory-reconciliation endpoint")
-        return await reporting_controller.get_reconciliation_report(
-            scope,
-            warehouse_id=warehouse_id,
-        )
-    except HTTPException:
-        raise
-    except Exception as error:
-        logger.error("Error in GET /v1/reports/inventory-reconciliation: %s", error, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal Server Error") from error
+    return await reporting_controller.get_reconciliation_report(
+        scope,
+        warehouse_id=warehouse_id,
+    )
+

@@ -46,14 +46,34 @@ import time
 from common.logger import get_logger
 from core.apis.api import api_router
 from core.config.settings import get_settings, validate_production_configuration
+import asyncio
 from core.database.database import (
     check_database_ready,
     close_database_connection,
     connect_to_database,
+    transaction_session,
 )
 from core.database.seed import initialize_schema_for_development, seed_initial_data
+from core.jobs.reservation_expiry_job import release_expired_reservations
 
 logger = get_logger(__name__)
+
+
+async def _periodic_reservation_expiry_worker(interval_seconds: int = 60) -> None:
+    """Periodically release expired reservations in background."""
+    logger.info("Reservation expiry background worker started (interval=%ds)", interval_seconds)
+    while True:
+        try:
+            await asyncio.sleep(interval_seconds)
+            async with transaction_session() as session:
+                result = await release_expired_reservations(session)
+                if result.get("released_reservations_count", 0) > 0:
+                    logger.info("Background expiry released: %s", result)
+        except asyncio.CancelledError:
+            logger.info("Reservation expiry background worker cancelled")
+            break
+        except Exception as error:
+            logger.error("Error in reservation expiry background worker: %s", error, exc_info=True)
 
 
 @asynccontextmanager
@@ -82,9 +102,15 @@ async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
     await connect_to_database()
     await initialize_schema_for_development()
     await seed_initial_data()
+    expiry_task = asyncio.create_task(_periodic_reservation_expiry_worker())
     try:
         yield
     finally:
+        expiry_task.cancel()
+        try:
+            await expiry_task
+        except asyncio.CancelledError:
+            pass
         await close_database_connection()
         logger.info("Whitfield Warehouse API shutdown complete")
 

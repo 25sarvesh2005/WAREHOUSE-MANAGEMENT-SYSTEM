@@ -1,31 +1,7 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/identity_controller.py
-Purpose     : Orchestrate authentication, users, sellers, warehouses, and assignments.
+Identity Controller.
 
-Responsibilities:
-    - Own identity business checks and role enforcement.
-    - Open transaction units of work and call CRUD functions.
-    - Create audit events for administrative and authentication actions.
-
-Flow:
-    Route handler
-        ->
-    IdentityController method
-        ->
-    transaction_session() plus CRUD functions
-        ->
-    Response-ready domain data
-
-Used By:
-    - core/apis/routes/identity_routes.py
-
-Returns:
-    Controller methods -> dict/list payloads for response schemas.
-
-Raises:
-    HTTPException: On authentication, authorization, validation, or conflict failures.
---------------------------------------------------------------------------------
+Orchestrates authentication, users, sellers, warehouses, and role assignments.
 """
 
 from __future__ import annotations

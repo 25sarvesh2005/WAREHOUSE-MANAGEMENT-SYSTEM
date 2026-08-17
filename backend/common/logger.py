@@ -1,30 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : common/logger.py
-Purpose     : Provide centralized application logging.
-
-Responsibilities:
-    - Configure stream and rotating-file handlers once per logger.
-    - Keep UTC timestamps and safe formatting for backend modules.
-
-Flow:
-    Module import
-        ->
-    get_logger() configures handlers
-        ->
-    Application modules write structured logs
-
-Used By:
-    - main.py
-    - common/auth.py
-    - core modules
-
-Returns:
-    get_logger() -> logging.Logger - Configured logger instance.
-
-Raises:
-    OSError: When the log directory cannot be created by the runtime.
---------------------------------------------------------------------------------
+Centralized application logging with stream and rotating-file handlers.
 """
 
 from __future__ import annotations

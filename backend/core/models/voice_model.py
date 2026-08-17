@@ -1,30 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/voice_model.py
-Purpose     : Define audited voice interaction and receiving draft models.
-
-Responsibilities:
-    - Persist speech-to-text transcripts, confidence scores, and safety flags.
-    - Persist draft receiving line proposals without mutating inventory or receipts.
-    - Keep voice audit separate from transactional warehouse ledger tables.
-
-Flow:
-    Voice controller / service boundary
-        ->
-    voice_crud persistence functions
-        ->
-    voice_interactions and voice_receiving_drafts tables
-
-Used By:
-    - core/cruds/voice_crud.py
-    - core/controllers/voice_controller.py
-
-Returns:
-    SQLAlchemy model instances - Audited voice persistence records.
-
-Raises:
-    sqlalchemy.exc.IntegrityError: On uniqueness or foreign key violations.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for voice interactions and voice receiving drafts.
 """
 
 from __future__ import annotations

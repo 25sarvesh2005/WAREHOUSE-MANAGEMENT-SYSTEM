@@ -1,31 +1,7 @@
 """
---------------------------------------------------------------------------------
-File        : core/controllers/catalog_controller.py
-Purpose     : Orchestrate catalog, location, and seller policy workflows.
+Catalog Controller.
 
-Responsibilities:
-    - Enforce master-data permissions and seller/warehouse scope.
-    - Open transaction units of work and call catalog CRUD functions.
-    - Audit business-significant catalog and policy changes.
-
-Flow:
-    Catalog route
-        ->
-    CatalogController method
-        ->
-    transaction_session() plus CRUD functions
-        ->
-    Response-ready SQLAlchemy models
-
-Used By:
-    - core/apis/routes/catalog_routes.py
-
-Returns:
-    Controller methods -> SQLAlchemy models or lists for response schemas.
-
-Raises:
-    HTTPException: On authorization, not-found, validation, or conflict failures.
---------------------------------------------------------------------------------
+Orchestrates catalog products, warehouse locations, and seller order policies.
 """
 
 from __future__ import annotations

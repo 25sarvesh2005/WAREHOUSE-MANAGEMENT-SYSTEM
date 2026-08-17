@@ -1,25 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/reporting_crud.py
-Purpose     : Async reporting read-model queries for dashboards and reports.
-
-Responsibilities:
-    - Aggregate dashboard quantities and queue counts.
-    - Keep SQLAlchemy query construction out of controllers.
-    - Return plain Python values for controller response composition.
-
-Flow:
-    ReportingController -> reporting_crud -> AsyncSession -> PostgreSQL
-
-Used By:
-    - core/controllers/reporting_controller.py
-
-Returns:
-    Dictionaries and scalar counts for reporting read models.
-
-Raises:
-    Does NOT raise HTTPException. SQLAlchemy exceptions propagate to controllers.
---------------------------------------------------------------------------------
+Async reporting read-model queries for manager dashboards, queues, and reconciliation reports.
 """
 
 from __future__ import annotations

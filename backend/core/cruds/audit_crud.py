@@ -1,28 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/audit_crud.py
-Purpose     : Persist audit trail records.
-
-Responsibilities:
-    - Insert audit events inside caller-owned transactions.
-    - Keep audit persistence free of HTTP and business policy.
-
-Flow:
-    Controller workflow
-        ->
-    create_audit_event()
-        ->
-    audit_events table
-
-Used By:
-    - core/controllers
-
-Returns:
-    create_audit_event() -> AuditEvent - Persisted audit event.
-
-Raises:
-    sqlalchemy.exc.SQLAlchemyError: On database failures.
---------------------------------------------------------------------------------
+Database persistence operations for audit trail records.
 """
 
 from __future__ import annotations

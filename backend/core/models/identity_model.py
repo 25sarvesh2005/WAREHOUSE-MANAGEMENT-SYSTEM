@@ -1,29 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/models/identity_model.py
-Purpose     : Define identity, tenant, and warehouse access tables.
-
-Responsibilities:
-    - Store users, sellers, warehouses, and assignment records.
-    - Preserve role and active-scope relationships for authorization.
-
-Flow:
-    Controller request
-        ->
-    CRUD persists identity model
-        ->
-    JWT and scope helpers derive allowed access
-
-Used By:
-    - core/cruds/identity_crud.py
-    - core/database/seed.py
-
-Returns:
-    SQLAlchemy model instances - Identity persistence records.
-
-Raises:
-    sqlalchemy.exc.IntegrityError: On uniqueness or foreign-key violations.
---------------------------------------------------------------------------------
+SQLAlchemy ORM models for users, sellers, warehouses, assignments, and refresh tokens.
 """
 
 from __future__ import annotations

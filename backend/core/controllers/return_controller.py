@@ -1,21 +1,8 @@
 """
-Return Controller.
-
-Business controller orchestrating customer / seller return workflows:
-    - Register expected RMA returns or unidentified parcel arrivals.
-    - Inbound return receipt placing items strictly into RETURN_INSPECTION state.
-    - Inspection logging posting explicit inventory disposition movements into target states
-      (AVAILABLE, DAMAGED, QUARANTINED, RESTOCKED, or SCRAPPED).
-
-Flow:
-    Route -> ReturnController -> Transaction Session
-        -> return_crud / inventory_crud -> Response
-
-Used By:
-    - core/apis/routes/return_routes.py
+Return controller orchestrating customer/seller return workflows and quality disposition.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
@@ -151,15 +138,7 @@ class ReturnController:
                         actor_user_id=actor_id,
                         occurred_at=now,
                     )
-                    session.add(m_ins)
-                    await inventory_crud.update_balance_projection(
-                        session,
-                        seller_id=ret.seller_id,
-                        product_id=line.product_id,
-                        warehouse_id=ret.warehouse_id,
-                        inventory_state=InventoryState.RETURN_INSPECTION.value,
-                        quantity_delta=rcv_qty,
-                    )
+                    await inventory_crud.apply_movement(session, m_ins)
 
             ret.status = ReturnStatus.INSPECTION.value
             ret.received_at = now
@@ -244,31 +223,6 @@ class ReturnController:
                     notes=disp_item.get("notes"),
                 )
 
-                # Deduct stock from RETURN_INSPECTION state
-                m_out_insp = InventoryMovement(
-                    seller_id=ret.seller_id,
-                    product_id=target_line.product_id,
-                    warehouse_id=ret.warehouse_id,
-                    inventory_state=InventoryState.RETURN_INSPECTION.value,
-                    quantity_delta=-qty,
-                    movement_type=InventoryMovementType.RETURN_DISPOSITION.value,
-                    source_type="returns",
-                    source_id=ret.id,
-                    source_line_id=line_id,
-                    idempotency_key=f"ret-disp-out-{ret.id}-{line_id}-{str(uuid4())[:8]}",
-                    actor_user_id=actor_id,
-                    occurred_at=now,
-                )
-                session.add(m_out_insp)
-                await inventory_crud.update_balance_projection(
-                    session,
-                    seller_id=ret.seller_id,
-                    product_id=target_line.product_id,
-                    warehouse_id=ret.warehouse_id,
-                    inventory_state=InventoryState.RETURN_INSPECTION.value,
-                    quantity_delta=-qty,
-                )
-
                 # Map disposition state string to operational InventoryState
                 target_inv_state = (
                     InventoryState.AVAILABLE.value
@@ -280,31 +234,22 @@ class ReturnController:
                     )
                 )
 
-                # Add stock to target disposition state
-                m_in_target = InventoryMovement(
+                # Transfer stock from RETURN_INSPECTION to target disposition state
+                await inventory_crud.apply_state_transfer(
+                    session,
                     seller_id=ret.seller_id,
                     product_id=target_line.product_id,
-                    warehouse_id=ret.warehouse_id,
-                    location_id=dest_loc_id,
-                    inventory_state=target_inv_state,
-                    quantity_delta=qty,
+                    from_warehouse_id=ret.warehouse_id,
+                    to_location_id=dest_loc_id,
+                    from_state=InventoryState.RETURN_INSPECTION.value,
+                    to_state=target_inv_state,
+                    quantity=qty,
                     movement_type=InventoryMovementType.RETURN_DISPOSITION.value,
                     source_type="returns",
                     source_id=ret.id,
                     source_line_id=line_id,
-                    idempotency_key=f"ret-disp-in-{ret.id}-{line_id}-{str(uuid4())[:8]}",
+                    idempotency_prefix=f"ret-disp-{ret.id}-{line_id}-{str(uuid4())[:8]}",
                     actor_user_id=actor_id,
-                    occurred_at=now,
-                )
-                session.add(m_in_target)
-                await inventory_crud.update_balance_projection(
-                    session,
-                    seller_id=ret.seller_id,
-                    product_id=target_line.product_id,
-                    warehouse_id=ret.warehouse_id,
-                    location_id=dest_loc_id,
-                    inventory_state=target_inv_state,
-                    quantity_delta=qty,
                 )
 
             ret.status = ReturnStatus.COMPLETED.value
@@ -356,3 +301,6 @@ class ReturnController:
                 offset=offset,
             )
             return list(returns), total
+
+
+return_controller = ReturnController()

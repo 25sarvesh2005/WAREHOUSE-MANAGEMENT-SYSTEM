@@ -1,29 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/identity_crud.py
-Purpose     : Perform pure database operations for identity and access records.
-
-Responsibilities:
-    - Create and read users, sellers, warehouses, and assignments.
-    - Keep persistence concerns separate from HTTP and authorization policy.
-
-Flow:
-    Identity controller
-        ->
-    CRUD function receives AsyncSession
-        ->
-    SQLAlchemy executes PostgreSQL query
-
-Used By:
-    - core/controllers/identity_controller.py
-    - core/database/seed.py
-
-Returns:
-    CRUD functions -> SQLAlchemy model instances or collections.
-
-Raises:
-    sqlalchemy.exc.SQLAlchemyError: On database failures.
---------------------------------------------------------------------------------
+Database persistence operations for identity, users, sellers, and warehouses.
 """
 
 from __future__ import annotations

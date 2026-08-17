@@ -1,27 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : common/rate_limit.py
-Purpose     : In-memory sliding-window rate limiting dependency.
-
-Responsibilities:
-    - Track request frequency per client IP or authenticated user key.
-    - Reject abusive traffic with HTTP 429 Too Many Requests.
-    - Provide preconfigured limits for sensitive endpoints (auth, AI, migrations).
-
-Flow:
-    HTTP request -> FastAPI Depends(rate_limiter) -> check window -> proceed or 429
-
-Used By:
-    - core/apis/routes/identity_routes.py
-    - core/apis/routes/ai_routes.py
-    - core/apis/routes/migration_routes.py
-
-Returns:
-    None if within limit.
-
-Raises:
-    HTTPException: 429 Too Many Requests when rate threshold is exceeded.
---------------------------------------------------------------------------------
+Sliding-window rate limiting dependencies for FastAPI endpoints.
 """
 
 from __future__ import annotations

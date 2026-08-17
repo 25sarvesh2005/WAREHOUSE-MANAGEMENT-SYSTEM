@@ -1,26 +1,5 @@
 """
---------------------------------------------------------------------------------
-File        : core/cruds/order_crud.py
-Purpose     : Provide async CRUD functions for customer orders and reservations.
-
-Responsibilities:
-    - Create order headers and line item breakdowns.
-    - Fetch orders by ID or seller order number.
-    - Query orders filtered by seller, warehouse, or status.
-    - Create active inventory reservations and update line reservation counts.
-
-Flow:
-    Controller -> order_crud -> AsyncSession -> PostgreSQL
-
-Used By:
-    - core/controllers/order_controller.py
-
-Returns:
-    Order / InventoryReservation instances or lists of instances.
-
-Raises:
-    Does NOT raise HTTPException. Returns None or model instances directly.
---------------------------------------------------------------------------------
+Database persistence operations for customer orders, order lines, and reservations.
 """
 
 from __future__ import annotations
