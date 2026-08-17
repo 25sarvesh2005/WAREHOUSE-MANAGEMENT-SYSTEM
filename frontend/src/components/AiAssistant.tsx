@@ -264,7 +264,7 @@ function ProviderBadge({ providerName }: { providerName?: string }) {
       ) : (
         <Bot className="size-3 text-slate-500" />
       )}
-      {isGemini ? "Gemini 2.0 Flash" : "Rule Engine"}
+      {isGemini ? "Gemini 2.5 Flash" : "Rule Engine"}
     </span>
   );
 }

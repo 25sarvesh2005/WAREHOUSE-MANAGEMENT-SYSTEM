@@ -125,7 +125,7 @@ class Settings(BaseSettings):
     )
     ai_enabled: bool = True
     ai_provider: Literal["disabled", "google_genai"] = "google_genai"
-    ai_model: str = "gemini-3.5-flash"
+    ai_model: str = "gemini-2.5-flash"
     ai_log_prompt_excerpts: bool = False
     ai_prompt_excerpt_chars: int = 500
     ai_response_excerpt_chars: int = 2000

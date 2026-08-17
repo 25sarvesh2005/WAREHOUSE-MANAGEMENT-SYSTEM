@@ -7,7 +7,7 @@
 [![React 19](https://img.shields.io/badge/React_19-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16_Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![Google Gemini](https://img.shields.io/badge/Google_Gemini-3.5_Flash-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.5_Flash-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
 [![Docker](https://img.shields.io/badge/Docker-Compose_Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
@@ -35,7 +35,7 @@
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1. 🤖 Conversational AI Warehouse Copilot (Google Gemini 3.5 Flash)
+### 1. 🤖 Conversational AI Warehouse Copilot (Google Gemini 2.5 Flash)
 - **Natural Language Warehouse Inquiries:** Ask anything in plain English (e.g., *"What products have 0 quantity?"*, *"Which headphones are in stock across Reno and Columbus?"*, *"Show lowest stock items"*).
 - **Grounded Read-Only RAG:** Grounded strictly in live PostgreSQL ledger evidence with safety guardrails — zero hallucination, zero unauthorized mutations.
 - **Automated Rebalance Drafting:** Detects regional stock imbalances and drafts transfer orders between facilities for manager review.
@@ -77,7 +77,7 @@ flowchart TB
         Locking["Pessimistic Concurrency Engine (SELECT FOR UPDATE)"]
         
         subgraph AIService["AI & Voice Operations Subsystem"]
-            Gemini["Google Gemini 3.5 Flash RAG"]
+            Gemini["Google Gemini 2.5 Flash RAG"]
             Voice["Sarvam & Deepgram Audio Pipeline"]
         end
     end
@@ -108,7 +108,7 @@ flowchart TB
 | **Data Fetching** | TanStack React Query 5 | Optimistic UI updates, caching, background refetching |
 | **Backend** | Python 3.11+, FastAPI, Uvicorn | Async ASGI backend, OpenAPI 3.1 schema auto-generation |
 | **Database** | PostgreSQL 16, Async SQLAlchemy 2.x, `asyncpg`, Alembic | Relational storage, async connection pooling, schema migrations |
-| **AI Intelligence**| Google Gemini 3.5 Flash (`google-genai`) | Grounded natural language warehouse queries & recommendations |
+| **AI Intelligence**| Google Gemini 2.5 Flash (`google-genai`) | Grounded natural language warehouse queries & recommendations |
 | **Speech Audio** | Sarvam AI & Deepgram STT/TTS | Multilingual voice intake processing for receiving docks |
 | **Authentication**| JWT (HS256), Passlib (Bcrypt) | Scoped Role-Based Access Control across 5 granular personas |
 | **Containerization**| Docker, Docker Compose | Production-ready multi-stage container packaging |
@@ -201,7 +201,7 @@ Access the services:
    JWT_SECRET=your_32_char_random_jwt_secret
    AI_ENABLED=true
    AI_PROVIDER=google_genai
-   AI_MODEL=gemini-3.5-flash
+   AI_MODEL=gemini-2.5-flash
    GOOGLE_GENAI_API_KEY=your_gemini_api_key
    INITIALIZE_SCHEMA_ON_STARTUP=true
    FRONTEND_ORIGINS=https://your-frontend.vercel.app,http://localhost:5173
