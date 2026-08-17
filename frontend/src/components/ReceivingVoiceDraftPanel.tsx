@@ -46,6 +46,31 @@ function stateClass(state: string): string {
   return "border-purple-200 bg-purple-50 text-purple-800";
 }
 
+interface SpeechRecognitionResultItem {
+  transcript: string;
+}
+
+interface SpeechRecognitionResultList {
+  [index: number]: {
+    [index: number]: SpeechRecognitionResultItem;
+  };
+  length: number;
+}
+
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+}
+
+interface BrowserSpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: () => void;
+  start: () => void;
+  stop: () => void;
+}
+
 export function ReceivingVoiceDraftPanel({
   warehouseId,
   productId,
@@ -66,6 +91,8 @@ export function ReceivingVoiceDraftPanel({
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const speechRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const liveTranscriptRef = useRef<string>("");
 
   const transcribeMutation = useVoiceTranscribeMutation();
   const parseTranscriptMutation = useVoiceParseTranscriptMutation();
@@ -85,6 +112,13 @@ export function ReceivingVoiceDraftPanel({
       if (mediaRecorderRef.current?.state === "recording") {
         mediaRecorderRef.current.stop();
       }
+      if (speechRecognitionRef.current) {
+        try {
+          speechRecognitionRef.current.stop();
+        } catch {
+          // Ignore
+        }
+      }
       player?.pause();
     };
   }, []);
@@ -92,9 +126,46 @@ export function ReceivingVoiceDraftPanel({
   const startRecording = async () => {
     setErrorMsg(null);
     audioChunksRef.current = [];
+    liveTranscriptRef.current = "";
+
+    // Initialize Web Speech Recognition if supported by browser
+    const win = typeof window !== "undefined" ? (window as unknown as Record<string, unknown>) : {};
+    const SpeechRecognitionClass = (win["SpeechRecognition"] ||
+      win["webkitSpeechRecognition"]) as (new () => BrowserSpeechRecognition) | undefined;
+
+    if (SpeechRecognitionClass) {
+      try {
+        const recognition = new SpeechRecognitionClass();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = languageCode;
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+          let currentTranscript = "";
+          for (let i = 0; i < event.results.length; i++) {
+            const item = event.results[i]?.[0];
+            if (item?.transcript) {
+              currentTranscript += item.transcript;
+            }
+          }
+          if (currentTranscript.trim()) {
+            liveTranscriptRef.current = currentTranscript.trim();
+            setManualTranscript(currentTranscript.trim());
+          }
+        };
+        recognition.onerror = () => {
+          // Fail gracefully and use audio upload fallback
+        };
+        recognition.start();
+        speechRecognitionRef.current = recognition;
+      } catch {
+        // Continue with mediaRecorder
+      }
+    }
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setErrorMsg("Microphone is unavailable in this browser. Use the transcript box instead.");
+      if (!SpeechRecognitionClass) {
+        setErrorMsg("Microphone is unavailable in this browser. Use the transcript box instead.");
+      }
       return;
     }
 
@@ -117,6 +188,21 @@ export function ReceivingVoiceDraftPanel({
         if (timerRef.current) clearInterval(timerRef.current);
         setRecordingSeconds(0);
         setIsRecording(false);
+
+        if (speechRecognitionRef.current) {
+          try {
+            speechRecognitionRef.current.stop();
+          } catch {
+            // Ignore
+          }
+        }
+
+        const recognizedText = liveTranscriptRef.current.trim();
+        if (recognizedText) {
+          // If browser speech recognition captured the text, parse it directly!
+          await handleParseText(recognizedText);
+          return;
+        }
 
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         if (audioBlob.size === 0) {
@@ -157,6 +243,13 @@ export function ReceivingVoiceDraftPanel({
   };
 
   const stopRecording = () => {
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop();
+      } catch {
+        // Ignore
+      }
+    }
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
     }
