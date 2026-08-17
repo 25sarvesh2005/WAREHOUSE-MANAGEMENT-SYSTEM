@@ -174,11 +174,10 @@ app.add_middleware(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app|http://localhost:\d+|http://127\.0\.0\.1:\d+",
     allow_credentials=True,
-    # Explicit verbs only — wildcards accept any HTTP method including DELETE on open origins.
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    # Restrict to headers actually consumed by the frontend and standard browser headers.
-    allow_headers=["Authorization", "Content-Type", "Accept", "X-Request-ID"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # RequestIDMiddleware runs inside CORS: reads/generates X-Request-ID, sets
