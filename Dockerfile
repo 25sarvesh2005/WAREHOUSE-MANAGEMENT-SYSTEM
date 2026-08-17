@@ -29,10 +29,12 @@ COPY --from=builder /install /usr/local
 
 WORKDIR /app
 
-# Copy backend source
 COPY backend/ .
 
-RUN addgroup --system warehouse && adduser --system --ingroup warehouse warehouse
+RUN mkdir -p /app/logs \
+ && addgroup --system warehouse \
+ && adduser --system --ingroup warehouse warehouse \
+ && chown -R warehouse:warehouse /app
 USER warehouse
 
 EXPOSE 8080

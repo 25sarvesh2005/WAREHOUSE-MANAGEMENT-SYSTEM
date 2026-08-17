@@ -79,18 +79,19 @@ def get_logger(name: str) -> logging.Logger:
     stream_handler.setFormatter(formatter)
     stream_handler.addFilter(_RequestIDFilter())
 
-    log_dir = Path("logs")
-    log_dir.mkdir(parents=True, exist_ok=True)
-    file_handler = RotatingFileHandler(
-        log_dir / "warehouse.log",
-        maxBytes=5 * 1024 * 1024,
-        backupCount=3,
-        encoding="utf-8",
-    )
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(formatter)
-    file_handler.addFilter(_RequestIDFilter())
-
-    logger.addHandler(stream_handler)
-    logger.addHandler(file_handler)
+    try:
+        log_dir = Path("logs")
+        log_dir.mkdir(parents=True, exist_ok=True)
+        file_handler = RotatingFileHandler(
+            log_dir / "warehouse.log",
+            maxBytes=5 * 1024 * 1024,
+            backupCount=3,
+            encoding="utf-8",
+        )
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+        file_handler.addFilter(_RequestIDFilter())
+        logger.addHandler(file_handler)
+    except OSError:
+        pass
     return logger

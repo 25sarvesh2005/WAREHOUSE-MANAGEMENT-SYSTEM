@@ -36,7 +36,10 @@ WORKDIR /app
 COPY . .
 
 # Create and switch to a non-root user for security
-RUN addgroup --system warehouse && adduser --system --ingroup warehouse warehouse
+RUN mkdir -p /app/logs \
+ && addgroup --system warehouse \
+ && adduser --system --ingroup warehouse warehouse \
+ && chown -R warehouse:warehouse /app
 USER warehouse
 
 # Expose the application port
