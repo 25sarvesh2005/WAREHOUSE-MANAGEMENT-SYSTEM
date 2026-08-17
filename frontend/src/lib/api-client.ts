@@ -1,13 +1,35 @@
 import { clearSession, readAccessToken, readRefreshToken, storeTokens } from "./session";
 
-function resolveBaseUrl(): string {
-  const raw =
-    (import.meta.env["VITE_API_BASE_URL"] as string | undefined) || "http://127.0.0.1:8080";
-  const trimmed = raw.trim().replace(/\/+$/, "");
+export function getApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const custom = localStorage.getItem("wms_api_base_url");
+    if (custom && custom.trim()) {
+      const trimmed = custom.trim().replace(/\/+$/, "");
+      return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
+    }
+    const injected = (window as unknown as Record<string, string>)["__WMS_API_URL__"];
+    if (injected && injected.trim()) {
+      const trimmed = injected.trim().replace(/\/+$/, "");
+      return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
+    }
+  }
+  const envMap = import.meta.env as unknown as Record<string, string>;
+  const raw = envMap["VITE_API_BASE_URL"] || "http://127.0.0.1:8080";
+  const trimmed = String(raw).trim().replace(/\/+$/, "");
   return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
 }
 
-export const API_BASE_URL = resolveBaseUrl();
+export function setCustomApiBaseUrl(url: string): void {
+  if (typeof window !== "undefined") {
+    if (url.trim()) {
+      localStorage.setItem("wms_api_base_url", url.trim());
+    } else {
+      localStorage.removeItem("wms_api_base_url");
+    }
+  }
+}
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export interface ApiErrorResponse {
   error?: {
@@ -39,7 +61,8 @@ async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = readRefreshToken();
   if (!refreshToken) return null;
 
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+  const base = getApiBaseUrl();
+  const response = await fetch(`${base}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh_token: refreshToken }),
@@ -88,7 +111,8 @@ async function requestWithToken(endpoint: string, options: RequestInit, token: s
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const base = getApiBaseUrl();
+  const url = endpoint.startsWith("http") ? endpoint : `${base}${endpoint}`;
   return fetch(url, {
     ...options,
     headers,
@@ -129,10 +153,12 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError(
-      error instanceof Error ? error.message : "Network error occurred",
-      0,
-      "NETWORK_ERROR",
-    );
+    const isFetchFail = error instanceof Error && error.message === "Failed to fetch";
+    const message = isFetchFail
+      ? `Cannot connect to API at ${API_BASE_URL}. Ensure your Render backend is running and CORS is allowed.`
+      : error instanceof Error
+        ? error.message
+        : "Network error occurred";
+    throw new ApiError(message, 0, "NETWORK_ERROR");
   }
 }
