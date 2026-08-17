@@ -50,7 +50,7 @@ services:
       FRONTEND_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:3000
       AI_ENABLED: "true"
       AI_PROVIDER: google_genai
-      AI_MODEL: gemini-3.5-flash
+      AI_MODEL: gemini-2.5-flash
       GOOGLE_GENAI_API_KEY: ${GOOGLE_GENAI_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
       INITIALIZE_SCHEMA_ON_STARTUP: "true"
