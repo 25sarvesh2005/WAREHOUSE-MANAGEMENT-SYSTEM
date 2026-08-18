@@ -5,7 +5,7 @@
 
 [![Live App on Vercel](https://img.shields.io/badge/Live_Deployment-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)](https://warehouse-management-system-jade-seven.vercel.app)
 [![API on Render](https://img.shields.io/badge/Live_API-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://whitfield-wms-api.onrender.com/docs)
-[![CI Tests](https://img.shields.io/badge/Pytest_Suite-110_Passed_%E2%9C%94-2ea44f?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/25sarvesh2005/WAREHOUSE-MANAGEMENT-SYSTEM/actions)
+[![CI Tests](https://img.shields.io/badge/Pytest_Suite-119_Passed_%E2%9C%94-2ea44f?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/25sarvesh2005/WAREHOUSE-MANAGEMENT-SYSTEM/actions)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React 19](https://img.shields.io/badge/React_19-Vite_8-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)

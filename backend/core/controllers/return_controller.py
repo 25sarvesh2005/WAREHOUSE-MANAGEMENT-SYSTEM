@@ -11,8 +11,16 @@ from fastapi import HTTPException, status
 
 from common.logger import get_logger
 from common.warehouse_scope import assert_seller_access, assert_warehouse_access, require_roles
-from core.constants import AuditActionType, InventoryMovementType, InventoryState, ReturnDispositionState, ReturnStatus, UserRole
-from core.cruds import audit_crud, inventory_crud, return_crud
+from core.constants import (
+    AuditActionType,
+    InventoryMovementType,
+    InventoryState,
+    OutboxEventType,
+    ReturnDispositionState,
+    ReturnStatus,
+    UserRole,
+)
+from core.cruds import audit_crud, inventory_crud, outbox_crud, return_crud
 from core.database.database import transaction_session
 from core.models.inventory_model import InventoryMovement
 from core.models.return_model import Return
@@ -73,6 +81,17 @@ class ReturnController:
                 source_record_type="returns",
                 source_record_id=ret.id,
                 metadata_json={"return_number": return_number, "status": ret.status},
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.RETURN_CREATED.value,
+                payload={
+                    "return_id": str(ret.id),
+                    "return_number": return_number,
+                    "seller_id": str(seller_id),
+                    "warehouse_id": str(wh_id),
+                    "status": ret.status,
+                },
             )
 
             reloaded = await return_crud.get_return_by_id(session, ret.id)
@@ -150,6 +169,17 @@ class ReturnController:
                 source_record_type="returns",
                 source_record_id=ret.id,
                 metadata_json={"status": ret.status},
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.RETURN_RECEIVED.value,
+                payload={
+                    "return_id": str(ret.id),
+                    "return_number": ret.return_number,
+                    "seller_id": str(ret.seller_id),
+                    "warehouse_id": str(ret.warehouse_id),
+                    "status": ret.status,
+                },
             )
 
             reloaded = await return_crud.get_return_by_id(session, ret.id)
@@ -262,6 +292,17 @@ class ReturnController:
                 source_record_type="returns",
                 source_record_id=ret.id,
                 metadata_json={"status": ret.status},
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.RETURN_COMPLETED.value,
+                payload={
+                    "return_id": str(ret.id),
+                    "return_number": ret.return_number,
+                    "seller_id": str(ret.seller_id),
+                    "warehouse_id": str(ret.warehouse_id),
+                    "status": ret.status,
+                },
             )
 
             reloaded = await return_crud.get_return_by_id(session, ret.id)

@@ -44,6 +44,7 @@ from core.apis.routes.return_routes import router as return_router
 from core.apis.routes.seller_routes import router as seller_router
 from core.apis.routes.transfer_routes import router as transfer_router
 from core.apis.routes.voice_routes import router as voice_router
+from mcp_server.server import mcp_router
 
 # The global_rate_limiter dependency is applied here at the aggregator level
 # so every route in every domain router inherits the 120 req/min default.
@@ -63,3 +64,5 @@ api_router.include_router(return_router)
 api_router.include_router(seller_router)
 api_router.include_router(reporting_router)
 api_router.include_router(migration_router)
+api_router.include_router(mcp_router)
+
