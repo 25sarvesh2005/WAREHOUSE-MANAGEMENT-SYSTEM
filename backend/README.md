@@ -8,7 +8,8 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%20Async-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0%20AsyncPG-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/)
 [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash%20RAG-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev/)
-[![Pytest Suite](https://img.shields.io/badge/Tests-119%2F119%20Passed%20(100%25)-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](#-automated-testing--ci-verification)
+[![Pytest Suite](https://img.shields.io/badge/Tests-122%2F122%20Passed%20(100%25)-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](#-automated-testing--ci-verification)
+[![FastMCP](https://img.shields.io/badge/Model_Context_Protocol-FastMCP_2024--11--05-7C3AED?style=for-the-badge&logo=anthropic&logoColor=white)](https://modelcontextprotocol.io)
 [![Alembic Migrations](https://img.shields.io/badge/Alembic-Synchronous%20Runner-orange?style=for-the-badge)](https://alembic.sqlalchemy.org/)
 [![Docker Ready](https://img.shields.io/badge/Docker-Multi--Stage%20Container-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#-containerization--docker-deployment)
 
@@ -177,6 +178,13 @@ All endpoints are versioned under `/api/v1/` and protected with rate limiters an
 | `POST` | `/api/v1/transfers/{id}/receive`| Complete transfer intake at destination facility | `RECEIVER`, `MANAGER` |
 | `POST` | `/api/v1/returns/rma` | Create Return Merchandise Authorization (RMA) | `SELLER`, `MANAGER` |
 | `POST` | `/api/v1/returns/{id}/inspect` | Inspect returned items and route to restock/scrap | `RECEIVER`, `MANAGER` |
+
+### 🔌 Model Context Protocol Server (`/mcp`)
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| `GET` | `/mcp` | FastMCP Capabilities & 8 Read-Only Tools Catalog | Public / Header |
+| `POST` | `/mcp/call` | Execute registered MCP tool (`inventory_lookup`, `ledger_explanation`, etc.) | JWT Bearer |
+
 
 ---
 
