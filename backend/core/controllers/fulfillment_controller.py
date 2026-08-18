@@ -18,10 +18,11 @@ from core.constants import (
     InventoryMovementType,
     InventoryState,
     OrderStatus,
+    OutboxEventType,
     PickTaskStatus,
     UserRole,
 )
-from core.cruds import audit_crud, fulfillment_crud, inventory_crud, order_crud
+from core.cruds import audit_crud, fulfillment_crud, inventory_crud, order_crud, outbox_crud
 from core.database.database import transaction_session
 from core.models.fulfillment_model import Package, PickTask, PickTaskLine, Shipment, ShipmentEvent
 from core.models.inventory_model import InventoryMovement
@@ -318,6 +319,17 @@ class FulfillmentController:
                 source_record_id=task.id,
                 metadata_json={"status": task.status, "has_short_pick": has_short_pick},
             )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.PICK_TASK_COMPLETED.value,
+                payload={
+                    "pick_task_id": str(task.id),
+                    "order_id": str(task.order_id),
+                    "warehouse_id": str(task.warehouse_id),
+                    "status": task.status,
+                    "has_short_pick": has_short_pick,
+                },
+            )
             await session.refresh(task)
             logger.info("Pick task %s completed with status %s", task.id, task.status)
             return task
@@ -463,6 +475,17 @@ class FulfillmentController:
                 source_record_type="shipments",
                 source_record_id=saved_shipment.id,
                 metadata_json={
+                    "tracking_number": tracking_number,
+                    "carrier": saved_shipment.carrier,
+                },
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.SHIPMENT_DISPATCHED.value,
+                payload={
+                    "shipment_id": str(saved_shipment.id),
+                    "order_id": str(saved_shipment.order_id),
+                    "warehouse_id": str(saved_shipment.warehouse_id),
                     "tracking_number": tracking_number,
                     "carrier": saved_shipment.carrier,
                 },

@@ -56,7 +56,11 @@ from core.database.database import (
     transaction_session,
 )
 from core.database.seed import initialize_schema_for_development, seed_initial_data
+from core.jobs.outbox_dispatch_job import dispatch_pending_outbox_events
+from core.jobs.receipt_aging_job import check_aging_receipts
 from core.jobs.reservation_expiry_job import release_expired_reservations
+from core.jobs.return_aging_job import check_aging_returns
+from core.jobs.transfer_delay_job import check_delayed_transfers
 from sqlalchemy import text
 
 logger = get_logger(__name__)
@@ -102,6 +106,53 @@ async def _periodic_reservation_expiry_worker(interval_seconds: int = 60) -> Non
             logger.error("Error in reservation expiry background worker: %s", error, exc_info=True)
 
 
+async def _periodic_outbox_dispatch_worker(interval_seconds: int = 10) -> None:
+    """Periodically poll and dispatch transactional outbox events."""
+    logger.info("Outbox dispatch background worker started (interval=%ds)", interval_seconds)
+    while True:
+        try:
+            await asyncio.sleep(interval_seconds)
+            async with transaction_session() as session:
+                result = await dispatch_pending_outbox_events(session)
+                if result.get("dispatched", 0) > 0 or result.get("failed", 0) > 0:
+                    logger.info("Outbox dispatch cycle complete: %s", result)
+        except asyncio.CancelledError:
+            logger.info("Outbox dispatch background worker cancelled")
+            break
+        except Exception as error:
+            logger.error("Error in outbox dispatch background worker: %s", error, exc_info=True)
+
+
+async def _periodic_operational_sla_worker(interval_seconds: int = 300) -> None:
+    """Periodically scan for operational SLA exceptions (receipts, transfers, returns)."""
+    logger.info("Operational SLA monitoring worker started (interval=%ds)", interval_seconds)
+    while True:
+        try:
+            await asyncio.sleep(interval_seconds)
+            async with transaction_session() as session:
+                rcv_result = await check_aging_receipts(session)
+                trf_result = await check_delayed_transfers(session)
+                ret_result = await check_aging_returns(session)
+                total_alerts = (
+                    rcv_result.get("alerts_emitted", 0)
+                    + trf_result.get("alerts_emitted", 0)
+                    + ret_result.get("alerts_emitted", 0)
+                )
+                if total_alerts > 0:
+                    logger.info(
+                        "Operational SLA check emitted %d alerts (rcv=%d, trf=%d, ret=%d)",
+                        total_alerts,
+                        rcv_result.get("alerts_emitted", 0),
+                        trf_result.get("alerts_emitted", 0),
+                        ret_result.get("alerts_emitted", 0),
+                    )
+        except asyncio.CancelledError:
+            logger.info("Operational SLA monitoring worker cancelled")
+            break
+        except Exception as error:
+            logger.error("Error in operational SLA monitoring worker: %s", error, exc_info=True)
+
+
 @asynccontextmanager
 async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
     """
@@ -138,14 +189,17 @@ async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
 
     await seed_initial_data()
     expiry_task = asyncio.create_task(_periodic_reservation_expiry_worker())
+    outbox_task = asyncio.create_task(_periodic_outbox_dispatch_worker())
+    sla_task = asyncio.create_task(_periodic_operational_sla_worker())
     try:
         yield
     finally:
-        expiry_task.cancel()
-        try:
-            await expiry_task
-        except asyncio.CancelledError:
-            pass
+        for task in (expiry_task, outbox_task, sla_task):
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
         await close_database_connection()
         logger.info("Whitfield Warehouse API shutdown complete")
 
@@ -184,7 +238,10 @@ app.add_middleware(
 # request.state.request_id and REQUEST_ID_CTX_VAR for log correlation.
 app.add_middleware(RequestIDMiddleware)
 
+from mcp_server.server import mcp_router
+
 app.include_router(api_router)
+app.include_router(mcp_router)
 
 
 @app.get("/", status_code=status.HTTP_200_OK, summary="Root health summary")

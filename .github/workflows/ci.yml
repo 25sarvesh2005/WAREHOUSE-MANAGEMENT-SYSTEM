@@ -8,7 +8,7 @@ on:
 
 jobs:
   backend-checks:
-    name: Backend Lint, Compile & Tests
+    name: Backend Lint, Compile & Unit Tests
     runs-on: ubuntu-latest
 
     services:
@@ -55,7 +55,7 @@ jobs:
       - name: Python Compileall Check
         working-directory: backend
         run: |
-          python -m compileall main.py common core cli tools tests
+          python -m compileall main.py common core cli tools tests mcp_server
 
       - name: Run Backend Pytest Suite
         working-directory: backend
@@ -71,8 +71,94 @@ jobs:
         run: |
           python tools/audit_frontend_secrets.py
 
+  e2e-checks:
+    name: Live Backend E2E & Concurrency Smoke
+    needs: backend-checks
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: warehouse_app
+          POSTGRES_PASSWORD: change-me
+          POSTGRES_DB: warehouse_ops
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install Backend Dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Start FastAPI API Server in Background
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
+          JWT_SECRET: replace-with-long-random-secret-for-ci-testing-purposes-only
+          APP_ENV: test
+          INITIALIZE_SCHEMA_ON_STARTUP: "true"
+        run: |
+          uvicorn main:app --host 127.0.0.1 --port 8080 &
+          sleep 5
+
+      - name: Wait for API Readiness
+        run: |
+          for i in {1..30}; do
+            curl -s http://127.0.0.1:8080/health/ready && echo "API is ready" && break
+            echo "Waiting for API..."
+            sleep 2
+          done
+
+      - name: Run Phase 2 E2E (Receiving Governance)
+        working-directory: backend
+        run: python -m tests.e2e.phase2_e2e_test
+
+      - name: Run Phase 3 E2E (Orders & Fulfillment)
+        working-directory: backend
+        run: python -m tests.e2e.phase3_e2e_test
+
+      - name: Run Phase 4 E2E (Transfers & Returns)
+        working-directory: backend
+        run: python -m tests.e2e.phase4_e2e_test
+
+      - name: Run Phase 5 E2E (Opening Inventory Staging)
+        working-directory: backend
+        run: python -m tests.e2e.phase5_e2e_test
+
+      - name: Run AI Release A E2E
+        working-directory: backend
+        run: python -m tests.e2e.ai_release_a_e2e_test
+
+      - name: Run AI Voice Receiving E2E
+        working-directory: backend
+        run: python -m tests.e2e.ai_voice_receiving_e2e_test
+
+      - name: Run Reservation Concurrency Load Test
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
+        run: python tools/load_test_reservations.py
+
   frontend-checks:
-    name: Frontend Typecheck & Production Build
+    name: Frontend Typecheck, Lint & Production Build
     runs-on: ubuntu-latest
 
     steps:
@@ -101,3 +187,31 @@ jobs:
       - name: Vite Production Build
         working-directory: frontend
         run: npm run build
+
+  frontend-e2e:
+    name: Frontend Playwright & Accessibility E2E
+    needs: frontend-checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend/package.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Install Playwright Browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E & Accessibility Tests
+        working-directory: frontend
+        run: npx playwright test

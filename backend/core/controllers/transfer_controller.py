@@ -11,8 +11,15 @@ from fastapi import HTTPException, status
 
 from common.logger import get_logger
 from common.warehouse_scope import assert_seller_access, assert_warehouse_access, require_roles
-from core.constants import AuditActionType, InventoryMovementType, InventoryState, TransferStatus, UserRole
-from core.cruds import audit_crud, inventory_crud, transfer_crud
+from core.constants import (
+    AuditActionType,
+    InventoryMovementType,
+    InventoryState,
+    OutboxEventType,
+    TransferStatus,
+    UserRole,
+)
+from core.cruds import audit_crud, inventory_crud, outbox_crud, transfer_crud
 from core.database.database import transaction_session
 from core.models.inventory_model import InventoryMovement
 from core.models.transfer_model import Transfer
@@ -75,6 +82,18 @@ class TransferController:
                 source_record_id=transfer.id,
                 metadata_json={"transfer_number": transfer_number, "status": transfer.status},
             )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.TRANSFER_CREATED.value,
+                payload={
+                    "transfer_id": str(transfer.id),
+                    "transfer_number": transfer.transfer_number,
+                    "seller_id": str(transfer.seller_id),
+                    "origin_warehouse_id": str(transfer.origin_warehouse_id),
+                    "destination_warehouse_id": str(transfer.destination_warehouse_id),
+                    "status": transfer.status,
+                },
+            )
 
             reloaded = await transfer_crud.get_transfer_by_id(session, transfer.id)
             logger.info("Transfer %s created successfully", transfer.id)
@@ -134,6 +153,16 @@ class TransferController:
                 source_record_type="transfers",
                 source_record_id=transfer.id,
                 metadata_json={"status": transfer.status},
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.TRANSFER_APPROVED.value,
+                payload={
+                    "transfer_id": str(transfer.id),
+                    "transfer_number": transfer.transfer_number,
+                    "seller_id": str(transfer.seller_id),
+                    "status": transfer.status,
+                },
             )
 
             reloaded = await transfer_crud.get_transfer_by_id(session, transfer.id)
@@ -220,6 +249,18 @@ class TransferController:
                 source_record_type="transfers",
                 source_record_id=transfer.id,
                 metadata_json={"status": transfer.status},
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.TRANSFER_DISPATCHED.value,
+                payload={
+                    "transfer_id": str(transfer.id),
+                    "transfer_number": transfer.transfer_number,
+                    "seller_id": str(transfer.seller_id),
+                    "origin_warehouse_id": str(transfer.origin_warehouse_id),
+                    "destination_warehouse_id": str(transfer.destination_warehouse_id),
+                    "status": transfer.status,
+                },
             )
 
             reloaded = await transfer_crud.get_transfer_by_id(session, transfer.id)
@@ -368,6 +409,22 @@ class TransferController:
                 source_record_type="transfers",
                 source_record_id=transfer.id,
                 metadata_json={"status": transfer.status, "has_discrepancy": has_discrepancy},
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=(
+                    OutboxEventType.TRANSFER_DISCREPANCY_RECORDED.value
+                    if has_discrepancy
+                    else OutboxEventType.TRANSFER_RECEIVED.value
+                ),
+                payload={
+                    "transfer_id": str(transfer.id),
+                    "transfer_number": transfer.transfer_number,
+                    "seller_id": str(transfer.seller_id),
+                    "destination_warehouse_id": str(transfer.destination_warehouse_id),
+                    "status": transfer.status,
+                    "has_discrepancy": has_discrepancy,
+                },
             )
 
             reloaded = await transfer_crud.get_transfer_by_id(session, transfer.id)

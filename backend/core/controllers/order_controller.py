@@ -18,10 +18,18 @@ from core.constants import (
     InventoryMovementType,
     InventoryState,
     OrderStatus,
+    OutboxEventType,
     UserRole,
 )
 from core.controllers import catalog_controller
-from core.cruds import audit_crud, catalog_crud, identity_crud, inventory_crud, order_crud
+from core.cruds import (
+    audit_crud,
+    catalog_crud,
+    identity_crud,
+    inventory_crud,
+    order_crud,
+    outbox_crud,
+)
 from core.database.database import transaction_session
 from core.models.audit_model import AuditEvent
 from core.models.inventory_model import InventoryMovement
@@ -151,6 +159,17 @@ class OrderController:
                 source_record_type="orders",
                 source_record_id=saved_order.id,
                 metadata_json={"seller_order_number": seller_order_number},
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.ORDER_CREATED.value,
+                payload={
+                    "order_id": str(saved_order.id),
+                    "seller_order_number": saved_order.seller_order_number,
+                    "seller_id": str(saved_order.seller_id),
+                    "warehouse_id": str(saved_order.warehouse_id),
+                    "status": saved_order.status,
+                },
             )
             await session.refresh(saved_order)
             logger.info("Order created successfully %s", saved_order.id)
@@ -359,6 +378,17 @@ class OrderController:
                             "reason": "Strict partial fulfillment policy rejected reservation",
                         },
                     )
+                    await outbox_crud.create_outbox_event(
+                        session,
+                        event_type=OutboxEventType.ORDER_RESERVED.value,
+                        payload={
+                            "order_id": str(order.id),
+                            "seller_order_number": order.seller_order_number,
+                            "seller_id": str(order.seller_id),
+                            "warehouse_id": str(order.warehouse_id),
+                            "status": order.status,
+                        },
+                    )
                     return order
 
             for line in sorted_lines:
@@ -445,6 +475,17 @@ class OrderController:
                 source_record_id=order.id,
                 metadata_json={"status": order.status},
             )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.ORDER_RESERVED.value,
+                payload={
+                    "order_id": str(order.id),
+                    "seller_order_number": order.seller_order_number,
+                    "seller_id": str(order.seller_id),
+                    "warehouse_id": str(order.warehouse_id),
+                    "status": order.status,
+                },
+            )
             reloaded_order = await order_crud.get_order_by_id(session, order.id)
             logger.info("Order %s reservation completed with status %s", order.id, order.status)
             return reloaded_order or order
@@ -524,6 +565,17 @@ class OrderController:
                 source_record_type="orders",
                 source_record_id=order.id,
                 metadata_json={"seller_order_number": order.seller_order_number},
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.ORDER_CANCELLED.value,
+                payload={
+                    "order_id": str(order.id),
+                    "seller_order_number": order.seller_order_number,
+                    "seller_id": str(order.seller_id),
+                    "warehouse_id": str(order.warehouse_id),
+                    "status": order.status,
+                },
             )
             reloaded_order = await order_crud.get_order_by_id(session, order.id)
             logger.info("Order %s cancelled successfully", order.id)

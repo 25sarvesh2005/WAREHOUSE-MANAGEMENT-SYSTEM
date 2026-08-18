@@ -18,10 +18,18 @@ from core.constants import (
     AuditActionType,
     InventoryMovementType,
     InventoryState,
+    OutboxEventType,
     ReceiptStatus,
     UserRole,
 )
-from core.cruds import audit_crud, catalog_crud, identity_crud, inventory_crud, receiving_crud
+from core.cruds import (
+    audit_crud,
+    catalog_crud,
+    identity_crud,
+    inventory_crud,
+    outbox_crud,
+    receiving_crud,
+)
 from core.database.database import transaction_session
 from core.models.inventory_model import InventoryMovement
 from core.models.receiving_model import Receipt, ReceiptEvent, ReceiptLine
@@ -130,6 +138,16 @@ class ReceivingController:
                 source_record_type="receipts",
                 source_record_id=receipt.id,
                 metadata_json={"receipt_number": receipt.receipt_number},
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.RECEIPT_CREATED.value,
+                payload={
+                    "receipt_id": str(receipt.id),
+                    "receipt_number": receipt.receipt_number,
+                    "seller_id": str(receipt.seller_id),
+                    "warehouse_id": str(receipt.warehouse_id),
+                },
             )
             logger.info("Receipt draft created successfully %s", receipt.id)
             return receipt
@@ -474,6 +492,17 @@ class ReceivingController:
                 source_record_id=receipt.id,
                 metadata_json={"receipt_number": receipt.receipt_number},
             )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.RECEIPT_COMPLETED.value,
+                payload={
+                    "receipt_id": str(receipt.id),
+                    "receipt_number": receipt.receipt_number,
+                    "seller_id": str(receipt.seller_id),
+                    "warehouse_id": str(receipt.warehouse_id),
+                    "lines_count": len(receipt.lines),
+                },
+            )
             await session.refresh(receipt)
             logger.info("Receipt completed successfully %s", receipt.id)
             return receipt
@@ -593,6 +622,16 @@ class ReceivingController:
                 source_record_type="receipts",
                 source_record_id=receipt.id,
                 metadata_json={"receipt_number": receipt.receipt_number},
+            )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type=OutboxEventType.RECEIPT_CANCELLED.value,
+                payload={
+                    "receipt_id": str(receipt.id),
+                    "receipt_number": receipt.receipt_number,
+                    "seller_id": str(receipt.seller_id),
+                    "warehouse_id": str(receipt.warehouse_id),
+                },
             )
             await session.refresh(receipt)
             logger.info("Receipt cancelled successfully %s", receipt.id)
