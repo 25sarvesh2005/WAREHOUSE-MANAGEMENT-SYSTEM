@@ -7,11 +7,12 @@ import {
   PackageCheck,
   Plus,
   Repeat,
+  Search,
   ShieldAlert,
   Trash2,
   Truck,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
 import {
@@ -29,6 +30,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { productName, productSku, sellerLabel, warehouseLabel } from "@/lib/display";
 import { formatDate, formatQty } from "@/lib/format";
+import { normalizeSearchQuery } from "@/lib/global-search";
 import {
   useApproveTransferMutation,
   useCreateTransferMutation,
@@ -40,9 +42,17 @@ import {
   useTransfersQuery,
   useWarehousesQuery,
 } from "@/hooks/use-api";
-import type { Transfer } from "@/lib/types";
+import type { Product, Seller, Transfer, Warehouse } from "@/lib/types";
+
+interface TransfersSearchParams {
+  q?: string;
+}
 
 export const Route = createFileRoute("/transfers/")({
+  validateSearch: (search: Record<string, unknown>): TransfersSearchParams => {
+    const q = normalizeSearchQuery(search["q"]);
+    return q ? { q } : {};
+  },
   head: () => ({
     meta: [
       { title: "Inter-Facility Transfers | Whitfield Ops" },
@@ -61,6 +71,11 @@ export const Route = createFileRoute("/transfers/")({
   component: TransfersPage,
 });
 
+const EMPTY_TRANSFERS: Transfer[] = [];
+const EMPTY_SELLERS: Seller[] = [];
+const EMPTY_WAREHOUSES: Warehouse[] = [];
+const EMPTY_PRODUCTS: Product[] = [];
+
 interface TransferLineDraft {
   product_id: string;
   quantity: string;
@@ -76,16 +91,32 @@ function newLineDraft(): TransferLineDraft {
 }
 
 function TransfersPage() {
+  const { q } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const { user } = useAuth();
   const transfersQuery = useTransfersQuery();
   const sellersQuery = useSellersQuery();
   const warehousesQuery = useWarehousesQuery();
   const productsQuery = useProductsQuery();
 
-  const transfers = transfersQuery.data ?? [];
-  const sellers = sellersQuery.data ?? [];
-  const warehouses = warehousesQuery.data ?? [];
-  const products = productsQuery.data ?? [];
+  const transfers = transfersQuery.data ?? EMPTY_TRANSFERS;
+  const sellers = sellersQuery.data ?? EMPTY_SELLERS;
+  const warehouses = warehousesQuery.data ?? EMPTY_WAREHOUSES;
+  const products = productsQuery.data ?? EMPTY_PRODUCTS;
+
+  const handleSearchChange = (val: string) => {
+    navigate({
+      search: (prev) => {
+        const normalized = normalizeSearchQuery(val);
+        if (!normalized) {
+          const { q: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, q: normalized };
+      },
+      replace: true,
+    });
+  };
 
   const approveMutation = useApproveTransferMutation();
   const dispatchMutation = useDispatchTransferMutation();
@@ -230,6 +261,33 @@ function TransfersPage() {
     }
   }
 
+  const filteredTransfers = useMemo(() => {
+    if (!q) return transfers;
+    const search = q.toLowerCase();
+    return transfers.filter((t: Transfer) => {
+      const num = (t.transfer_number || "").toLowerCase();
+      const synthetic = `trf-${t.id.slice(0, 8)}`.toLowerCase();
+      const id = (t.id || "").toLowerCase();
+      const origin = (
+        warehouses.find((w) => w.id === t.origin_warehouse_id)?.code || ""
+      ).toLowerCase();
+      const dest = (
+        warehouses.find((w) => w.id === t.destination_warehouse_id)?.code || ""
+      ).toLowerCase();
+      const seller = sellerLabel(sellers, t.seller_id).toLowerCase();
+      const status = (t.status || "").toLowerCase();
+      return (
+        num.includes(search) ||
+        synthetic.includes(search) ||
+        id.includes(search) ||
+        origin.includes(search) ||
+        dest.includes(search) ||
+        seller.includes(search) ||
+        status.includes(search)
+      );
+    });
+  }, [transfers, q, warehouses, sellers]);
+
   return (
     <AppShell>
       <PageHeader
@@ -282,11 +340,39 @@ function TransfersPage() {
         </Card>
       </div>
 
+      {/* Search Bar */}
+      <Card className="mb-5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="relative flex items-center w-full sm:w-80">
+            <Search className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" />
+            <label htmlFor="transfer-search" className="sr-only">
+              Search transfers
+            </label>
+            <input
+              id="transfer-search"
+              type="search"
+              maxLength={100}
+              value={q ?? ""}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search transfer number, route, seller, or status…"
+              className="w-full min-h-[44px] rounded-full border border-input bg-white py-2.5 pr-4 pl-10 font-mono text-sm font-semibold text-foreground outline-none placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+          </div>
+        </div>
+      </Card>
+
       {transfers.length === 0 ? (
         <Card className="p-8">
           <EmptyState
             message="No inter-facility transfers recorded"
             hint="Create a stock transfer above to balance inventory between Reno and Columbus."
+          />
+        </Card>
+      ) : filteredTransfers.length === 0 ? (
+        <Card className="p-8">
+          <EmptyState
+            message="No transfers match this search"
+            hint="Clear or adjust the search query to see other transfers."
           />
         </Card>
       ) : (
@@ -303,7 +389,7 @@ function TransfersPage() {
             </tr>
           </thead>
           <tbody>
-            {transfers.map((t: Transfer) => {
+            {filteredTransfers.map((t: Transfer) => {
               const originCode =
                 warehouses.find((w) => w.id === t.origin_warehouse_id)?.code || "ORIGIN";
               const destCode =

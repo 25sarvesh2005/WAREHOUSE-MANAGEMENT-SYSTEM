@@ -48,7 +48,17 @@ import {
 } from "@/hooks/use-api";
 import type { Order, Product, Seller, Warehouse } from "@/lib/types";
 
+import { normalizeSearchQuery } from "@/lib/global-search";
+
+interface OrdersSearchParams {
+  q?: string;
+}
+
 export const Route = createFileRoute("/orders")({
+  validateSearch: (search: Record<string, unknown>): OrdersSearchParams => {
+    const q = normalizeSearchQuery(search["q"]);
+    return q ? { q } : {};
+  },
   head: () => ({
     meta: [
       { title: "Customer Orders & Reservation | Whitfield Ops" },
@@ -74,6 +84,8 @@ const EMPTY_WAREHOUSES: Warehouse[] = [];
 const EMPTY_PRODUCTS: Product[] = [];
 
 function OrdersPage() {
+  const { q } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const ordersQuery = useOrdersQuery();
   const sellersQuery = useSellersQuery();
   const warehousesQuery = useWarehousesQuery();
@@ -86,7 +98,20 @@ function OrdersPage() {
   const reserveOrderMutation = useReserveOrderMutation();
   const cancelOrderMutation = useCancelOrderMutation();
 
-  const [query, setQuery] = useState("");
+  const handleSearchChange = (val: string) => {
+    navigate({
+      search: (prev) => {
+        const normalized = normalizeSearchQuery(val);
+        if (!normalized) {
+          const { q: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, q: normalized };
+      },
+      replace: true,
+    });
+  };
+
   const [sort, setSort] = useState<SortKey>("priority");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState<string | null>(null);
@@ -127,15 +152,21 @@ function OrdersPage() {
   ).length;
 
   const rows = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const search = (q || "").toLowerCase();
     return orders
-      .filter(
-        (o: Order) =>
-          !q ||
-          (o.seller_order_number || "").toLowerCase().includes(q) ||
-          orderDestination(o).toLowerCase().includes(q) ||
-          sellerLabel(sellers, o.seller_id).toLowerCase().includes(q),
-      )
+      .filter((o: Order) => {
+        if (!search) return true;
+        const son = (o.seller_order_number || "").toLowerCase();
+        const cust = (o.customer_name || "").toLowerCase();
+        const dest = orderDestination(o).toLowerCase();
+        const seller = sellerLabel(sellers, o.seller_id).toLowerCase();
+        return (
+          son.includes(search) ||
+          cust.includes(search) ||
+          dest.includes(search) ||
+          seller.includes(search)
+        );
+      })
       .slice()
       .sort((a: Order, b: Order) => {
         const pA = Number(a.policy_snapshot?.["priority"] ?? 5);
@@ -148,7 +179,7 @@ function OrdersPage() {
                 String((b as unknown as Record<string, unknown>)[sort] || ""),
               );
       });
-  }, [orders, query, sellers, sort]);
+  }, [orders, q, sellers, sort]);
 
   const activeSelectedId = selectedId || rows[0]?.id || null;
   const selected = orders.find((o: Order) => o.id === activeSelectedId) ?? null;
@@ -312,8 +343,8 @@ function OrdersPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="w-full sm:w-72">
                 <ScannerInputField
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  value={q ?? ""}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Search order #, customer, seller..."
                 />
               </div>

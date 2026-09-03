@@ -163,7 +163,7 @@ test.describe("App Shell & Sidebar Navigation", () => {
     await expect(searchInput).toBeVisible();
     await expect(searchInput).toHaveAttribute(
       "placeholder",
-      "Search Orders (ORD-), Receipts (REC-), Transfers (TRF-), or SKUs...",
+      "Search ORD-, REC-/1Z, TRF-/TRN-, RET-/RMA-, or SKU-…",
     );
   });
 
