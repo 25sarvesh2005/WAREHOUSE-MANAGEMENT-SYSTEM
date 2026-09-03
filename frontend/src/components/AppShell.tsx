@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
-  const statusReportQuery = useOperationalStatusReportQuery({ enabled: Boolean(user) });
+  const statusReportQuery = useOperationalStatusReportQuery({ enabled: Boolean(ready && user) });
 
   useEffect(() => {
     if (ready && !user) navigate({ to: "/login" });
