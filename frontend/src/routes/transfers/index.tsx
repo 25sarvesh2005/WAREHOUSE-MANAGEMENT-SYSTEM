@@ -7,11 +7,14 @@ import {
   PackageCheck,
   Plus,
   Repeat,
+  Search,
   ShieldAlert,
   Trash2,
   Truck,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
 import {
@@ -29,6 +32,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { productName, productSku, sellerLabel, warehouseLabel } from "@/lib/display";
 import { formatDate, formatQty } from "@/lib/format";
+import { normalizeSearchQuery } from "@/lib/global-search";
 import {
   useApproveTransferMutation,
   useCreateTransferMutation,
@@ -40,9 +44,17 @@ import {
   useTransfersQuery,
   useWarehousesQuery,
 } from "@/hooks/use-api";
-import type { Transfer } from "@/lib/types";
+import type { Product, Seller, Transfer, Warehouse } from "@/lib/types";
+
+interface TransfersSearchParams {
+  q?: string;
+}
 
 export const Route = createFileRoute("/transfers/")({
+  validateSearch: (search: Record<string, unknown>): TransfersSearchParams => {
+    const q = normalizeSearchQuery(search["q"]);
+    return q ? { q } : {};
+  },
   head: () => ({
     meta: [
       { title: "Inter-Facility Transfers | Whitfield Ops" },
@@ -61,6 +73,11 @@ export const Route = createFileRoute("/transfers/")({
   component: TransfersPage,
 });
 
+const EMPTY_TRANSFERS: Transfer[] = [];
+const EMPTY_SELLERS: Seller[] = [];
+const EMPTY_WAREHOUSES: Warehouse[] = [];
+const EMPTY_PRODUCTS: Product[] = [];
+
 interface TransferLineDraft {
   product_id: string;
   quantity: string;
@@ -76,16 +93,32 @@ function newLineDraft(): TransferLineDraft {
 }
 
 function TransfersPage() {
+  const { q } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const { user } = useAuth();
   const transfersQuery = useTransfersQuery();
   const sellersQuery = useSellersQuery();
   const warehousesQuery = useWarehousesQuery();
   const productsQuery = useProductsQuery();
 
-  const transfers = transfersQuery.data ?? [];
-  const sellers = sellersQuery.data ?? [];
-  const warehouses = warehousesQuery.data ?? [];
-  const products = productsQuery.data ?? [];
+  const transfers = transfersQuery.data ?? EMPTY_TRANSFERS;
+  const sellers = sellersQuery.data ?? EMPTY_SELLERS;
+  const warehouses = warehousesQuery.data ?? EMPTY_WAREHOUSES;
+  const products = productsQuery.data ?? EMPTY_PRODUCTS;
+
+  const handleSearchChange = (val: string) => {
+    navigate({
+      search: (prev) => {
+        const normalized = normalizeSearchQuery(val);
+        if (!normalized) {
+          const { q: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, q: normalized };
+      },
+      replace: true,
+    });
+  };
 
   const approveMutation = useApproveTransferMutation();
   const dispatchMutation = useDispatchTransferMutation();
@@ -182,7 +215,7 @@ function TransfersPage() {
       await approveMutation.mutateAsync(id);
       transfersQuery.refetch();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to approve transfer.");
+      toast.error(err instanceof Error ? err.message : "Failed to approve transfer.");
     }
   }
 
@@ -191,7 +224,7 @@ function TransfersPage() {
       await dispatchMutation.mutateAsync(id);
       transfersQuery.refetch();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to dispatch transfer.");
+      toast.error(err instanceof Error ? err.message : "Failed to dispatch transfer.");
     }
   }
 
@@ -209,13 +242,14 @@ function TransfersPage() {
       setReceiveLines({});
       transfersQuery.refetch();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to receive transfer.");
+      toast.error(err instanceof Error ? err.message : "Failed to receive transfer.");
     }
   }
 
   async function handleResolve(transfer: Transfer) {
     if (!resolveNotes.trim()) {
-      return alert("Manager resolution notes are required.");
+      toast.error("Manager resolution notes are required.");
+      return;
     }
     try {
       await resolveMutation.mutateAsync({
@@ -226,9 +260,36 @@ function TransfersPage() {
       setResolveNotes("");
       transfersQuery.refetch();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to resolve discrepancy.");
+      toast.error(err instanceof Error ? err.message : "Failed to resolve discrepancy.");
     }
   }
+
+  const filteredTransfers = useMemo(() => {
+    if (!q) return transfers;
+    const search = q.toLowerCase();
+    return transfers.filter((t: Transfer) => {
+      const num = (t.transfer_number || "").toLowerCase();
+      const synthetic = `trf-${t.id.slice(0, 8)}`.toLowerCase();
+      const id = (t.id || "").toLowerCase();
+      const origin = (
+        warehouses.find((w) => w.id === t.origin_warehouse_id)?.code || ""
+      ).toLowerCase();
+      const dest = (
+        warehouses.find((w) => w.id === t.destination_warehouse_id)?.code || ""
+      ).toLowerCase();
+      const seller = sellerLabel(sellers, t.seller_id).toLowerCase();
+      const status = (t.status || "").toLowerCase();
+      return (
+        num.includes(search) ||
+        synthetic.includes(search) ||
+        id.includes(search) ||
+        origin.includes(search) ||
+        dest.includes(search) ||
+        seller.includes(search) ||
+        status.includes(search)
+      );
+    });
+  }, [transfers, q, warehouses, sellers]);
 
   return (
     <AppShell>
@@ -282,11 +343,39 @@ function TransfersPage() {
         </Card>
       </div>
 
+      {/* Search Bar */}
+      <Card className="mb-5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="relative flex items-center w-full sm:w-80">
+            <Search className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" />
+            <label htmlFor="transfer-search" className="sr-only">
+              Search transfers
+            </label>
+            <input
+              id="transfer-search"
+              type="search"
+              maxLength={100}
+              value={q ?? ""}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search transfer number, route, seller, or status…"
+              className="w-full min-h-[44px] rounded-full border border-input bg-white py-2.5 pr-4 pl-10 font-mono text-sm font-semibold text-foreground outline-none placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+          </div>
+        </div>
+      </Card>
+
       {transfers.length === 0 ? (
         <Card className="p-8">
           <EmptyState
             message="No inter-facility transfers recorded"
             hint="Create a stock transfer above to balance inventory between Reno and Columbus."
+          />
+        </Card>
+      ) : filteredTransfers.length === 0 ? (
+        <Card className="p-8">
+          <EmptyState
+            message="No transfers match this search"
+            hint="Clear or adjust the search query to see other transfers."
           />
         </Card>
       ) : (
@@ -303,7 +392,7 @@ function TransfersPage() {
             </tr>
           </thead>
           <tbody>
-            {transfers.map((t: Transfer) => {
+            {filteredTransfers.map((t: Transfer) => {
               const originCode =
                 warehouses.find((w) => w.id === t.origin_warehouse_id)?.code || "ORIGIN";
               const destCode =
@@ -385,164 +474,165 @@ function TransfersPage() {
       )}
 
       {/* Create Transfer Modal */}
-      {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="w-full max-w-xl rounded-xl border border-slate-200 bg-white p-6 shadow-2xl animate-rise max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">
-                New Inter-Facility Stock Transfer
-              </h3>
-              <button
-                onClick={() => setOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+      <AppDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="New Inter-Facility Stock Transfer"
+        description="Define the origin, destination, seller, and stock lines for this transfer."
+        className="max-w-xl"
+        pending={createMutation.isPending}
+      >
+        {error ? (
+          <div className="mb-3">
+            <ErrorState message={error} />
+          </div>
+        ) : null}
+
+        <div className="space-y-4 text-xs">
+          <div>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+              Seller Account
+            </label>
+            <select
+              value={form.seller_id}
+              onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
+              className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+            >
+              {sellers.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} ({s.code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                Origin Facility
+              </label>
+              <select
+                value={form.origin_warehouse_id}
+                onChange={(e) => setForm({ ...form, origin_warehouse_id: e.target.value })}
+                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
-                ✕
+                {warehouses.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.code} ({w.city || "Hub"})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                Destination Facility
+              </label>
+              <select
+                value={form.destination_warehouse_id}
+                onChange={(e) => setForm({ ...form, destination_warehouse_id: e.target.value })}
+                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+              >
+                {warehouses.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.code} ({w.city || "Hub"})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Transfer Lines */}
+          <div className="border-t border-slate-100 pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-bold text-slate-700 uppercase text-[10px]">
+                Transfer Items
+              </span>
+              <button
+                type="button"
+                onClick={addLine}
+                className="text-xs font-semibold text-primary hover:text-primary-dark cursor-pointer"
+              >
+                + Add Another SKU
               </button>
             </div>
 
-            {error ? (
-              <div className="mt-3">
-                <ErrorState message={error} />
-              </div>
-            ) : null}
-
-            <div className="mt-4 space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                  Seller Account
-                </label>
-                <select
-                  value={form.seller_id}
-                  onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
-                  className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+            <div className="space-y-2.5">
+              {form.lines.map((line, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 rounded-xl bg-slate-50 p-2.5 border border-slate-200"
                 >
-                  {sellers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Origin Facility
-                  </label>
                   <select
-                    value={form.origin_warehouse_id}
-                    onChange={(e) => setForm({ ...form, origin_warehouse_id: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+                    value={line.product_id}
+                    onChange={(e) => updateLine(idx, { product_id: e.target.value })}
+                    className="flex-1 rounded-xl border border-input bg-white px-3 py-1.5 font-mono text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                   >
-                    {warehouses.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.code} ({w.city || "Hub"})
+                    <option value="">-- Choose Product SKU --</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.sku} — {p.name}
                       </option>
                     ))}
                   </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Destination Facility
-                  </label>
-                  <select
-                    value={form.destination_warehouse_id}
-                    onChange={(e) => setForm({ ...form, destination_warehouse_id: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
-                  >
-                    {warehouses.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.code} ({w.city || "Hub"})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Transfer Lines */}
-              <div className="border-t border-slate-100 pt-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-slate-700 uppercase text-[10px]">
-                    Transfer Items
-                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={line.quantity}
+                    onChange={(e) => updateLine(idx, { quantity: e.target.value })}
+                    className="w-20 rounded-md border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs font-bold text-right text-slate-900 focus:outline-none"
+                  />
                   <button
                     type="button"
-                    onClick={addLine}
-                    className="text-xs font-semibold text-primary hover:text-primary-dark cursor-pointer"
+                    onClick={() => removeLine(idx)}
+                    className="text-rose-600 hover:text-rose-800 p-1"
                   >
-                    + Add Another SKU
+                    <Trash2 className="size-4" />
                   </button>
                 </div>
-
-                <div className="space-y-2.5">
-                  {form.lines.map((line, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-2 rounded-xl bg-slate-50 p-2.5 border border-slate-200"
-                    >
-                      <select
-                        value={line.product_id}
-                        onChange={(e) => updateLine(idx, { product_id: e.target.value })}
-                        className="flex-1 rounded-xl border border-input bg-white px-3 py-1.5 font-mono text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
-                      >
-                        <option value="">-- Choose Product SKU --</option>
-                        {products.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.sku} — {p.name}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        min="1"
-                        value={line.quantity}
-                        onChange={(e) => updateLine(idx, { quantity: e.target.value })}
-                        className="w-20 rounded-md border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs font-bold text-right text-slate-900 focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeLine(idx)}
-                        className="text-rose-600 hover:text-rose-800 p-1"
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
-              <Button variant="secondary" size="md" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={createTransfer}
-                disabled={createMutation.isPending}
-              >
-                {createMutation.isPending ? "Creating..." : "Submit Transfer for Approval"}
-              </Button>
+              ))}
             </div>
           </div>
         </div>
-      ) : null}
+
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end border-t border-slate-100 pt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            disabled={createMutation.isPending}
+            onClick={() => setOpen(false)}
+            className="w-full sm:w-auto"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            onClick={createTransfer}
+            disabled={createMutation.isPending}
+            className="w-full sm:w-auto"
+          >
+            {createMutation.isPending ? "Creating..." : "Submit Transfer for Approval"}
+          </Button>
+        </div>
+      </AppDialog>
 
       {/* Receive Transfer Modal */}
-      {receiving ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl animate-rise">
-            <h3 className="font-bold text-slate-900 text-base border-b border-slate-100 pb-3">
-              Receive Inter-Facility Transfer (TRF-{receiving.id.slice(0, 8)})
-            </h3>
-            <p className="mt-2 text-xs text-slate-600">
-              Verify incoming quantities at destination dock. Note damaged or missing items
-              separately:
-            </p>
-
-            <div className="mt-4 space-y-3">
+      <AppDialog
+        open={Boolean(receiving)}
+        onOpenChange={(next) => {
+          if (!next) setReceiving(null);
+        }}
+        title={`Receive Inter-Facility Transfer (TRF-${receiving ? receiving.id.slice(0, 8) : ""})`}
+        description="Verify incoming quantities and record damaged or missing stock separately."
+        className="max-w-lg"
+        pending={receiveMutation.isPending}
+      >
+        {receiving ? (
+          <div>
+            <div className="space-y-3">
               {receiving.lines?.map((line) => {
                 const sku = productSku(products, line.product_id);
                 const good = receiveLines[line.id]?.good ?? String(line.requested_quantity);
@@ -601,58 +691,83 @@ function TransfersPage() {
               })}
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
-              <Button variant="secondary" size="md" onClick={() => setReceiving(null)}>
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end border-t border-slate-100 pt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                disabled={receiveMutation.isPending}
+                onClick={() => setReceiving(null)}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
               <Button
+                type="button"
                 variant="primary"
                 size="md"
                 onClick={() => handleReceive(receiving)}
                 disabled={receiveMutation.isPending}
-                className="bg-emerald-600 hover:bg-emerald-700 font-bold"
+                className="bg-emerald-600 hover:bg-emerald-700 font-bold w-full sm:w-auto"
               >
                 {receiveMutation.isPending ? "Posting..." : "Confirm Inbound Receipt"}
               </Button>
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </AppDialog>
 
       {/* Resolve Discrepancy Modal */}
-      {resolving ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl animate-rise">
-            <h3 className="font-bold text-slate-900 text-base border-b border-slate-100 pb-3">
-              Manager Transfer Discrepancy Resolution
-            </h3>
-            <p className="mt-2 text-xs text-slate-600">
-              Provide formal operational notes explaining the variance before closing this
-              discrepancy:
-            </p>
+      <AppDialog
+        open={Boolean(resolving)}
+        onOpenChange={(next) => {
+          if (!next) {
+            setResolving(null);
+            setResolveNotes("");
+          }
+        }}
+        title="Manager Transfer Discrepancy Resolution"
+        description="Provide formal operational notes explaining the variance before closing this discrepancy."
+        className="max-w-md"
+        pending={resolveMutation.isPending}
+      >
+        {resolving ? (
+          <div>
             <textarea
               rows={3}
               value={resolveNotes}
               onChange={(e) => setResolveNotes(e.target.value)}
               placeholder="e.g. Carrier investigation confirmed 2 units lost in transit, insurance claim filed."
-              className="mt-3 w-full rounded-lg border border-slate-300 p-2.5 text-xs text-slate-800 focus:outline-none"
+              className="w-full rounded-lg border border-slate-300 p-2.5 text-xs text-slate-800 focus:outline-none"
             />
-            <div className="mt-4 flex items-center justify-end gap-2">
-              <Button variant="secondary" size="md" onClick={() => setResolving(null)}>
+            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                disabled={resolveMutation.isPending}
+                onClick={() => {
+                  setResolving(null);
+                  setResolveNotes("");
+                }}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
               <Button
+                type="button"
                 variant="danger"
                 size="md"
                 onClick={() => handleResolve(resolving)}
                 disabled={resolveMutation.isPending}
+                className="w-full sm:w-auto"
               >
                 {resolveMutation.isPending ? "Resolving..." : "Close Discrepancy"}
               </Button>
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </AppDialog>
     </AppShell>
   );
 }

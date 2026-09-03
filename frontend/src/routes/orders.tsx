@@ -14,7 +14,10 @@ import {
   XCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
 import {
   Button,
@@ -48,7 +51,17 @@ import {
 } from "@/hooks/use-api";
 import type { Order, Product, Seller, Warehouse } from "@/lib/types";
 
+import { normalizeSearchQuery } from "@/lib/global-search";
+
+interface OrdersSearchParams {
+  q?: string;
+}
+
 export const Route = createFileRoute("/orders")({
+  validateSearch: (search: Record<string, unknown>): OrdersSearchParams => {
+    const q = normalizeSearchQuery(search["q"]);
+    return q ? { q } : {};
+  },
   head: () => ({
     meta: [
       { title: "Customer Orders & Reservation | Whitfield Ops" },
@@ -74,6 +87,8 @@ const EMPTY_WAREHOUSES: Warehouse[] = [];
 const EMPTY_PRODUCTS: Product[] = [];
 
 function OrdersPage() {
+  const { q } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const ordersQuery = useOrdersQuery();
   const sellersQuery = useSellersQuery();
   const warehousesQuery = useWarehousesQuery();
@@ -86,7 +101,20 @@ function OrdersPage() {
   const reserveOrderMutation = useReserveOrderMutation();
   const cancelOrderMutation = useCancelOrderMutation();
 
-  const [query, setQuery] = useState("");
+  const handleSearchChange = (val: string) => {
+    navigate({
+      search: (prev) => {
+        const normalized = normalizeSearchQuery(val);
+        if (!normalized) {
+          const { q: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, q: normalized };
+      },
+      replace: true,
+    });
+  };
+
   const [sort, setSort] = useState<SortKey>("priority");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState<string | null>(null);
@@ -127,15 +155,21 @@ function OrdersPage() {
   ).length;
 
   const rows = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const search = (q || "").toLowerCase();
     return orders
-      .filter(
-        (o: Order) =>
-          !q ||
-          (o.seller_order_number || "").toLowerCase().includes(q) ||
-          orderDestination(o).toLowerCase().includes(q) ||
-          sellerLabel(sellers, o.seller_id).toLowerCase().includes(q),
-      )
+      .filter((o: Order) => {
+        if (!search) return true;
+        const son = (o.seller_order_number || "").toLowerCase();
+        const cust = (o.customer_name || "").toLowerCase();
+        const dest = orderDestination(o).toLowerCase();
+        const seller = sellerLabel(sellers, o.seller_id).toLowerCase();
+        return (
+          son.includes(search) ||
+          cust.includes(search) ||
+          dest.includes(search) ||
+          seller.includes(search)
+        );
+      })
       .slice()
       .sort((a: Order, b: Order) => {
         const pA = Number(a.policy_snapshot?.["priority"] ?? 5);
@@ -148,7 +182,7 @@ function OrdersPage() {
                 String((b as unknown as Record<string, unknown>)[sort] || ""),
               );
       });
-  }, [orders, query, sellers, sort]);
+  }, [orders, q, sellers, sort]);
 
   const activeSelectedId = selectedId || rows[0]?.id || null;
   const selected = orders.find((o: Order) => o.id === activeSelectedId) ?? null;
@@ -158,7 +192,7 @@ function OrdersPage() {
       await reserveOrderMutation.mutateAsync(orderId);
       ordersQuery.refetch();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to reserve order stock.");
+      toast.error(err instanceof Error ? err.message : "Failed to reserve order stock.");
     }
   };
 
@@ -168,7 +202,7 @@ function OrdersPage() {
       setConfirmCancel(null);
       ordersQuery.refetch();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to cancel order.");
+      toast.error(err instanceof Error ? err.message : "Failed to cancel order.");
     }
   };
 
@@ -312,8 +346,8 @@ function OrdersPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="w-full sm:w-72">
                 <ScannerInputField
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  value={q ?? ""}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Search order #, customer, seller..."
                 />
               </div>
@@ -487,31 +521,14 @@ function OrdersPage() {
                 ) : null}
 
                 {selected.status !== "CLOSED" && selected.status !== "CANCELLED" ? (
-                  confirmCancel === selected.id ? (
-                    <div className="flex w-full items-center gap-2">
-                      <span className="text-xs text-rose-700 font-medium">Confirm cancel?</span>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => handleCancelOrder(selected.id)}
-                        disabled={cancelOrderMutation.isPending}
-                      >
-                        Yes, Cancel
-                      </Button>
-                      <Button variant="secondary" size="sm" onClick={() => setConfirmCancel(null)}>
-                        No
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setConfirmCancel(selected.id)}
-                      className="text-rose-700 hover:bg-rose-50 border-rose-200"
-                    >
-                      Cancel Order
-                    </Button>
-                  )
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setConfirmCancel(selected.id)}
+                    className="text-rose-700 hover:bg-rose-50 border-rose-200"
+                  >
+                    Cancel Order
+                  </Button>
                 ) : null}
               </div>
             </Card>
@@ -523,211 +540,231 @@ function OrdersPage() {
         </div>
       </div>
 
+      {/* Cancel Order Confirmation Dialog */}
+      <ConfirmActionDialog
+        open={Boolean(confirmCancel)}
+        onOpenChange={(open) => {
+          if (!open) setConfirmCancel(null);
+        }}
+        title="Cancel order?"
+        description="This stops further fulfillment work for this order. This action cannot be undone."
+        recordIdentifier={
+          confirmCancel
+            ? orders.find((o) => o.id === confirmCancel)?.seller_order_number || confirmCancel
+            : ""
+        }
+        confirmLabel="Cancel order"
+        cancelLabel="Keep order"
+        destructive={true}
+        pending={cancelOrderMutation.isPending}
+        onConfirm={async () => {
+          if (confirmCancel) {
+            await handleCancelOrder(confirmCancel);
+          }
+        }}
+      />
+
       {/* Create Customer Order Modal */}
-      {openCreate ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="w-full max-w-xl rounded-xl border border-slate-200 bg-white p-6 shadow-2xl animate-rise max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">Create Customer Order</h3>
-              <button
-                onClick={() => setOpenCreate(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+      <AppDialog
+        open={openCreate}
+        onOpenChange={setOpenCreate}
+        title="Create Customer Order"
+        description="Enter the customer, fulfillment location, delivery, and line-item details."
+        className="max-w-xl"
+        pending={createOrderMutation.isPending}
+      >
+        {createError ? (
+          <div className="mb-3">
+            <ErrorState message={createError} />
+          </div>
+        ) : null}
+
+        <form onSubmit={createOrder} className="space-y-4 text-xs">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                Seller Account
+              </label>
+              <select
+                value={orderForm.seller_id}
+                onChange={(e) => setOrderForm({ ...orderForm, seller_id: e.target.value })}
+                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
-                ✕
-              </button>
+                {sellers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.code})
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {createError ? (
-              <div className="mt-3">
-                <ErrorState message={createError} />
-              </div>
-            ) : null}
-
-            <form onSubmit={createOrder} className="mt-4 space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Seller Account
-                  </label>
-                  <select
-                    value={orderForm.seller_id}
-                    onChange={(e) => setOrderForm({ ...orderForm, seller_id: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
-                  >
-                    {sellers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} ({s.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Fulfillment Warehouse
-                  </label>
-                  <select
-                    value={orderForm.warehouse_id}
-                    onChange={(e) => setOrderForm({ ...orderForm, warehouse_id: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
-                  >
-                    {warehouses.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.code} ({w.city || "Hub"}, {w.state || ""})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                  Seller Order Number
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. SO-2026-9041"
-                  value={orderForm.seller_order_number}
-                  onChange={(e) =>
-                    setOrderForm({ ...orderForm, seller_order_number: e.target.value })
-                  }
-                  className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                  Customer Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Jane Doe"
-                  value={orderForm.customer_name}
-                  onChange={(e) => setOrderForm({ ...orderForm, customer_name: e.target.value })}
-                  className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
-                />
-              </div>
-
-              {/* Physical Delivery Address */}
-              <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-200 space-y-2.5">
-                <span className="font-bold text-slate-700 uppercase text-[10px] flex items-center gap-1.5">
-                  <Truck className="size-3.5 text-primary" /> Delivery Destination Address
-                </span>
-                <input
-                  type="text"
-                  placeholder="Street Address Line 1"
-                  value={orderForm.shipping_address_line1}
-                  onChange={(e) =>
-                    setOrderForm({ ...orderForm, shipping_address_line1: e.target.value })
-                  }
-                  className="w-full rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                />
-                <div className="grid grid-cols-3 gap-2">
-                  <input
-                    type="text"
-                    placeholder="City"
-                    value={orderForm.city}
-                    onChange={(e) => setOrderForm({ ...orderForm, city: e.target.value })}
-                    className="rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                  />
-                  <input
-                    type="text"
-                    placeholder="State"
-                    value={orderForm.state}
-                    onChange={(e) => setOrderForm({ ...orderForm, state: e.target.value })}
-                    className="rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                  />
-                  <input
-                    type="text"
-                    placeholder="ZIP"
-                    value={orderForm.postal_code}
-                    onChange={(e) => setOrderForm({ ...orderForm, postal_code: e.target.value })}
-                    className="rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                  />
-                </div>
-              </div>
-
-              {/* Order Line Builder */}
-              <div className="border-t border-slate-200 pt-3">
-                <span className="font-bold text-slate-700 uppercase text-[10px]">
-                  Add Order Line Items
-                </span>
-                <div className="mt-2 flex gap-2">
-                  <select
-                    value={lineForm.product_id}
-                    onChange={(e) => setLineForm({ ...lineForm, product_id: e.target.value })}
-                    className="flex-1 rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-mono font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
-                  >
-                    <option value="">-- Select Product SKU --</option>
-                    {createProductOptions.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.sku} — {p.name}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="number"
-                    min="1"
-                    value={lineForm.quantity}
-                    onChange={(e) => setLineForm({ ...lineForm, quantity: e.target.value })}
-                    className="w-20 rounded-xl border border-input bg-white px-3 py-2 font-mono text-xs font-bold text-foreground text-right outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs"
-                  />
-                  <Button type="button" variant="secondary" size="sm" onClick={addOrderLine}>
-                    Add Line
-                  </Button>
-                </div>
-
-                {/* Staged Lines List */}
-                <div className="mt-3 space-y-1.5">
-                  {orderLines.map((line, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between rounded-lg bg-slate-50 p-2 border border-slate-200"
-                    >
-                      <span className="font-mono font-bold text-slate-900">
-                        {productSku(products, line.product_id)}
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono font-bold text-slate-700">
-                          Qty: {line.ordered_quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setOrderLines(orderLines.filter((_, i) => i !== idx))}
-                          className="text-rose-600 hover:text-rose-800"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setOpenCreate(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="md"
-                  disabled={createOrderMutation.isPending}
-                >
-                  {createOrderMutation.isPending ? "Creating..." : "Save Customer Order"}
-                </Button>
-              </div>
-            </form>
+            <div>
+              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                Fulfillment Warehouse
+              </label>
+              <select
+                value={orderForm.warehouse_id}
+                onChange={(e) => setOrderForm({ ...orderForm, warehouse_id: e.target.value })}
+                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+              >
+                {warehouses.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.code} ({w.city || "Hub"}, {w.state || ""})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
-      ) : null}
+
+          <div>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+              Seller Order Number
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. SO-2026-9041"
+              value={orderForm.seller_order_number}
+              onChange={(e) =>
+                setOrderForm({ ...orderForm, seller_order_number: e.target.value })
+              }
+              className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+              Customer Full Name
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Jane Doe"
+              value={orderForm.customer_name}
+              onChange={(e) => setOrderForm({ ...orderForm, customer_name: e.target.value })}
+              className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+            />
+          </div>
+
+          {/* Physical Delivery Address */}
+          <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-200 space-y-2.5">
+            <span className="font-bold text-slate-700 uppercase text-[10px] flex items-center gap-1.5">
+              <Truck className="size-3.5 text-primary" /> Delivery Destination Address
+            </span>
+            <input
+              type="text"
+              placeholder="Street Address Line 1"
+              value={orderForm.shipping_address_line1}
+              onChange={(e) =>
+                setOrderForm({ ...orderForm, shipping_address_line1: e.target.value })
+              }
+              className="w-full rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+            <div className="grid grid-cols-3 gap-2">
+              <input
+                type="text"
+                placeholder="City"
+                value={orderForm.city}
+                onChange={(e) => setOrderForm({ ...orderForm, city: e.target.value })}
+                className="rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              />
+              <input
+                type="text"
+                placeholder="State"
+                value={orderForm.state}
+                onChange={(e) => setOrderForm({ ...orderForm, state: e.target.value })}
+                className="rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              />
+              <input
+                type="text"
+                placeholder="ZIP"
+                value={orderForm.postal_code}
+                onChange={(e) => setOrderForm({ ...orderForm, postal_code: e.target.value })}
+                className="rounded-xl border border-input bg-white px-3 py-1.5 text-xs text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              />
+            </div>
+          </div>
+
+          {/* Order Line Builder */}
+          <div className="border-t border-slate-200 pt-3">
+            <span className="font-bold text-slate-700 uppercase text-[10px]">
+              Add Order Line Items
+            </span>
+            <div className="mt-2 flex gap-2">
+              <select
+                value={lineForm.product_id}
+                onChange={(e) => setLineForm({ ...lineForm, product_id: e.target.value })}
+                className="flex-1 rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-mono font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+              >
+                <option value="">-- Select Product SKU --</option>
+                {createProductOptions.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.sku} — {p.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min="1"
+                value={lineForm.quantity}
+                onChange={(e) => setLineForm({ ...lineForm, quantity: e.target.value })}
+                className="w-20 rounded-xl border border-input bg-white px-3 py-2 font-mono text-xs font-bold text-foreground text-right outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs"
+              />
+              <Button type="button" variant="secondary" size="sm" onClick={addOrderLine}>
+                Add Line
+              </Button>
+            </div>
+
+            {/* Staged Lines List */}
+            <div className="mt-3 space-y-1.5">
+              {orderLines.map((line, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between rounded-lg bg-slate-50 p-2 border border-slate-200"
+                >
+                  <span className="font-mono font-bold text-slate-900">
+                    {productSku(products, line.product_id)}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono font-bold text-slate-700">
+                      Qty: {line.ordered_quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setOrderLines(orderLines.filter((_, i) => i !== idx))}
+                      className="text-rose-600 hover:text-rose-800"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end border-t border-slate-100 pt-4">
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              disabled={createOrderMutation.isPending}
+              onClick={() => setOpenCreate(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              disabled={createOrderMutation.isPending}
+              className="w-full sm:w-auto"
+            >
+              {createOrderMutation.isPending ? "Creating..." : "Save Customer Order"}
+            </Button>
+          </div>
+        </form>
+      </AppDialog>
     </AppShell>
   );
 }

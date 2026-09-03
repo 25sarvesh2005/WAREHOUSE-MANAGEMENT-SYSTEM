@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Barcode, CheckCircle2, Package, Plus, Scale, Search, Truck } from "lucide-react";
 import { useState } from "react";
+import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
 import {
@@ -215,178 +216,176 @@ function ShipmentsPage() {
         </TableShell>
       )}
 
-      {/* Create Shipping Label Modal */}
-      {showCreate ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl animate-rise">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Truck className="size-5 text-blue-600" />
-                <h3 className="font-bold text-slate-900 text-base">Weigh & Print Shipping Label</h3>
-              </div>
-              <button
-                onClick={() => setShowCreate(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+      {/* Weigh & Print Shipping Label Modal */}
+      <AppDialog
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        title="Weigh & Print Shipping Label"
+        description="Select the fulfilled order and record its carrier, service, package, and tracking details."
+        className="max-w-lg"
+        pending={createShipmentMutation.isPending}
+      >
+        {error ? (
+          <div className="mb-3">
+            <ErrorState message={error} />
+          </div>
+        ) : null}
+
+        <div className="space-y-4 text-xs">
+          <div>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+              Select Packed Customer Order
+            </label>
+            <select
+              value={newShipment.order_id}
+              onChange={(e) => setNewShipment({ ...newShipment, order_id: e.target.value })}
+              className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+            >
+              <option value="">-- Choose Packed Order --</option>
+              {eligibleOrders.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.seller_order_number || `ORD-${o.id.slice(0, 8)}`} ({o.status})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                Carrier
+              </label>
+              <select
+                value={newShipment.carrier}
+                onChange={(e) => setNewShipment({ ...newShipment, carrier: e.target.value })}
+                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
-                ✕
-              </button>
+                <option value="UPS">UPS Ground / Air</option>
+                <option value="FEDEX">FedEx Express / Ground</option>
+                <option value="USPS">USPS Priority Mail</option>
+                <option value="MANUAL_CARRIER">Freight / Local Pickup</option>
+              </select>
             </div>
 
-            {error ? (
-              <div className="mt-3">
-                <ErrorState message={error} />
-              </div>
-            ) : null}
+            <div>
+              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                Service Level
+              </label>
+              <select
+                value={newShipment.service_level}
+                onChange={(e) =>
+                  setNewShipment({ ...newShipment, service_level: e.target.value })
+                }
+                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+              >
+                <option value="GROUND">Ground</option>
+                <option value="2DAY">2-Day Expedited</option>
+                <option value="OVERNIGHT">Standard Overnight</option>
+              </select>
+            </div>
+          </div>
 
-            <div className="mt-4 space-y-4 text-xs">
+          {/* Physical Weighing & Dimension Fields */}
+          <div className="rounded-lg bg-slate-50 p-3 border border-slate-200 space-y-3">
+            <span className="font-bold text-slate-700 uppercase text-[10px] flex items-center gap-1.5">
+              <Scale className="size-3.5 text-blue-600" /> Package Scale Weight & Dimensions
+            </span>
+            <div className="grid grid-cols-4 gap-2">
               <div>
-                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                  Select Packed Customer Order
-                </label>
-                <select
-                  value={newShipment.order_id}
-                  onChange={(e) => setNewShipment({ ...newShipment, order_id: e.target.value })}
-                  className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
-                >
-                  <option value="">-- Choose Packed Order --</option>
-                  {eligibleOrders.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.seller_order_number || `ORD-${o.id.slice(0, 8)}`} ({o.status})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Carrier
-                  </label>
-                  <select
-                    value={newShipment.carrier}
-                    onChange={(e) => setNewShipment({ ...newShipment, carrier: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
-                  >
-                    <option value="UPS">UPS Ground / Air</option>
-                    <option value="FEDEX">FedEx Express / Ground</option>
-                    <option value="USPS">USPS Priority Mail</option>
-                    <option value="MANUAL_CARRIER">Freight / Local Pickup</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Service Level
-                  </label>
-                  <select
-                    value={newShipment.service_level}
-                    onChange={(e) =>
-                      setNewShipment({ ...newShipment, service_level: e.target.value })
-                    }
-                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
-                  >
-                    <option value="GROUND">Ground</option>
-                    <option value="2DAY">2-Day Expedited</option>
-                    <option value="OVERNIGHT">Standard Overnight</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Physical Weighing & Dimension Fields */}
-              <div className="rounded-lg bg-slate-50 p-3 border border-slate-200 space-y-3">
-                <span className="font-bold text-slate-700 uppercase text-[10px] flex items-center gap-1.5">
-                  <Scale className="size-3.5 text-blue-600" /> Package Scale Weight & Dimensions
-                </span>
-                <div className="grid grid-cols-4 gap-2">
-                  <div>
-                    <label className="block font-medium text-slate-600 text-[10px]">
-                      Weight (lbs)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={newShipment.weight_lbs}
-                      onChange={(e) =>
-                        setNewShipment({ ...newShipment, weight_lbs: e.target.value })
-                      }
-                      className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 font-mono text-xs font-bold text-right"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-medium text-slate-600 text-[10px]">
-                      Length (in)
-                    </label>
-                    <input
-                      type="number"
-                      value={newShipment.length_in}
-                      onChange={(e) =>
-                        setNewShipment({ ...newShipment, length_in: e.target.value })
-                      }
-                      className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 font-mono text-xs font-bold text-right"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-medium text-slate-600 text-[10px]">
-                      Width (in)
-                    </label>
-                    <input
-                      type="number"
-                      value={newShipment.width_in}
-                      onChange={(e) => setNewShipment({ ...newShipment, width_in: e.target.value })}
-                      className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 font-mono text-xs font-bold text-right"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-medium text-slate-600 text-[10px]">
-                      Height (in)
-                    </label>
-                    <input
-                      type="number"
-                      value={newShipment.height_in}
-                      onChange={(e) =>
-                        setNewShipment({ ...newShipment, height_in: e.target.value })
-                      }
-                      className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 font-mono text-xs font-bold text-right"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                  Manual Tracking Barcode (Optional override)
+                <label className="block font-medium text-slate-600 text-[10px]">
+                  Weight (lbs)
                 </label>
                 <input
-                  type="text"
-                  value={newShipment.tracking_number}
+                  type="number"
+                  step="0.1"
+                  value={newShipment.weight_lbs}
                   onChange={(e) =>
-                    setNewShipment({ ...newShipment, tracking_number: e.target.value })
+                    setNewShipment({ ...newShipment, weight_lbs: e.target.value })
                   }
-                  placeholder="e.g. 1Z9999999999999999 or leave blank for auto-generated tracking"
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-800 focus:outline-none"
+                  className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 font-mono text-xs font-bold text-right"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-slate-600 text-[10px]">
+                  Length (in)
+                </label>
+                <input
+                  type="number"
+                  value={newShipment.length_in}
+                  onChange={(e) =>
+                    setNewShipment({ ...newShipment, length_in: e.target.value })
+                  }
+                  className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 font-mono text-xs font-bold text-right"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-slate-600 text-[10px]">
+                  Width (in)
+                </label>
+                <input
+                  type="number"
+                  value={newShipment.width_in}
+                  onChange={(e) => setNewShipment({ ...newShipment, width_in: e.target.value })}
+                  className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 font-mono text-xs font-bold text-right"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-slate-600 text-[10px]">
+                  Height (in)
+                </label>
+                <input
+                  type="number"
+                  value={newShipment.height_in}
+                  onChange={(e) =>
+                    setNewShipment({ ...newShipment, height_in: e.target.value })
+                  }
+                  className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 font-mono text-xs font-bold text-right"
                 />
               </div>
             </div>
+          </div>
 
-            <div className="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
-              <Button variant="secondary" size="md" onClick={() => setShowCreate(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={createShipment}
-                disabled={createShipmentMutation.isPending || !newShipment.order_id}
-                className="font-bold"
-              >
-                {createShipmentMutation.isPending
-                  ? "Generating Label..."
-                  : "Print Label & Dispatch"}
-              </Button>
-            </div>
+          <div>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+              Manual Tracking Barcode (Optional override)
+            </label>
+            <input
+              type="text"
+              value={newShipment.tracking_number}
+              onChange={(e) =>
+                setNewShipment({ ...newShipment, tracking_number: e.target.value })
+              }
+              placeholder="e.g. 1Z9999999999999999 or leave blank for auto-generated tracking"
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-800 focus:outline-none"
+            />
           </div>
         </div>
-      ) : null}
+
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end border-t border-slate-100 pt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            disabled={createShipmentMutation.isPending}
+            onClick={() => setShowCreate(false)}
+            className="w-full sm:w-auto"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            onClick={createShipment}
+            disabled={createShipmentMutation.isPending || !newShipment.order_id}
+            className="font-bold w-full sm:w-auto"
+          >
+            {createShipmentMutation.isPending
+              ? "Generating Label..."
+              : "Print Label & Dispatch"}
+          </Button>
+        </div>
+      </AppDialog>
     </AppShell>
   );
 }
