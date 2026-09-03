@@ -56,21 +56,37 @@ export function readUser(): User | null {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(() =>
-    typeof window !== "undefined" ? readUser() : null,
-  );
-  const [ready, setReady] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const sync = () => setUser(readUser());
+    let isMounted = true;
 
-    if (readUser()) {
+    const sync = () => {
+      if (!isMounted) return;
+      setUser(readUser());
+    };
+
+    const initialUser = readUser();
+    if (!initialUser) {
+      if (isMounted) {
+        setUser(null);
+        setReady(true);
+      }
+    } else {
+      if (isMounted) {
+        setUser(initialUser);
+        setReady(true);
+      }
+
       getCurrentUserApi()
         .then((serverUser) => {
+          if (!isMounted) return;
           storeUser(serverUser);
           setUser(serverUser);
         })
         .catch((err: unknown) => {
+          if (!isMounted) return;
           // Only clear session on explicit 401 Unauthorized error from server.
           // Never log out on history popstate, canceled requests, or transient network offline.
           const status = (err as { status?: number; code?: string })?.status;
@@ -85,6 +101,7 @@ export function useAuth() {
     window.addEventListener("whitfield-auth", sync);
     window.addEventListener("storage", sync);
     return () => {
+      isMounted = false;
       window.removeEventListener("whitfield-auth", sync);
       window.removeEventListener("storage", sync);
     };

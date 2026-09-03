@@ -36,7 +36,17 @@ import {
 } from "@/hooks/use-api";
 import type { Balance, Movement, Product, Seller, Warehouse } from "@/lib/types";
 
+import { normalizeSearchQuery } from "@/lib/global-search";
+
+interface InventorySearchParams {
+  q?: string;
+}
+
 export const Route = createFileRoute("/inventory")({
+  validateSearch: (search: Record<string, unknown>): InventorySearchParams => {
+    const q = normalizeSearchQuery(search["q"]);
+    return q ? { q } : {};
+  },
   head: () => ({
     meta: [
       { title: "Inventory Balances & Ledger | Whitfield Ops" },
@@ -72,10 +82,25 @@ const EMPTY_WAREHOUSES: Warehouse[] = [];
 const EMPTY_PRODUCTS: Product[] = [];
 
 function InventoryPage() {
+  const { q } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [selectedState, setSelectedState] = useState("ALL");
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("ALL");
   const [selectedSellerId, setSelectedSellerId] = useState<string>("ALL");
-  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearchChange = (val: string) => {
+    navigate({
+      search: (prev) => {
+        const normalized = normalizeSearchQuery(val);
+        if (!normalized) {
+          const { q: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, q: normalized };
+      },
+      replace: true,
+    });
+  };
 
   const balancesQuery = useBalancesQuery();
   const movementsQuery = useMovementsQuery(200);
@@ -96,8 +121,8 @@ function InventoryPage() {
       if (selectedWarehouseId !== "ALL" && b.warehouse_id !== selectedWarehouseId) return false;
       if (selectedSellerId !== "ALL" && b.seller_id !== selectedSellerId) return false;
 
-      if (searchQuery.trim()) {
-        const query = searchQuery.trim().toLowerCase();
+      if (q) {
+        const query = q.toLowerCase();
         const sku = productSku(products, b.product_id).toLowerCase();
         const name = productName(products, b.product_id).toLowerCase();
         const seller = sellerLabel(sellers, b.seller_id).toLowerCase();
@@ -112,7 +137,7 @@ function InventoryPage() {
     selectedState,
     selectedWarehouseId,
     selectedSellerId,
-    searchQuery,
+    q,
     products,
     sellers,
   ]);
@@ -230,8 +255,8 @@ function InventoryPage() {
           {/* Scanner Search Input */}
           <div className="w-full sm:w-80">
             <ScannerInputField
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={q ?? ""}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Scan barcode, SKU, product name..."
             />
           </div>
