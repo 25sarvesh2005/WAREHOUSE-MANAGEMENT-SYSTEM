@@ -46,7 +46,17 @@ import {
 } from "@/lib/offline-receipt-store";
 import type { Receipt } from "@/lib/types";
 
+import { normalizeSearchQuery } from "@/lib/global-search";
+
+interface ReceiptsSearchParams {
+  q?: string;
+}
+
 export const Route = createFileRoute("/receipts/")({
+  validateSearch: (search: Record<string, unknown>): ReceiptsSearchParams => {
+    const q = normalizeSearchQuery(search["q"]);
+    return q ? { q } : {};
+  },
   head: () => ({
     meta: [
       { title: "Inbound Receiving Dock | Whitfield Ops" },
@@ -66,6 +76,8 @@ export const Route = createFileRoute("/receipts/")({
 });
 
 function ReceiptsPage() {
+  const { q } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const receiptsQuery = useReceiptsQuery();
   const sellersQuery = useSellersQuery();
   const warehousesQuery = useWarehousesQuery();
@@ -73,6 +85,20 @@ function ReceiptsPage() {
   const sellers = sellersQuery.data ?? [];
   const warehouses = warehousesQuery.data ?? [];
   const createReceiptMutation = useCreateReceiptMutation();
+
+  const handleSearchChange = (val: string) => {
+    navigate({
+      search: (prev) => {
+        const normalized = normalizeSearchQuery(val);
+        if (!normalized) {
+          const { q: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, q: normalized };
+      },
+      replace: true,
+    });
+  };
 
   const [open, setOpen] = useState(false);
   const [sourceType, setSourceType] = useState<"CARRIER_TRACKING" | "SELLER_DROP_OFF">(
@@ -83,7 +109,6 @@ function ReceiptsPage() {
     warehouse_id: warehouses[0]?.id || "",
     source_reference: "",
   });
-  const [filterSearch, setFilterSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [offlineDrafts, setOfflineDrafts] = useState<OfflineDraftReceipt[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -170,12 +195,13 @@ function ReceiptsPage() {
   }
 
   const filteredReceipts = receipts.filter((r) => {
-    if (!filterSearch.trim()) return true;
-    const q = filterSearch.toLowerCase().trim();
+    if (!q) return true;
+    const search = q.toLowerCase();
+    const num = (r.receipt_number || "").toLowerCase();
     const ref = (r.source_reference || "").toLowerCase();
     const seller = sellerLabel(sellers, r.seller_id).toLowerCase();
-    const id = r.id.toLowerCase();
-    return ref.includes(q) || seller.includes(q) || id.includes(q);
+    const id = (r.id || "").toLowerCase();
+    return num.includes(search) || ref.includes(search) || seller.includes(search) || id.includes(search);
   });
 
   return (
@@ -256,8 +282,8 @@ function ReceiptsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="w-full sm:w-80">
             <ScannerInputField
-              value={filterSearch}
-              onChange={(e) => setFilterSearch(e.target.value)}
+              value={q ?? ""}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Scan tracking # or search receipt..."
             />
           </div>
@@ -455,7 +481,7 @@ function ReceiptsPage() {
                       params={{ id: r.id }}
                       className="text-blue-600 hover:text-blue-800 hover:underline"
                     >
-                      {r.source_reference || `REC-${r.id.slice(0, 8)}`}
+                      {r.receipt_number || r.source_reference || `REC-${r.id.slice(0, 8)}`}
                     </Link>
                   </Td>
                   <Td className="text-slate-600 font-medium">

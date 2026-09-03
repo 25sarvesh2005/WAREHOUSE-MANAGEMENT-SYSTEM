@@ -16,9 +16,11 @@ import {
   Undo2,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { useOperationalStatusReportQuery } from "@/hooks/use-api";
 import { ROLE_SECTIONS, signOutAsync, useAuth } from "@/lib/auth";
 import { initials } from "@/lib/format";
+import { resolveGlobalSearch } from "@/lib/global-search";
 import {
   Sheet,
   SheetContent,
@@ -111,21 +113,47 @@ export function AppShell({ children }: { children: ReactNode }) {
   const health = statusReportQuery.data;
   const systemHealthy = health?.status === "HEALTHY";
 
-  const handleGlobalSearch = (event: React.FormEvent) => {
+  const handleGlobalSearch = async (event: React.FormEvent) => {
     event.preventDefault();
-    const query = globalSearch.trim().toUpperCase();
-    if (!query) return;
+    const trimmed = globalSearch.trim();
+    if (!trimmed) return;
 
-    if (query.startsWith("REC-") || query.startsWith("1Z")) {
-      navigate({ to: "/receipts" });
-    } else if (query.startsWith("ORD-") || query.startsWith("SO-")) {
-      navigate({ to: "/orders" });
-    } else if (query.startsWith("TRF-")) {
-      navigate({ to: "/transfers" });
-    } else if (query.startsWith("RET-") || query.startsWith("RMA-")) {
-      navigate({ to: "/returns" });
-    } else {
-      navigate({ to: "/inventory" });
+    const destination = resolveGlobalSearch(trimmed);
+    if (!destination) {
+      toast.error("Search format not recognized", {
+        description:
+          "Supported prefixes: ORD-, SO-, REC-, 1Z, TRF-, TRN-, RET-, RMA-, SKU-, PROD-",
+      });
+      return;
+    }
+
+    const allowedPaths = ROLE_SECTIONS[user.role] ?? [];
+    if (!allowedPaths.includes(destination.route)) {
+      toast.error(`You do not have access to search ${destination.label}.`);
+      return;
+    }
+
+    try {
+      switch (destination.route) {
+        case "/orders":
+          await navigate({ to: "/orders", search: { q: destination.q } });
+          break;
+        case "/receipts":
+          await navigate({ to: "/receipts", search: { q: destination.q } });
+          break;
+        case "/transfers":
+          await navigate({ to: "/transfers", search: { q: destination.q } });
+          break;
+        case "/returns":
+          await navigate({ to: "/returns", search: { q: destination.q } });
+          break;
+        case "/inventory":
+          await navigate({ to: "/inventory", search: { q: destination.q } });
+          break;
+      }
+      setGlobalSearch("");
+    } catch {
+      toast.error("Search could not be opened");
     }
   };
 
@@ -263,9 +291,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 aria-label="Search warehouse records"
+                maxLength={100}
                 value={globalSearch}
                 onChange={(event) => setGlobalSearch(event.target.value)}
-                placeholder="Search Orders (ORD-), Receipts (REC-), Transfers (TRF-), or SKUs..."
+                placeholder="Search ORD-, REC-/1Z, TRF-/TRN-, RET-/RMA-, or SKU-…"
                 className="w-full rounded-full border border-border/80 bg-white py-2 pl-10 pr-4 text-sm text-foreground shadow-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
               />
             </form>

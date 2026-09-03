@@ -5,12 +5,13 @@ import {
   CheckCircle2,
   FileSearch,
   Plus,
+  Search,
   ShieldAlert,
   ShieldCheck,
   Trash2,
   Undo2,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
 import {
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui-kit";
 import { productName, productSku, sellerLabel, warehouseLabel } from "@/lib/display";
 import { formatDate, formatQty } from "@/lib/format";
+import { normalizeSearchQuery } from "@/lib/global-search";
 import {
   useCreateReturnMutation,
   useOrdersQuery,
@@ -35,9 +37,17 @@ import {
   useSellersQuery,
   useWarehousesQuery,
 } from "@/hooks/use-api";
-import type { ReturnOrder } from "@/lib/types";
+import type { Order, Product, ReturnOrder, Seller, Warehouse } from "@/lib/types";
+
+interface ReturnsSearchParams {
+  q?: string;
+}
 
 export const Route = createFileRoute("/returns/")({
+  validateSearch: (search: Record<string, unknown>): ReturnsSearchParams => {
+    const q = normalizeSearchQuery(search["q"]);
+    return q ? { q } : {};
+  },
   head: () => ({
     meta: [
       { title: "Customer Returns & Inspection | Whitfield Ops" },
@@ -56,6 +66,12 @@ export const Route = createFileRoute("/returns/")({
   }),
   component: ReturnsPage,
 });
+
+const EMPTY_RETURNS: ReturnOrder[] = [];
+const EMPTY_SELLERS: Seller[] = [];
+const EMPTY_WAREHOUSES: Warehouse[] = [];
+const EMPTY_PRODUCTS: Product[] = [];
+const EMPTY_ORDERS: Order[] = [];
 
 interface ReturnLineDraft {
   product_id: string;
@@ -76,6 +92,8 @@ function newReturnLineDraft(): ReturnLineDraft {
 }
 
 function ReturnsPage() {
+  const { q } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const returnsQuery = useReturnsQuery();
   const sellersQuery = useSellersQuery();
   const warehousesQuery = useWarehousesQuery();
@@ -83,11 +101,25 @@ function ReturnsPage() {
   const ordersQuery = useOrdersQuery();
   const createReturnMutation = useCreateReturnMutation();
 
-  const returns = returnsQuery.data ?? [];
-  const sellers = sellersQuery.data ?? [];
-  const warehouses = warehousesQuery.data ?? [];
-  const products = productsQuery.data ?? [];
-  const orders = ordersQuery.data ?? [];
+  const handleSearchChange = (val: string) => {
+    navigate({
+      search: (prev) => {
+        const normalized = normalizeSearchQuery(val);
+        if (!normalized) {
+          const { q: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, q: normalized };
+      },
+      replace: true,
+    });
+  };
+
+  const returns = returnsQuery.data ?? EMPTY_RETURNS;
+  const sellers = sellersQuery.data ?? EMPTY_SELLERS;
+  const warehouses = warehousesQuery.data ?? EMPTY_WAREHOUSES;
+  const products = productsQuery.data ?? EMPTY_PRODUCTS;
+  const orders = ordersQuery.data ?? EMPTY_ORDERS;
 
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,6 +210,33 @@ function ReturnsPage() {
     }
   }
 
+  const filteredReturns = useMemo(() => {
+    if (!q) return returns;
+    const search = q.toLowerCase();
+    return returns.filter((r: ReturnOrder) => {
+      const retNum = (r.return_number || "").toLowerCase();
+      const rma = (r.rma_number || "").toLowerCase();
+      const track = (r.inbound_tracking_number || "").toLowerCase();
+      const id = (r.id || "").toLowerCase();
+      const seller = sellerLabel(sellers, r.seller_id).toLowerCase();
+      const warehouse = (
+        warehouses.find((w) => w.id === r.warehouse_id)?.code ||
+        warehouseLabel(warehouses, r.warehouse_id) ||
+        ""
+      ).toLowerCase();
+      const status = (r.status || "").toLowerCase();
+      return (
+        retNum.includes(search) ||
+        rma.includes(search) ||
+        track.includes(search) ||
+        id.includes(search) ||
+        seller.includes(search) ||
+        warehouse.includes(search) ||
+        status.includes(search)
+      );
+    });
+  }, [returns, q, sellers, warehouses]);
+
   return (
     <AppShell>
       <PageHeader
@@ -211,11 +270,39 @@ function ReturnsPage() {
         <LoadingState message="Loading returns queue..." />
       ) : null}
 
+      {/* Search Bar */}
+      <Card className="mb-5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="relative flex items-center w-full sm:w-80">
+            <Search className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" />
+            <label htmlFor="return-search" className="sr-only">
+              Search returns
+            </label>
+            <input
+              id="return-search"
+              type="search"
+              maxLength={100}
+              value={q ?? ""}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search return, RMA, tracking number, seller, or facility…"
+              className="w-full min-h-[44px] rounded-full border border-input bg-white py-2.5 pr-4 pl-10 font-mono text-sm font-semibold text-foreground outline-none placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+          </div>
+        </div>
+      </Card>
+
       {returns.length === 0 ? (
         <Card className="p-8">
           <EmptyState
             message="No customer returns recorded"
             hint="Log an expected RMA or unidentified customer return package above."
+          />
+        </Card>
+      ) : filteredReturns.length === 0 ? (
+        <Card className="p-8">
+          <EmptyState
+            message="No returns match this search"
+            hint="Clear or adjust the search query to see other returns."
           />
         </Card>
       ) : (
@@ -232,7 +319,7 @@ function ReturnsPage() {
             </tr>
           </thead>
           <tbody>
-            {returns.map((r: ReturnOrder) => {
+            {filteredReturns.map((r: ReturnOrder) => {
               const whCode = warehouses.find((w) => w.id === r.warehouse_id)?.code || "WH";
 
               return (
