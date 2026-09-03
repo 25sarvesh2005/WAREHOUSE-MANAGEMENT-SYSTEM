@@ -12,8 +12,8 @@ import {
   ShieldCheck,
   Truck,
   WifiOff,
-  X,
 } from "lucide-react";
+import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
 import { ReceivingVoiceDraftPanel } from "@/components/ReceivingVoiceDraftPanel";
@@ -301,152 +301,147 @@ function ReceiptsPage() {
       </Card>
 
       {/* Create Inbound Receipt Modal */}
-      {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl animate-rise">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <PackagePlus className="size-5 text-blue-600" />
-                <h3 className="font-bold text-slate-900 text-base">New Inbound Receipt Intake</h3>
-              </div>
+      <AppDialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setError(null);
+        }}
+        title="New Inbound Receipt Intake"
+        description="Create a draft receipt for a carrier delivery or seller drop-off."
+        className="max-w-lg"
+        pending={createReceiptMutation.isPending}
+      >
+        {error ? (
+          <div className="mb-3">
+            <ErrorState message={error} />
+          </div>
+        ) : null}
+
+        <div className="space-y-4 text-xs">
+          {/* Source Type Selector */}
+          <div>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+              Intake Delivery Type
+            </label>
+            <div className="mt-1.5 grid grid-cols-2 gap-2.5">
               <button
-                onClick={() => {
-                  setOpen(false);
-                  setError(null);
-                }}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+                type="button"
+                onClick={() => setSourceType("CARRIER_TRACKING")}
+                className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 font-semibold transition-all cursor-pointer ${
+                  sourceType === "CARRIER_TRACKING"
+                    ? "border-blue-600 bg-blue-50 text-blue-800 ring-1 ring-blue-600"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
               >
-                ✕
+                <Truck className="size-4" />
+                <span>Carrier Delivery (UPS/FedEx)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSourceType("SELLER_DROP_OFF")}
+                className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 font-semibold transition-all cursor-pointer ${
+                  sourceType === "SELLER_DROP_OFF"
+                    ? "border-blue-600 bg-blue-50 text-blue-800 ring-1 ring-blue-600"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                <FileCheck2 className="size-4" />
+                <span>Seller In-Person Drop-Off</span>
               </button>
             </div>
+          </div>
 
-            {error ? (
-              <div className="mt-3">
-                <ErrorState message={error} />
-              </div>
-            ) : null}
+          {/* Source Reference Input */}
+          <div>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+              {sourceType === "CARRIER_TRACKING"
+                ? "Carrier Tracking Number (Barcode Scan)"
+                : "Seller Drop-Off Ticket #"}
+            </label>
+            <div className="mt-1">
+              <ScannerInputField
+                value={form.source_reference}
+                onChange={(e) => setForm({ ...form, source_reference: e.target.value })}
+                placeholder={
+                  sourceType === "CARRIER_TRACKING"
+                    ? "e.g. 1Z9999999999999999 or scan shipping label"
+                    : "e.g. TICKET-2026-0814"
+                }
+                autoFocus
+              />
+            </div>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Used for duplicate detection to prevent double-logging if laptops freeze or
+              network resets.
+            </p>
+          </div>
 
-            <div className="mt-4 space-y-4 text-xs">
-              {/* Source Type Selector */}
-              <div>
-                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                  Intake Delivery Type
-                </label>
-                <div className="mt-1.5 grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setSourceType("CARRIER_TRACKING")}
-                    className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 font-semibold transition-all cursor-pointer ${
-                      sourceType === "CARRIER_TRACKING"
-                        ? "border-blue-600 bg-blue-50 text-blue-800 ring-1 ring-blue-600"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    <Truck className="size-4" />
-                    <span>Carrier Delivery (UPS/FedEx)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSourceType("SELLER_DROP_OFF")}
-                    className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 font-semibold transition-all cursor-pointer ${
-                      sourceType === "SELLER_DROP_OFF"
-                        ? "border-blue-600 bg-blue-50 text-blue-800 ring-1 ring-blue-600"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    <FileCheck2 className="size-4" />
-                    <span>Seller In-Person Drop-Off</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Source Reference Input */}
-              <div>
-                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                  {sourceType === "CARRIER_TRACKING"
-                    ? "Carrier Tracking Number (Barcode Scan)"
-                    : "Seller Drop-Off Ticket #"}
-                </label>
-                <div className="mt-1">
-                  <ScannerInputField
-                    value={form.source_reference}
-                    onChange={(e) => setForm({ ...form, source_reference: e.target.value })}
-                    placeholder={
-                      sourceType === "CARRIER_TRACKING"
-                        ? "e.g. 1Z9999999999999999 or scan shipping label"
-                        : "e.g. TICKET-2026-0814"
-                    }
-                    autoFocus
-                  />
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Used for duplicate detection to prevent double-logging if laptops freeze or
-                  network resets.
-                </p>
-              </div>
-
-              {/* Warehouse Selection */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Receiving Warehouse
-                  </label>
-                  <select
-                    value={form.warehouse_id}
-                    onChange={(e) => setForm({ ...form, warehouse_id: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
-                  >
-                    {warehouses.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.code} ({w.city || "Hub"}, {w.state || ""})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Seller Tenant Selection */}
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Seller Account
-                  </label>
-                  <select
-                    value={form.seller_id}
-                    onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
-                  >
-                    {sellers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} ({s.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+          {/* Warehouse Selection */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                Receiving Warehouse
+              </label>
+              <select
+                value={form.warehouse_id}
+                onChange={(e) => setForm({ ...form, warehouse_id: e.target.value })}
+                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+              >
+                {warehouses.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.code} ({w.city || "Hub"}, {w.state || ""})
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-2.5 border-t border-slate-100 pt-4">
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={() => {
-                  setOpen(false);
-                  setError(null);
-                }}
+            {/* Seller Tenant Selection */}
+            <div>
+              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                Seller Account
+              </label>
+              <select
+                value={form.seller_id}
+                onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
+                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => handleCreate()}
-                disabled={createReceiptMutation.isPending}
-              >
-                {createReceiptMutation.isPending ? "Creating Draft..." : "Create Inbound Draft"}
-              </Button>
+                {sellers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.code})
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
-      ) : null}
+
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end border-t border-slate-100 pt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            disabled={createReceiptMutation.isPending}
+            onClick={() => {
+              setOpen(false);
+              setError(null);
+            }}
+            className="w-full sm:w-auto"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            onClick={() => handleCreate()}
+            disabled={createReceiptMutation.isPending}
+            className="w-full sm:w-auto"
+          >
+            {createReceiptMutation.isPending ? "Creating Draft..." : "Create Inbound Draft"}
+          </Button>
+        </div>
+      </AppDialog>
 
       {/* Main Receipts Table */}
       {filteredReceipts.length === 0 ? (
@@ -514,22 +509,18 @@ function ReceiptsPage() {
       )}
 
       {/* Voice AI Intake Station Modal */}
-      {voiceOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs animate-fade-in">
-          <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setVoiceOpen(false)}
-              className="absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-            >
-              <X className="size-5" />
-            </button>
-            <div className="p-2">
-              <ReceivingVoiceDraftPanel />
-            </div>
-          </div>
+      <AppDialog
+        open={voiceOpen}
+        onOpenChange={setVoiceOpen}
+        title="Voice AI Intake Station"
+        description="Create an inbound receipt draft from a spoken intake."
+        className="max-w-4xl"
+        pending={false}
+      >
+        <div className="p-2">
+          <ReceivingVoiceDraftPanel />
         </div>
-      ) : null}
+      </AppDialog>
     </AppShell>
   );
 }

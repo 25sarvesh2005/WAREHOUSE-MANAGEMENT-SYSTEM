@@ -18,7 +18,9 @@ import {
   XCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
 import {
   Button,
@@ -101,6 +103,8 @@ function ReceiptDetail() {
   const [overrideError, setOverrideError] = useState<string | null>(null);
   const [skuSearch, setSkuSearch] = useState("");
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const [confirmComplete, setConfirmComplete] = useState(false);
+  const [confirmCancelReceipt, setConfirmCancelReceipt] = useState(false);
 
   const productOptions = useMemo(
     () => products.filter((product) => !receipt || product.seller_id === receipt.seller_id),
@@ -222,26 +226,33 @@ function ReceiptDetail() {
     }));
   }
 
+  function handleCompleteClick() {
+    if (!receipt?.lines || receipt.lines.length === 0) {
+      toast.error("Please scan and log at least one receipt line before completing.");
+      return;
+    }
+    setConfirmComplete(true);
+  }
+
   async function handleCompleteReceipt() {
     if (!receipt?.lines || receipt.lines.length === 0) {
-      return alert("Please scan and log at least one receipt line before completing.");
+      toast.error("Please scan and log at least one receipt line before completing.");
+      return;
     }
-    const confirmed = window.confirm(
-      `Post ${totalSellable} sellable, ${totalDamaged} damaged, and ${totalQuarantined} quarantined units to the immutable inventory ledger? This action cannot be reversed.`,
-    );
-    if (!confirmed) return;
 
     try {
       await completeReceiptMutation.mutateAsync(receipt.id);
+      setConfirmComplete(false);
       receiptQuery.refetch();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Could not complete receipt.");
+      toast.error(err instanceof Error ? err.message : "Could not complete receipt.");
     }
   }
 
   async function handleOverrideDuplicate() {
     if (!overrideForm.override_reason.trim()) {
-      return setOverrideError("Manager override justification is required.");
+      setOverrideError("Manager override justification is required.");
+      return;
     }
     setOverrideError(null);
     try {
@@ -259,13 +270,10 @@ function ReceiptDetail() {
   }
 
   async function handleCancelReceipt() {
-    const confirmed = window.confirm(
-      "Cancel this draft receipt? No inventory movements will be posted.",
-    );
-    if (!confirmed) return;
-
+    if (!receipt) return;
     try {
-      await cancelReceiptMutation.mutateAsync(receipt!.id);
+      await cancelReceiptMutation.mutateAsync(receipt.id);
+      setConfirmCancelReceipt(false);
       receiptQuery.refetch();
     } catch (err: unknown) {
       setCancelError(err instanceof Error ? err.message : "Failed to cancel receipt.");
@@ -289,7 +297,7 @@ function ReceiptDetail() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleCancelReceipt}
+              onClick={() => setConfirmCancelReceipt(true)}
               disabled={cancelReceiptMutation.isPending}
               className="text-rose-700 hover:bg-rose-50 border-rose-300"
             >
@@ -298,7 +306,7 @@ function ReceiptDetail() {
             <Button
               variant="primary"
               size="md"
-              onClick={handleCompleteReceipt}
+              onClick={handleCompleteClick}
               disabled={
                 completeReceiptMutation.isPending || !receipt.lines || receipt.lines.length === 0
               }
@@ -646,6 +654,40 @@ function ReceiptDetail() {
           </div>
         </Card>
       </section>
+
+      {/* Complete Receipt Confirmation */}
+      <ConfirmActionDialog
+        open={confirmComplete}
+        onOpenChange={(open) => {
+          setConfirmComplete(open);
+          if (open) setConfirmCancelReceipt(false);
+        }}
+        title="Post receipt to inventory ledger?"
+        description={`Post ${totalSellable} sellable, ${totalDamaged} damaged, and ${totalQuarantined} quarantined units to the immutable inventory ledger? This action cannot be reversed.`}
+        recordIdentifier={receipt.source_reference || `REC-${receipt.id.slice(0, 8)}`}
+        confirmLabel="Post to ledger"
+        cancelLabel="Review receipt"
+        destructive={false}
+        pending={completeReceiptMutation.isPending}
+        onConfirm={handleCompleteReceipt}
+      />
+
+      {/* Cancel Receipt Confirmation */}
+      <ConfirmActionDialog
+        open={confirmCancelReceipt}
+        onOpenChange={(open) => {
+          setConfirmCancelReceipt(open);
+          if (open) setConfirmComplete(false);
+        }}
+        title="Cancel draft receipt?"
+        description="Cancel this draft receipt? No inventory movements will be posted."
+        recordIdentifier={receipt.source_reference || `REC-${receipt.id.slice(0, 8)}`}
+        confirmLabel="Cancel draft"
+        cancelLabel="Keep draft"
+        destructive={true}
+        pending={cancelReceiptMutation.isPending}
+        onConfirm={handleCancelReceipt}
+      />
     </AppShell>
   );
 }
