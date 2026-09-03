@@ -1,12 +1,9 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  Bell,
   Bot,
   Boxes,
   ClipboardList,
-  Database,
   FileSpreadsheet,
-  Globe2,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -14,17 +11,22 @@ import {
   Repeat,
   Search,
   Settings,
-  ShieldCheck,
   ShoppingCart,
-  Sparkles,
   Truck,
   Undo2,
-  Warehouse,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useOperationalStatusReportQuery } from "@/hooks/use-api";
 import { ROLE_SECTIONS, signOutAsync, useAuth } from "@/lib/auth";
 import { initials } from "@/lib/format";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface NavItem {
   to: string;
@@ -32,17 +34,49 @@ interface NavItem {
   icon: typeof LayoutDashboard;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/inventory", label: "Inventory", icon: Boxes },
-  { to: "/receipts", label: "Inbound Receipts", icon: PackageCheck },
-  { to: "/orders", label: "Customer Orders", icon: ShoppingCart },
-  { to: "/pick-tasks", label: "Pick Tasks", icon: ClipboardList },
-  { to: "/shipments", label: "Outbound Shipments", icon: Truck },
-  { to: "/transfers", label: "Hub Transfers", icon: Repeat },
-  { to: "/returns", label: "Returns & RMAs", icon: Undo2 },
-  { to: "/migration", label: "Inventory Migration", icon: FileSpreadsheet },
-  { to: "/ai-assistant", label: "AI Copilot", icon: Bot },
+interface NavGroup {
+  name: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    name: "Overview",
+    items: [{ to: "/", label: "Dashboard", icon: LayoutDashboard }],
+  },
+  {
+    name: "Inbound",
+    items: [
+      { to: "/receipts", label: "Receiving", icon: PackageCheck },
+      { to: "/returns", label: "Returns", icon: Undo2 },
+    ],
+  },
+  {
+    name: "Inventory Control",
+    items: [
+      { to: "/inventory", label: "Inventory", icon: Boxes },
+      { to: "/transfers", label: "Transfers", icon: Repeat },
+    ],
+  },
+  {
+    name: "Fulfillment",
+    items: [
+      { to: "/orders", label: "Orders", icon: ShoppingCart },
+      { to: "/pick-tasks", label: "Pick Tasks", icon: ClipboardList },
+      { to: "/shipments", label: "Shipments", icon: Truck },
+    ],
+  },
+  {
+    name: "Intelligence",
+    items: [{ to: "/ai-assistant", label: "AI Assistant", icon: Bot }],
+  },
+  {
+    name: "Administration",
+    items: [
+      { to: "/migration", label: "Inventory Migration", icon: FileSpreadsheet },
+      { to: "/admin", label: "Admin", icon: Settings },
+    ],
+  },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -61,10 +95,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     setMobileOpen(false);
   }, [pathname]);
 
-  const accessibleItems = useMemo(() => {
+  const accessibleGroups = useMemo(() => {
     if (!user) return [];
     const allowedPaths = ROLE_SECTIONS[user.role] ?? [];
-    return NAV_ITEMS.filter((item) => allowedPaths.includes(item.to));
+    return NAV_GROUPS.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => allowedPaths.includes(item.to)),
+    })).filter((group) => group.items.length > 0);
   }, [user]);
 
   if (!ready || !user) {
@@ -73,7 +110,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const health = statusReportQuery.data;
   const systemHealthy = health?.status === "HEALTHY";
-  const aiStatus = health?.ai?.status ?? "ONLINE";
 
   const handleGlobalSearch = (event: React.FormEvent) => {
     event.preventDefault();
@@ -93,7 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   };
 
-  const sidebar = (
+  const sidebarContent = (
     <div className="flex h-full w-[240px] flex-col border-r border-border bg-card">
       <div className="px-5 py-5 border-b border-border/60">
         <Link to="/" className="flex items-center gap-3">
@@ -120,31 +156,26 @@ export function AppShell({ children }: { children: ReactNode }) {
         </span>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
-        {accessibleItems.map(({ to, label, icon: Icon }) => (
-          <Link
-            key={to}
-            to={to}
-            activeOptions={{ exact: to === "/" }}
-            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted hover:text-foreground [&.active]:bg-primary-tint [&.active]:text-primary"
-          >
-            <Icon className="size-4.5 shrink-0" />
-            <span>{label}</span>
-          </Link>
+      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
+        {accessibleGroups.map((group) => (
+          <div key={group.name} className="space-y-1">
+            <p className="px-3 text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase select-none">
+              {group.name}
+            </p>
+            {group.items.map(({ to, label, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                activeOptions={{ exact: to === "/" }}
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3.5 py-2 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 [&.active]:bg-primary-tint [&.active]:text-primary min-h-[44px]"
+              >
+                <Icon className="size-4.5 shrink-0" />
+                <span>{label}</span>
+              </Link>
+            ))}
+          </div>
         ))}
-
-        {["ADMINISTRATOR", "WAREHOUSE_MANAGER"].includes(user.role) ? (
-          <>
-            <div className="my-3 border-t border-border/80" />
-            <Link
-              to="/admin"
-              className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted hover:text-foreground [&.active]:bg-primary-tint [&.active]:text-primary"
-            >
-              <Settings className="size-4.5 shrink-0" />
-              <span>Admin Console</span>
-            </Link>
-          </>
-        ) : null}
       </nav>
 
       <div className="border-t border-border px-4 py-4">
@@ -180,7 +211,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               await signOutAsync();
               navigate({ to: "/login" });
             }}
-            className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+            className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary cursor-pointer"
           >
             <LogOut className="size-4" />
           </button>
@@ -191,71 +222,69 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 hidden h-screen shrink-0 lg:block">{sidebar}</aside>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
+      >
+        Skip to main content
+      </a>
 
-      {mobileOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            aria-label="Close navigation"
-            className="absolute inset-0 bg-navy/40 backdrop-blur-sm"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="absolute inset-y-0 left-0">{sidebar}</div>
+      <aside className="sticky top-0 hidden h-screen shrink-0 lg:block">{sidebarContent}</aside>
+
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent
+          side="left"
+          id="mobile-navigation"
+          className="w-[260px] p-0 border-r border-border bg-card flex flex-col [&>button]:size-11 [&>button]:min-h-[44px] [&>button]:min-w-[44px] [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:right-2 [&>button]:top-2 [&>button]:rounded-full [&>button]:hover:bg-muted [&>button]:transition-colors"
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigation Menu</SheetTitle>
+            <SheetDescription>Access Whitfield Logistics operational sections and tools</SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto">
+            {sidebarContent}
+          </div>
+        </SheetContent>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-md md:px-6">
+            <SheetTrigger asChild>
+              <button
+                aria-label="Open navigation"
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-navigation"
+                className="rounded-full p-2.5 text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+              >
+                <Menu className="size-5" />
+              </button>
+            </SheetTrigger>
+
+            <form onSubmit={handleGlobalSearch} className="relative max-w-xl flex-1 min-w-0">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                aria-label="Search warehouse records"
+                value={globalSearch}
+                onChange={(event) => setGlobalSearch(event.target.value)}
+                placeholder="Search Orders (ORD-), Receipts (REC-), Transfers (TRF-), or SKUs..."
+                className="w-full rounded-full border border-border/80 bg-white py-2 pl-10 pr-4 text-sm text-foreground shadow-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+              />
+            </form>
+
+            <div className="flex items-center lg:hidden">
+              <span
+                aria-label={`Signed in as ${user.name}`}
+                className="flex size-9 items-center justify-center rounded-full bg-primary font-bold text-xs text-white shadow-sm"
+              >
+                {initials(user.name)}
+              </span>
+            </div>
+          </header>
+
+          <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6 outline-none">
+            {children}
+          </main>
         </div>
-      ) : null}
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-md md:px-6">
-          <button
-            aria-label="Open navigation"
-            className="rounded-full p-2 text-muted-foreground hover:bg-muted lg:hidden"
-            onClick={() => setMobileOpen(true)}
-          >
-            <Menu className="size-5" />
-          </button>
-
-          <form onSubmit={handleGlobalSearch} className="relative max-w-xl flex-1">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={globalSearch}
-              onChange={(event) => setGlobalSearch(event.target.value)}
-              placeholder="Search Orders (ORD-), Receipts (REC-), Transfers (TRF-), or SKUs..."
-              className="w-full rounded-full border border-border/80 bg-white py-2 pl-10 pr-4 text-sm text-foreground shadow-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
-            />
-          </form>
-
-          {/* Network Facility Badges */}
-          <div className="hidden items-center gap-2 md:flex">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
-              <span className="size-1.5 rounded-full bg-emerald-500" /> RNO Reno
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
-              <span className="size-1.5 rounded-full bg-emerald-500" /> CMH Columbus
-            </span>
-          </div>
-
-          <Link
-            to="/ai-assistant"
-            className="hidden items-center gap-1.5 rounded-full bg-gradient-to-r from-primary-tint to-blue-100 px-3.5 py-1.5 text-xs font-bold text-primary transition-all hover:shadow-sm sm:inline-flex border border-primary/20"
-          >
-            <Sparkles className="size-3.5" />
-            AI Copilot
-          </Link>
-
-          <button className="relative rounded-full p-2 text-muted-foreground hover:bg-muted transition-colors">
-            <Bell className="size-4.5" />
-            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" />
-          </button>
-
-          <div className="flex items-center gap-2 pl-2 border-l border-border">
-            <span className="flex size-9 items-center justify-center rounded-full bg-primary font-bold text-xs text-white shadow-sm">
-              {initials(user.name)}
-            </span>
-          </div>
-        </header>
-
-        <main className="flex-1 p-4 md:p-6">{children}</main>
-      </div>
+      </Sheet>
     </div>
   );
 }
