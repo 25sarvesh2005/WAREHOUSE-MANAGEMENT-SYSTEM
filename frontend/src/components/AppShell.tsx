@@ -81,6 +81,17 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+function formatLastChecked(isoString?: string): string | null {
+  if (!isoString) return null;
+  const d = new Date(isoString);
+  if (Number.isNaN(d.getTime())) return null;
+  try {
+    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
+  } catch {
+    return null;
+  }
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, ready } = useAuth();
   const navigate = useNavigate();
@@ -111,7 +122,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const health = statusReportQuery.data;
-  const systemHealthy = health?.status === "HEALTHY";
 
   const handleGlobalSearch = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -207,21 +217,125 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <div className="border-t border-border px-4 py-4">
-        <div className="mb-4 rounded-2xl border border-border/80 bg-background/80 p-3">
-          <div className="flex items-center justify-between text-xs font-semibold">
-            <span className="flex items-center gap-1.5 text-foreground">
-              <span
-                className={`size-2 rounded-full ${systemHealthy ? "bg-emerald-500" : "bg-amber-500"}`}
-              />
-              Fulfillment Network
-            </span>
-            <span className="text-[11px] font-mono text-emerald-600">ONLINE</span>
-          </div>
-          <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>Bicoastal 2-Day SLA</span>
-            <span className="font-semibold text-primary">99.98%</span>
-          </div>
-        </div>
+        {/* Operations Service Status Card */}
+        {(() => {
+          let statusLabel = "Checking";
+          let statusColorClass = "text-muted-foreground";
+          let dotColorClass = "bg-blue-500";
+          let supportingText: React.ReactNode = null;
+          let warningText: string | null = null;
+          let showRetry = false;
+
+          if (!health) {
+            if (statusReportQuery.isError) {
+              statusLabel = "Status unavailable";
+              statusColorClass = "text-amber-700";
+              dotColorClass = "bg-amber-500";
+              supportingText = (
+                <p className="text-[11px] text-muted-foreground">Live health could not be verified.</p>
+              );
+              showRetry = true;
+            } else {
+              statusLabel = "Checking";
+              statusColorClass = "text-blue-600";
+              dotColorClass = "bg-blue-500";
+              supportingText = (
+                <p className="text-[11px] text-muted-foreground">Checking live system health…</p>
+              );
+            }
+          } else {
+            const warningCount = health.warnings?.length ?? 0;
+            if (warningCount === 1) {
+              warningText = "1 configuration warning";
+            } else if (warningCount > 1) {
+              warningText = `${warningCount} configuration warnings`;
+            }
+
+            if (health.status === "HEALTHY") {
+              statusLabel = "Operational";
+              statusColorClass = "text-emerald-600 font-semibold";
+              dotColorClass = "bg-emerald-500";
+
+              let dbText = "Database status needs attention";
+              if (health.database?.status === "connected") {
+                if (
+                  typeof health.database.latency_ms === "number" &&
+                  Number.isFinite(health.database.latency_ms)
+                ) {
+                  dbText = `Database connected · ${health.database.latency_ms} ms`;
+                } else {
+                  dbText = "Database connected";
+                }
+              }
+              supportingText = <p className="text-[11px] text-muted-foreground">{dbText}</p>;
+            } else if (health.status === "DEGRADED") {
+              statusLabel = "Degraded";
+              statusColorClass = "text-amber-600 font-semibold";
+              dotColorClass = "bg-amber-500";
+              supportingText = (
+                <p className="text-[11px] text-amber-700">Some system checks need attention.</p>
+              );
+            } else {
+              statusLabel = "Unavailable";
+              statusColorClass = "text-destructive font-semibold";
+              dotColorClass = "bg-destructive";
+              supportingText = (
+                <p className="text-[11px] text-destructive">
+                  The operations service reported an unhealthy state.
+                </p>
+              );
+            }
+          }
+
+          const formattedTime = health ? formatLastChecked(health.timestamp) : null;
+
+          return (
+            <div
+              role="status"
+              aria-live="polite"
+              aria-label={`System status: ${statusLabel}`}
+              className="mb-4 rounded-2xl border border-border/80 bg-background/80 p-3 space-y-1.5"
+            >
+              <div className="flex items-center justify-between text-xs font-semibold">
+                <span className="flex items-center gap-1.5 text-foreground">
+                  <span className={`size-2 rounded-full ${dotColorClass}`} aria-hidden="true" />
+                  Operations service
+                </span>
+                <span className={`text-xs ${statusColorClass}`}>{statusLabel}</span>
+              </div>
+
+              {supportingText}
+
+              {warningText ? (
+                <p className="text-[11px] font-medium text-amber-600">{warningText}</p>
+              ) : null}
+
+              {health && statusReportQuery.isFetching ? (
+                <p className="text-[10px] text-muted-foreground">Refreshing…</p>
+              ) : null}
+
+              {formattedTime && health ? (
+                <p className="text-[10px] text-muted-foreground">
+                  Last checked <time dateTime={health.timestamp}>{formattedTime}</time>
+                </p>
+              ) : null}
+
+              {showRetry ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    statusReportQuery.refetch();
+                  }}
+                  disabled={statusReportQuery.isFetching}
+                  aria-busy={statusReportQuery.isFetching ? "true" : undefined}
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center rounded-xl border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {statusReportQuery.isFetching ? "Checking…" : "Retry status check"}
+                </button>
+              ) : null}
+            </div>
+          );
+        })()}
 
         <div className="flex items-center gap-3">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-sm">
