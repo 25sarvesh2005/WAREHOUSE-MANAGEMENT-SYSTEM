@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportError } from "../lib/error-reporting";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -137,6 +138,7 @@ function RootComponent() {
       <ErrorBoundary name="RootApplicationBoundary">
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <Toaster position="bottom-right" richColors closeButton />
       </ErrorBoundary>
     </QueryClientProvider>
   );
