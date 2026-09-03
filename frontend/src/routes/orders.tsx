@@ -280,11 +280,7 @@ function OrdersPage() {
         title="Customer Orders & Allocation"
         subtitle="Manage customer orders with server-confirmed inventory reservations to eliminate oversell race conditions."
         actions={
-          <Button
-            id="btn-new-customer-order"
-            onClick={() => setOpenCreate(true)}
-            className="gap-2"
-          >
+          <Button onClick={() => setOpenCreate(true)} className="gap-2">
             <Plus className="size-4" /> New Customer Order
           </Button>
         }
@@ -571,14 +567,7 @@ function OrdersPage() {
       {/* Create Customer Order Modal */}
       <AppDialog
         open={openCreate}
-        onOpenChange={(next) => {
-          setOpenCreate(next);
-          if (!next) {
-            setTimeout(() => {
-              document.getElementById("btn-new-customer-order")?.focus();
-            }, 0);
-          }
-        }}
+        onOpenChange={setOpenCreate}
         title="Create Customer Order"
         description="Enter the customer, fulfillment location, delivery, and line-item details."
         className="max-w-xl"

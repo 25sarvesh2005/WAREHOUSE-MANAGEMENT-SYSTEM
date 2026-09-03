@@ -16,7 +16,6 @@ test.describe("Standardized Dialogs & Confirmations", () => {
 
     const newOrderButton = page.getByRole("button", { name: /New Customer Order/i });
     await expect(newOrderButton).toBeVisible();
-    await newOrderButton.focus();
     await newOrderButton.click();
 
     // 1. There is exactly one visible role="dialog".
