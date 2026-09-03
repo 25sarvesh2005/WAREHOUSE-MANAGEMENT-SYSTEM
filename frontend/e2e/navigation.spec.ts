@@ -7,11 +7,20 @@ test.describe("App Shell & Sidebar Navigation", () => {
     await injectAuthSession(page);
   });
 
-  test("loads authenticated dashboard and renders role-scoped sidebar links", async ({ page }) => {
+  test("loads authenticated dashboard and renders role-scoped sidebar links without hydration error", async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+    });
+
     await page.goto("/");
 
     // App shell header & sidebar
-    await expect(page.locator("text=Whitfield Ops").first()).toBeVisible();
+    await expect(page.locator("text=Whitfield Logistics").first()).toBeVisible();
     await expect(page.locator("text=System Admin").first()).toBeVisible();
 
     // Verify primary navigation links exist
@@ -27,9 +36,24 @@ test.describe("App Shell & Sidebar Navigation", () => {
     await expect(nav.locator('a[href="/migration"]')).toBeVisible();
     await expect(nav.locator('a[href="/ai-assistant"]')).toBeVisible();
     await expect(nav.locator('a[href="/admin"]')).toBeVisible();
+
+    const hydrationErrors = consoleErrors.filter(
+      (msg) =>
+        msg.includes("Hydration failed") ||
+        msg.includes("server rendered HTML didn't match") ||
+        msg.includes("hydration mismatch"),
+    );
+    expect(hydrationErrors).toEqual([]);
   });
 
   test("navigates cleanly between operational pages without errors", async ({ page }) => {
+    const consoleErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+    });
+
     await page.goto("/");
 
     // 1. Inventory
@@ -40,7 +64,7 @@ test.describe("App Shell & Sidebar Navigation", () => {
     // 2. Receipts
     await page.locator('nav a[href="/receipts"]').click();
     await expect(page).toHaveURL(/.*\/receipts/);
-    await expect(page.locator("h1")).toContainText(/Inbound Receipts|Receipts/);
+    await expect(page.locator("h1")).toContainText(/Receiving|Receipts/);
 
     // 3. Orders
     await page.locator('nav a[href="/orders"]').click();
@@ -71,5 +95,13 @@ test.describe("App Shell & Sidebar Navigation", () => {
     await page.locator('nav a[href="/admin"]').click();
     await expect(page).toHaveURL(/.*\/admin/);
     await expect(page.locator("h1")).toContainText(/Admin & Staff Hierarchy|Admin/);
+
+    const hydrationErrors = consoleErrors.filter(
+      (msg) =>
+        msg.includes("Hydration failed") ||
+        msg.includes("server rendered HTML didn't match") ||
+        msg.includes("hydration mismatch"),
+    );
+    expect(hydrationErrors).toEqual([]);
   });
 });
