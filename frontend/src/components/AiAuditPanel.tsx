@@ -8,7 +8,6 @@ import {
   Download,
   Eye,
   FileCode,
-  Fingerprint,
   Loader2,
   RefreshCw,
   Search,
@@ -16,7 +15,6 @@ import {
   Sparkles,
   ThumbsDown,
   ThumbsUp,
-  X,
   XCircle,
 } from "lucide-react";
 import {
@@ -26,6 +24,7 @@ import {
   useAiProviderHealthQuery,
   useRejectAiDraftActionMutation,
 } from "@/hooks/use-api";
+import { AppDialog } from "@/components/AppDialog";
 import { Button, Card, EmptyState, LoadingState, TableShell, Td, Th } from "@/components/ui-kit";
 import type { AiDraftActionDetail, AiInteractionSummaryItem } from "@/lib/types";
 
@@ -226,37 +225,46 @@ export function AiAuditPanel() {
       ) : null}
 
       {/* Reject Modal */}
-      {rejectingDraftId ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <Card className="w-full max-w-md p-5 space-y-3">
-            <h3 className="font-semibold text-foreground text-sm">Reject AI Draft Action</h3>
-            <p className="text-xs text-muted-foreground">
-              Rejecting this recommendation marks it as rejected in the audit log without executing
-              any mutation.
-            </p>
-            <textarea
-              placeholder="Reason for rejection (optional)…"
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              rows={3}
-              className="w-full rounded-lg border border-input bg-card p-2.5 text-xs text-foreground outline-none resize-none focus:border-primary"
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setRejectingDraftId(null)}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                className="bg-status-red text-white hover:bg-status-red/90"
-                disabled={rejectDraftMutation.isPending}
-                onClick={() => handleRejectDraft(rejectingDraftId)}
-              >
-                {rejectDraftMutation.isPending ? "Rejecting..." : "Confirm Rejection"}
-              </Button>
-            </div>
-          </Card>
+      <AppDialog
+        open={Boolean(rejectingDraftId)}
+        onOpenChange={(next) => {
+          if (!next) setRejectingDraftId(null);
+        }}
+        title="Reject AI Draft Action"
+        description="Rejecting this recommendation marks it as rejected in the audit log without executing any mutation."
+        className="max-w-md"
+        pending={rejectDraftMutation.isPending}
+      >
+        <div className="space-y-3">
+          <textarea
+            placeholder="Reason for rejection (optional)…"
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            rows={3}
+            className="w-full rounded-lg border border-input bg-card p-2.5 text-xs text-foreground outline-none resize-none focus:border-primary"
+          />
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={rejectDraftMutation.isPending}
+              onClick={() => setRejectingDraftId(null)}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              className="bg-status-red text-white hover:bg-status-red/90 w-full sm:w-auto"
+              disabled={rejectDraftMutation.isPending}
+              onClick={() => rejectingDraftId && handleRejectDraft(rejectingDraftId)}
+            >
+              {rejectDraftMutation.isPending ? "Rejecting..." : "Confirm Rejection"}
+            </Button>
+          </div>
         </div>
-      ) : null}
+      </AppDialog>
 
       {/* 3. AI Interaction Audit Log Table */}
       <Card className="p-5 space-y-4">
@@ -405,26 +413,18 @@ export function AiAuditPanel() {
       </Card>
 
       {/* 4. Detail Modal / Drawer */}
-      {selectedInteractionId && detail ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <Card className="w-full max-w-3xl max-h-[85vh] overflow-y-auto p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div>
-                <h3 className="font-bold text-foreground text-base flex items-center gap-2">
-                  <Fingerprint className="size-4 text-primary" />
-                  <span>AI Interaction Audit Detail</span>
-                </h3>
-                <span className="text-xs font-mono text-muted-foreground">{detail.id}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedInteractionId(null)}
-                className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-
+      <AppDialog
+        open={Boolean(selectedInteractionId && detail)}
+        onOpenChange={(next) => {
+          if (!next) setSelectedInteractionId(null);
+        }}
+        title="AI Interaction Audit Detail"
+        description={detail ? detail.id : ""}
+        className="max-w-3xl"
+        pending={false}
+      >
+        {detail ? (
+          <div className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div className="rounded-lg bg-muted/40 p-2.5">
                 <span className="text-muted-foreground">Category</span>
@@ -534,11 +534,11 @@ export function AiAuditPanel() {
             ) : null}
 
             <div className="flex justify-end pt-2 border-t border-border">
-              <Button onClick={() => setSelectedInteractionId(null)}>Close</Button>
+              <Button type="button" onClick={() => setSelectedInteractionId(null)}>Close</Button>
             </div>
-          </Card>
-        </div>
-      ) : null}
+          </div>
+        ) : null}
+      </AppDialog>
     </div>
   );
 }

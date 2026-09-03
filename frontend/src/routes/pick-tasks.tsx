@@ -10,6 +10,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { useState } from "react";
+import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
 import {
@@ -141,8 +142,8 @@ function PickTasksPage() {
       ) : null}
 
       {/* Main Grid: Pick Tasks Table & Active Picking Drawer */}
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1.1fr]">
-        <div>
+      <div className="grid gap-6 xl:grid-cols-[1.6fr_1.1fr] min-w-0">
+        <div className="min-w-0">
           {tasks.length === 0 ? (
             <Card className="p-8">
               <EmptyState
@@ -225,7 +226,7 @@ function PickTasksPage() {
         </div>
 
         {/* Right Column: Pick Station Controls */}
-        <div>
+        <div className="min-w-0">
           {active ? (
             <Card className="sticky top-20 border-t-4 border-t-blue-600 p-5 shadow-sm space-y-4">
               <div className="flex items-start justify-between border-b border-slate-100 pb-3">
@@ -327,69 +328,71 @@ function PickTasksPage() {
       </div>
 
       {/* Generate Pick Task Modal */}
-      {showCreate ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl animate-rise">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">Generate Pick Task</h3>
-              <button
-                onClick={() => setShowCreate(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
+      <AppDialog
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        title="Generate Pick Task"
+        description="Select an eligible reserved order and assign its picking priority."
+        className="max-w-md"
+        pending={createPickTaskMutation.isPending}
+      >
+        <div className="space-y-3.5 text-xs">
+          <div>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+              Select Reserved Order
+            </label>
+            <select
+              value={newTask.order_id}
+              onChange={(e) => setNewTask({ ...newTask, order_id: e.target.value })}
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+            >
+              <option value="">-- Choose Order to Pick --</option>
+              {eligibleOrders.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.seller_order_number || `ORD-${o.id.slice(0, 8)}`} ({o.status})
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="mt-4 space-y-3.5 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                  Select Reserved Order
-                </label>
-                <select
-                  value={newTask.order_id}
-                  onChange={(e) => setNewTask({ ...newTask, order_id: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
-                >
-                  <option value="">-- Choose Order to Pick --</option>
-                  {eligibleOrders.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.seller_order_number || `ORD-${o.id.slice(0, 8)}`} ({o.status})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                  Wave Priority Level (1-5)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={newTask.priority}
-                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs font-bold text-slate-900 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
-              <Button variant="secondary" size="md" onClick={() => setShowCreate(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={createTask}
-                disabled={createPickTaskMutation.isPending || !newTask.order_id}
-              >
-                {createPickTaskMutation.isPending ? "Generating..." : "Generate Pick Task"}
-              </Button>
-            </div>
+          <div>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+              Wave Priority Level (1-5)
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="5"
+              value={newTask.priority}
+              onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs font-bold text-slate-900 focus:outline-none"
+            />
           </div>
         </div>
-      ) : null}
+
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end border-t border-slate-100 pt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            disabled={createPickTaskMutation.isPending}
+            onClick={() => setShowCreate(false)}
+            className="w-full sm:w-auto"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            onClick={createTask}
+            disabled={createPickTaskMutation.isPending || !newTask.order_id}
+            className="w-full sm:w-auto"
+          >
+            {createPickTaskMutation.isPending ? "Generating..." : "Generate Pick Task"}
+          </Button>
+        </div>
+      </AppDialog>
     </AppShell>
   );
 }

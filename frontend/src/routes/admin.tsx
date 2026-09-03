@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   ShieldCheck,
 } from "lucide-react";
+import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { AiAuditPanel } from "@/components/AiAuditPanel";
 import { ControlledLaunchPanel } from "@/components/ControlledLaunchPanel";
@@ -569,224 +570,245 @@ function AdminPage() {
       {activeTab === "Migration" ? <MigrationPanel /> : null}
 
       {/* Modal to Register Staff according to RBAC */}
-      {openAddUser ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 px-4">
-          <Card className="w-full max-w-md p-6">
-            <h2 className="font-semibold text-navy">Onboard Staff Member</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {isAdmin
-                ? "As an Administrator, you can onboard Managers, Receivers, and Pickers."
-                : "As a Warehouse Manager, you can onboard Receivers and Pickers."}
-            </p>
-            {error ? (
-              <p className="mt-3 rounded-xl border border-status-red/30 bg-status-red/5 px-3 py-2 text-sm text-status-red">
-                {error}
-              </p>
-            ) : null}
-            <form onSubmit={handleCreateUser} className="mt-4 space-y-3 text-sm">
-              <label className="block">
-                <span className="font-medium">Role</span>
-                <select
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value as Role })}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                >
-                  {isAdmin && <option value="WAREHOUSE_MANAGER">Warehouse Manager</option>}
-                  <option value="RECEIVER">Receiver (Inbound Dock)</option>
-                  <option value="PICKER_PACKER">Picker / Packer (Fulfillment)</option>
-                </select>
-              </label>
-              <label className="block">
-                <span className="font-medium">Full Name</span>
-                <input
-                  type="text"
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Jordan Vance"
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                />
-              </label>
-              <label className="block">
-                <span className="font-medium">Email</span>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="jordan@whitfield.local"
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                />
-              </label>
-              <label className="block">
-                <span className="font-medium">Temporary Password</span>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                />
-              </label>
-              <label className="block">
-                <span className="font-medium">Assigned Warehouse</span>
-                <select
-                  value={form.warehouse_id}
-                  onChange={(e) => setForm({ ...form, warehouse_id: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                >
-                  {warehouses.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.name} ({w.code})
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="mt-5 flex justify-end gap-2">
-                <Button variant="ghost" type="button" onClick={() => setOpenAddUser(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createUserMutation.isPending}>
-                  {createUserMutation.isPending ? "Onboarding..." : "Register Staff"}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      ) : null}
+      <AppDialog
+        open={openAddUser}
+        onOpenChange={setOpenAddUser}
+        title="Onboard Staff Member"
+        description={
+          isAdmin
+            ? "As an Administrator, you can onboard Managers, Receivers, and Pickers."
+            : "As a Warehouse Manager, you can onboard Receivers and Pickers."
+        }
+        className="max-w-md"
+        pending={createUserMutation.isPending}
+      >
+        {error ? (
+          <p className="mb-3 rounded-xl border border-status-red/30 bg-status-red/5 px-3 py-2 text-sm text-status-red">
+            {error}
+          </p>
+        ) : null}
+        <form onSubmit={handleCreateUser} className="space-y-3 text-sm">
+          <label className="block">
+            <span className="font-medium">Role</span>
+            <select
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value as Role })}
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            >
+              {isAdmin && <option value="WAREHOUSE_MANAGER">Warehouse Manager</option>}
+              <option value="RECEIVER">Receiver (Inbound Dock)</option>
+              <option value="PICKER_PACKER">Picker / Packer (Fulfillment)</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="font-medium">Full Name</span>
+            <input
+              type="text"
+              required
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Jordan Vance"
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            />
+          </label>
+          <label className="block">
+            <span className="font-medium">Email</span>
+            <input
+              type="email"
+              required
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="jordan@whitfield.local"
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            />
+          </label>
+          <label className="block">
+            <span className="font-medium">Temporary Password</span>
+            <input
+              type="password"
+              required
+              minLength={8}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            />
+          </label>
+          <label className="block">
+            <span className="font-medium">Assigned Warehouse</span>
+            <select
+              value={form.warehouse_id}
+              onChange={(e) => setForm({ ...form, warehouse_id: e.target.value })}
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            >
+              {warehouses.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name} ({w.code})
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+            <Button
+              variant="ghost"
+              type="button"
+              disabled={createUserMutation.isPending}
+              onClick={() => setOpenAddUser(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={createUserMutation.isPending}
+              className="w-full sm:w-auto"
+            >
+              {createUserMutation.isPending ? "Onboarding..." : "Register Staff"}
+            </Button>
+          </div>
+        </form>
+      </AppDialog>
 
-      {openAddProduct ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 px-4">
-          <Card className="w-full max-w-2xl p-6">
-            <h2 className="font-semibold text-navy">Create Product / SKU</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Product master data is tenant-scoped to a seller and defaults to active status.
-            </p>
-            {productError ? (
-              <p className="mt-3 rounded-xl border border-status-red/30 bg-status-red/5 px-3 py-2 text-sm text-status-red">
-                {productError}
-              </p>
-            ) : null}
-            <form onSubmit={handleCreateProduct} className="mt-4 grid gap-3 text-sm md:grid-cols-2">
-              <label className="block">
-                <span className="font-medium">Seller</span>
-                <select
-                  value={productForm.seller_id}
-                  onChange={(e) => setProductForm({ ...productForm, seller_id: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                >
-                  <option value="">Select seller</option>
-                  {sellers.map((seller) => (
-                    <option key={seller.id} value={seller.id}>
-                      {seller.code} - {seller.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className="font-medium">Status</span>
-                <select
-                  value={productForm.status}
-                  onChange={(e) => setProductForm({ ...productForm, status: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                >
-                  <option value="ACTIVE">Active</option>
-                  <option value="INACTIVE">Inactive</option>
-                </select>
-              </label>
-              <label className="block">
-                <span className="font-medium">SKU</span>
-                <input
-                  required
-                  value={productForm.sku}
-                  onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                />
-              </label>
-              <label className="block">
-                <span className="font-medium">Name</span>
-                <input
-                  required
-                  value={productForm.name}
-                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                />
-              </label>
-              <label className="block">
-                <span className="font-medium">Unit of measure</span>
-                <input
-                  required
-                  value={productForm.unit_of_measure}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, unit_of_measure: e.target.value })
-                  }
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                />
-              </label>
-              <label className="block">
-                <span className="font-medium">Weight</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={productForm.weight}
-                  onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                />
-              </label>
-              <div className="grid grid-cols-3 gap-3 md:col-span-2">
-                <label className="block">
-                  <span className="font-medium">Length</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={productForm.length}
-                    onChange={(e) => setProductForm({ ...productForm, length: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                  />
-                </label>
-                <label className="block">
-                  <span className="font-medium">Width</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={productForm.width}
-                    onChange={(e) => setProductForm({ ...productForm, width: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                  />
-                </label>
-                <label className="block">
-                  <span className="font-medium">Height</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={productForm.height}
-                    onChange={(e) => setProductForm({ ...productForm, height: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                  />
-                </label>
-              </div>
-              <label className="block md:col-span-2">
-                <span className="font-medium">Description</span>
-                <textarea
-                  value={productForm.description}
-                  onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                  rows={3}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
-                />
-              </label>
-              <div className="mt-2 flex justify-end gap-2 md:col-span-2">
-                <Button variant="ghost" type="button" onClick={() => setOpenAddProduct(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createProductMutation.isPending}>
-                  {createProductMutation.isPending ? "Creating..." : "Create Product"}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      ) : null}
+      {/* Modal to Create Product / SKU */}
+      <AppDialog
+        open={openAddProduct}
+        onOpenChange={setOpenAddProduct}
+        title="Create Product / SKU"
+        description="Product master data is tenant-scoped to a seller and defaults to active status."
+        className="max-w-2xl"
+        pending={createProductMutation.isPending}
+      >
+        {productError ? (
+          <p className="mb-3 rounded-xl border border-status-red/30 bg-status-red/5 px-3 py-2 text-sm text-status-red">
+            {productError}
+          </p>
+        ) : null}
+        <form onSubmit={handleCreateProduct} className="grid gap-3 text-sm md:grid-cols-2">
+          <label className="block">
+            <span className="font-medium">Seller</span>
+            <select
+              value={productForm.seller_id}
+              onChange={(e) => setProductForm({ ...productForm, seller_id: e.target.value })}
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            >
+              <option value="">Select seller</option>
+              {sellers.map((seller) => (
+                <option key={seller.id} value={seller.id}>
+                  {seller.code} - {seller.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="font-medium">Status</span>
+            <select
+              value={productForm.status}
+              onChange={(e) => setProductForm({ ...productForm, status: e.target.value })}
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            >
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="font-medium">SKU</span>
+            <input
+              required
+              value={productForm.sku}
+              onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            />
+          </label>
+          <label className="block">
+            <span className="font-medium">Name</span>
+            <input
+              required
+              value={productForm.name}
+              onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            />
+          </label>
+          <label className="block">
+            <span className="font-medium">Unit of measure</span>
+            <input
+              required
+              value={productForm.unit_of_measure}
+              onChange={(e) =>
+                setProductForm({ ...productForm, unit_of_measure: e.target.value })
+              }
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            />
+          </label>
+          <label className="block">
+            <span className="font-medium">Weight</span>
+            <input
+              type="number"
+              min="0"
+              value={productForm.weight}
+              onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })}
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            />
+          </label>
+          <div className="grid grid-cols-3 gap-3 md:col-span-2">
+            <label className="block">
+              <span className="font-medium">Length</span>
+              <input
+                type="number"
+                min="0"
+                value={productForm.length}
+                onChange={(e) => setProductForm({ ...productForm, length: e.target.value })}
+                className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+              />
+            </label>
+            <label className="block">
+              <span className="font-medium">Width</span>
+              <input
+                type="number"
+                min="0"
+                value={productForm.width}
+                onChange={(e) => setProductForm({ ...productForm, width: e.target.value })}
+                className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+              />
+            </label>
+            <label className="block">
+              <span className="font-medium">Height</span>
+              <input
+                type="number"
+                min="0"
+                value={productForm.height}
+                onChange={(e) => setProductForm({ ...productForm, height: e.target.value })}
+                className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+              />
+            </label>
+          </div>
+          <label className="block md:col-span-2">
+            <span className="font-medium">Description</span>
+            <textarea
+              value={productForm.description}
+              onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+              rows={3}
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 outline-none focus:border-primary"
+            />
+          </label>
+          <div className="mt-2 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end md:col-span-2">
+            <Button
+              variant="ghost"
+              type="button"
+              disabled={createProductMutation.isPending}
+              onClick={() => setOpenAddProduct(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={createProductMutation.isPending}
+              className="w-full sm:w-auto"
+            >
+              {createProductMutation.isPending ? "Creating..." : "Create Product"}
+            </Button>
+          </div>
+        </form>
+      </AppDialog>
     </AppShell>
   );
 }

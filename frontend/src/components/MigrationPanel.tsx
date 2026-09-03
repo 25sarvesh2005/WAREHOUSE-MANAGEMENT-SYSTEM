@@ -13,6 +13,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
+import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import {
   Button,
   Card,
@@ -68,6 +69,7 @@ export function MigrationPanel() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmApply, setConfirmApply] = useState(false);
 
   const createBatch = useCreateMigrationBatchMutation();
   const uploadFile = useUploadMigrationFileMutation();
@@ -84,15 +86,17 @@ export function MigrationPanel() {
   const reconciliation = reconciliationQuery.data;
   const canOperateMigration = user?.role === "ADMINISTRATOR" || user?.role === "WAREHOUSE_MANAGER";
 
-  async function runAction(action: () => Promise<unknown>, successMessage: string) {
+  async function runAction(action: () => Promise<unknown>, successMessage: string): Promise<boolean> {
     setError(null);
     setMessage(null);
     try {
       await action();
       setMessage(successMessage);
       batchesQuery.refetch();
+      return true;
     } catch (caught: unknown) {
       setError(caught instanceof Error ? caught.message : "Migration action failed.");
+      return false;
     }
   }
 
@@ -132,18 +136,20 @@ export function MigrationPanel() {
     );
   }
 
-  async function handleApply() {
+  function handleApply() {
     if (!canOperateMigration) return setError("Your role cannot apply migration batches.");
     if (!effectiveBatchId) return;
-    const confirmed = window.confirm(
-      "Apply this opening inventory batch to the immutable movement ledger? This will create permanent balance records.",
-    );
-    if (!confirmed) return;
+    setConfirmApply(true);
+  }
 
-    await runAction(
+  async function performApply() {
+    const success = await runAction(
       async () => applyBatch.mutateAsync(effectiveBatchId),
       "Successfully posted opening inventory balances to the immutable movement ledger.",
     );
+    if (success) {
+      setConfirmApply(false);
+    }
   }
 
   const isBusy =
@@ -425,6 +431,19 @@ export function MigrationPanel() {
           </div>
         )}
       </Card>
+
+      <ConfirmActionDialog
+        open={confirmApply}
+        onOpenChange={setConfirmApply}
+        title="Apply opening inventory batch?"
+        description="Apply this opening inventory batch to the immutable movement ledger? This will create permanent balance records."
+        recordIdentifier={effectiveBatchId}
+        confirmLabel="Apply batch"
+        cancelLabel="Review batch"
+        destructive
+        pending={applyBatch.isPending}
+        onConfirm={performApply}
+      />
     </div>
   );
 }
