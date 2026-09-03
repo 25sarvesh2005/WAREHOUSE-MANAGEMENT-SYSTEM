@@ -10,21 +10,23 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
+export interface IconTileProps {
+  icon: LucideIcon;
+  size?: "sm" | "md" | "lg";
+  tone?: "primary" | "emerald" | "amber" | "rose" | "slate";
+}
+
 export function IconTile({
   icon: Icon,
   size = "md",
   tone = "primary",
-}: {
-  icon: LucideIcon;
-  size?: "sm" | "md" | "lg";
-  tone?: "primary" | "emerald" | "amber" | "rose" | "slate";
-}) {
+}: IconTileProps) {
   const toneClasses = {
-    primary: "bg-primary-tint text-primary",
-    emerald: "bg-primary-tint text-primary",
-    amber: "bg-primary-tint text-primary",
-    rose: "bg-primary-tint text-primary",
-    slate: "bg-primary-tint text-primary",
+    primary: "bg-primary-tint text-primary border border-primary/20",
+    emerald: "bg-emerald-50 text-emerald-700 border border-emerald-200/60",
+    amber: "bg-amber-50 text-amber-800 border border-amber-200/60",
+    rose: "bg-rose-50 text-rose-700 border border-rose-200/60",
+    slate: "bg-slate-100 text-slate-700 border border-slate-200/60",
   }[tone];
 
   const sizeClasses = {
@@ -204,26 +206,34 @@ export function ScannerInputField({
   );
 }
 
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "outline" | "danger" | "ghost";
+  size?: "sm" | "md" | "lg";
+  loading?: boolean;
+  loadingLabel?: string;
+}
+
 export function Button({
   children,
   variant = "primary",
   size = "md",
   className = "",
+  disabled = false,
+  loading = false,
+  loadingLabel,
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "outline" | "danger" | "ghost";
-  size?: "sm" | "md" | "lg";
-}) {
+}: ButtonProps) {
   const styles = {
     primary:
-      "bg-primary text-primary-foreground hover:bg-primary-dark border border-transparent font-semibold shadow-[0_1px_2px_rgba(37,99,235,0.25)] hover:shadow-[0_8px_20px_rgba(37,99,235,0.22)] disabled:opacity-50",
+      "bg-primary text-primary-foreground hover:bg-primary-dark border border-transparent font-semibold shadow-[0_1px_2px_rgba(37,99,235,0.25)] hover:shadow-[0_8px_20px_rgba(37,99,235,0.22)] focus-visible:ring-primary/30",
     secondary:
-      "bg-primary-tint text-primary hover:bg-blue-100 border border-transparent font-semibold disabled:opacity-50",
+      "bg-primary-tint text-primary hover:bg-blue-100 border border-transparent font-semibold focus-visible:ring-primary/30",
     outline:
-      "border border-primary/35 bg-white text-primary hover:bg-primary-tint font-semibold disabled:opacity-50",
+      "border border-primary/35 bg-white text-primary hover:bg-primary-tint font-semibold focus-visible:ring-primary/30",
     danger:
-      "bg-primary text-primary-foreground hover:bg-primary-dark border border-transparent font-semibold disabled:opacity-50",
-    ghost: "text-muted-foreground hover:bg-muted font-medium disabled:opacity-50",
+      "bg-destructive text-destructive-foreground hover:bg-red-700 active:bg-red-800 border border-transparent font-semibold shadow-xs focus-visible:ring-destructive/30",
+    ghost:
+      "text-muted-foreground hover:bg-muted font-medium border border-transparent focus-visible:ring-primary/30",
   }[variant];
 
   const sizeStyles = {
@@ -232,12 +242,17 @@ export function Button({
     lg: "px-5 py-2.5 text-sm rounded-full gap-2.5",
   }[size];
 
+  const isDisabled = disabled || loading;
+
   return (
     <button
-      className={`inline-flex cursor-pointer items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 ${styles} ${sizeStyles} ${className}`}
+      disabled={isDisabled}
+      aria-busy={loading ? "true" : undefined}
+      className={`inline-flex cursor-pointer items-center justify-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${styles} ${sizeStyles} ${className}`}
       {...props}
     >
-      {children}
+      {loading ? <Loader2 className="size-4 animate-spin shrink-0" /> : null}
+      {loading && loadingLabel ? loadingLabel : children}
     </button>
   );
 }
