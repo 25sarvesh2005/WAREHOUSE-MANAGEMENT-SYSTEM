@@ -1,6 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Barcode,
+  ChevronLeft,
+  ChevronRight,
   Database,
   Loader2,
   PackageSearch,
@@ -382,5 +384,73 @@ export function MobileRecordCard({
     >
       {children}
     </article>
+  );
+}
+
+export interface PaginationControlsProps {
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
+  visibleCount: number;
+  itemLabel: string;
+  onPageChange: (page: number) => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+export function PaginationControls({
+  currentPage,
+  pageSize,
+  totalCount,
+  visibleCount,
+  itemLabel,
+  onPageChange,
+  disabled = false,
+  className = "",
+}: PaginationControlsProps) {
+  if (totalCount <= pageSize) {
+    return null;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const start = totalCount === 0 ? 0 : (safePage - 1) * pageSize + 1;
+  const end = totalCount === 0 ? 0 : Math.min((safePage - 1) * pageSize + visibleCount, totalCount);
+
+  return (
+    <nav
+      aria-label={`${itemLabel} pagination`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-4 py-3 px-2 ${className}`}
+    >
+      <p role="status" aria-live="polite" className="text-sm text-muted-foreground order-2 sm:order-1">
+        Showing <span className="font-medium text-foreground">{start}</span>–<span className="font-medium text-foreground">{end}</span> of{" "}
+        <span className="font-medium text-foreground">{totalCount}</span> {itemLabel}
+      </p>
+      <div className="flex items-center gap-2 order-1 sm:order-2 w-full sm:w-auto justify-between sm:justify-end">
+        <button
+          type="button"
+          onClick={() => onPageChange(safePage - 1)}
+          disabled={disabled || safePage <= 1}
+          aria-label={`Go to previous page of ${itemLabel}`}
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 transition-colors"
+        >
+          <ChevronLeft className="size-4" aria-hidden="true" />
+          <span>Previous</span>
+        </button>
+        <span className="text-sm font-medium text-muted-foreground px-2" aria-current="page">
+          Page {safePage} of {totalPages}
+        </span>
+        <button
+          type="button"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={disabled || currentPage >= totalPages}
+          aria-label={`Go to next page of ${itemLabel}`}
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 transition-colors"
+        >
+          <span>Next</span>
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </button>
+      </div>
+    </nav>
   );
 }

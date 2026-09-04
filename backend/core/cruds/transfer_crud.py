@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -107,6 +107,7 @@ async def get_transfer_by_id(session: AsyncSession, transfer_id: UUID) -> Transf
 async def list_transfers(
     session: AsyncSession,
     *,
+    q: str | None = None,
     seller_id: UUID | None = None,
     seller_ids: Sequence[UUID] | None = None,
     origin_warehouse_id: UUID | None = None,
@@ -116,10 +117,13 @@ async def list_transfers(
     offset: int = 0,
 ) -> tuple[Sequence[Transfer], int]:
     """
-    List transfers with filtering and pagination.
+    List transfers with text search, filtering, and pagination.
+
+    Applies identical filtering and search predicates to item and count queries.
 
     Args:
         session: Active session.
+        q: Optional text search string matching transfer_number or notes.
         seller_id: Optional seller filter.
         seller_ids: Optional seller scope filter.
         origin_warehouse_id: Optional origin warehouse filter.
@@ -131,8 +135,20 @@ async def list_transfers(
     Returns:
         tuple[Sequence[Transfer], int]: (transfers, total_count)
     """
+    logger.info("Executing transfer_crud.list_transfers")
     stmt = select(Transfer).options(selectinload(Transfer.lines))
     count_stmt = select(func.count(Transfer.id))
+
+    if q and q.strip():
+        trimmed_q = q.strip()
+        escaped_q = trimmed_q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        search_pattern = f"%{escaped_q}%"
+        search_predicate = or_(
+            Transfer.transfer_number.ilike(search_pattern, escape="\\"),
+            Transfer.notes.ilike(search_pattern, escape="\\"),
+        )
+        stmt = stmt.where(search_predicate)
+        count_stmt = count_stmt.where(search_predicate)
 
     if seller_id is not None:
         stmt = stmt.where(Transfer.seller_id == seller_id)
