@@ -263,15 +263,20 @@ export function MigrationPanel() {
             </label>
             <select
               id="migration-active-batch"
+              aria-label="Active Batch"
               value={effectiveBatchId}
               onChange={(event) => setSelectedBatchId(event.target.value)}
               className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs font-bold text-slate-900 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
-              {batches.map((batch) => (
-                <option key={batch.id} value={batch.id}>
-                  {batch.source_notes || "Batch"} ({batch.status}) — {batch.id.slice(0, 8)}
-                </option>
-              ))}
+              {batches.map((batch) => {
+                const batchNum = batch.batch_number || `BATCH-${batch.id.slice(0, 8)}`;
+                const notes = batch.source_notes ? ` — ${batch.source_notes}` : "";
+                return (
+                  <option key={batch.id} value={batch.id}>
+                    {batchNum}{notes} ({batch.status})
+                  </option>
+                );
+              })}
             </select>
             {selectedBatch ? <StatusBadge value={selectedBatch.status} /> : null}
           </div>

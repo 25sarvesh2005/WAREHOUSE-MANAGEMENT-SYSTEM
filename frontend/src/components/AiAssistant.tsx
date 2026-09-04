@@ -239,7 +239,7 @@ function detectIntentFromText(text: string): string | null {
   if (clean.includes("EXCEPTION") || clean.includes("FLAGGED") || clean.includes("BOTTLENECK"))
     return "exceptions-summary";
   if (clean.includes("REBALANCE") || clean.includes("TRANSFER RECOMMENDATION"))
-    return "draft-recommendation";
+    return "rebalance-recommendation";
   if (clean.includes("LEDGER") || clean.includes("AUDIT") || clean.includes("VARIANCE"))
     return "ledger-explanation";
   return null;
@@ -264,7 +264,7 @@ function ProviderBadge({ providerName }: { providerName?: string }) {
       ) : (
         <Bot className="size-3 text-slate-500" />
       )}
-      {isGemini ? "Gemini 2.5 Flash" : "Rule Engine"}
+      {isGemini ? "Google Gemini" : "Rule Engine"}
     </span>
   );
 }
@@ -410,7 +410,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
 
     if (
       resolvedIntent.id !== "exceptions-summary" &&
-      resolvedIntent.id !== "draft-recommendation" &&
+      resolvedIntent.id !== "rebalance-recommendation" &&
       !query.trim()
     ) {
       setError(`Please enter a valid ${resolvedIntent.title.toLowerCase()} identifier.`);
@@ -492,7 +492,11 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
       {/* ─────────────────────────────────────────────────────────────────
           1. Hero Header & Safety Banner
           ───────────────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-white via-slate-50/50 to-primary-tint/30 p-6 shadow-card">
+      <div
+        role="region"
+        aria-label="AI Safety and Overview"
+        className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-white via-slate-50/50 to-primary-tint/30 p-6 shadow-card"
+      >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-start gap-4">
             <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-md">
@@ -513,7 +517,11 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 text-xs text-muted-foreground bg-white/80 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-border">
+          <div
+            role="note"
+            aria-label="AI Safety Guardrails"
+            className="flex items-center gap-2 shrink-0 text-xs text-muted-foreground bg-white/80 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-border"
+          >
             <Info className="size-3.5 text-primary" />
             <span>AI cannot mutate stock or finalize shipments</span>
           </div>
@@ -522,10 +530,15 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
         {/* ───────────────────────────────────────────────────────────────
             2. Category Selector Pills
             ─────────────────────────────────────────────────────────────── */}
-        <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border/70 pt-4">
+        <div
+          role="group"
+          aria-label="Inquiry Domain"
+          className="mt-6 flex flex-wrap items-center gap-2 border-t border-border/70 pt-4"
+        >
           <span className="text-xs font-semibold text-muted-foreground mr-1">Inquiry Domain:</span>
           <button
             type="button"
+            aria-pressed={!showVoiceDock && activeCategory === "inventory"}
             onClick={() => {
               setActiveCategory("inventory");
               const first = availableIntents.find((i) => i.category === "inventory");
@@ -543,6 +556,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
 
           <button
             type="button"
+            aria-pressed={!showVoiceDock && activeCategory === "tracking"}
             onClick={() => {
               setActiveCategory("tracking");
               const first = availableIntents.find((i) => i.category === "tracking");
@@ -560,6 +574,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
 
           <button
             type="button"
+            aria-pressed={!showVoiceDock && activeCategory === "exceptions"}
             onClick={() => {
               setActiveCategory("exceptions");
               const first = availableIntents.find((i) => i.category === "exceptions");
@@ -577,6 +592,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
 
           <button
             type="button"
+            aria-pressed={!showVoiceDock && activeCategory === "rebalance"}
             onClick={() => {
               setShowVoiceDock(false);
               setActiveCategory("rebalance");
@@ -595,6 +611,8 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
 
           <button
             type="button"
+            aria-pressed={showVoiceDock}
+            aria-expanded={showVoiceDock}
             onClick={() => setShowVoiceDock(!showVoiceDock)}
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
               showVoiceDock
@@ -609,11 +627,12 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
 
         {/* Sub-intent options within category */}
         {!showVoiceDock && categoryIntents.length > 1 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          <div role="group" aria-label="Inquiry Options" className="mt-3 flex flex-wrap gap-1.5">
             {categoryIntents.map((intent) => (
               <button
                 key={intent.id}
                 type="button"
+                aria-pressed={selectedIntentId === intent.id}
                 onClick={() => handleSelectIntent(intent)}
                 className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
                   selectedIntentId === intent.id
@@ -649,6 +668,8 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             </label>
             <button
               type="button"
+              aria-expanded={showFilters}
+              aria-controls="ai-scope-filters-panel"
               onClick={() => setShowFilters(!showFilters)}
               className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline cursor-pointer"
             >
@@ -672,6 +693,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             {queryInput && (
               <button
                 type="button"
+                aria-label="Clear query input"
                 onClick={() => setQueryInput("")}
                 className="absolute right-28 p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
@@ -699,7 +721,10 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
 
           {/* Optional Filter Drawer */}
           {showFilters && (
-            <div className="flex flex-wrap gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 pt-2 text-xs">
+            <div
+              id="ai-scope-filters-panel"
+              className="flex flex-wrap gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 pt-2 text-xs"
+            >
               <div className="flex-1 min-w-[180px]">
                 <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Target Warehouse:
