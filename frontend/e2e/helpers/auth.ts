@@ -176,11 +176,18 @@ export async function setupStandardApiMocks(page: Page) {
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        total_skus: 42,
-        total_inventory_units: 12500,
-        active_orders: 14,
-        pending_receipts: 3,
-        system_alerts: [],
+        balances_by_state: {
+          AVAILABLE: 12500,
+          RESERVED: 860,
+          DAMAGED: 12,
+          QUARANTINED: 8,
+          RETURN_INSPECTION: 5,
+          IN_TRANSIT: 240,
+        },
+        open_receipts_count: 3,
+        pending_pick_tasks_count: 4,
+        active_transfers_count: 2,
+        uninspected_returns_count: 1,
       }),
     });
   });
@@ -190,10 +197,33 @@ export async function setupStandardApiMocks(page: Page) {
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        overdue_receipts: [],
-        short_picks: [],
-        expired_reservations: [],
-        transfer_discrepancies: [],
+        short_pick_exceptions: [
+          {
+            id: "00000000-0000-0000-0000-000000000031",
+            order_id: "00000000-0000-0000-0000-000000000020",
+            warehouse_id: "00000000-0000-0000-0000-000000000002",
+            status: "SHORT_PICK_EXCEPTION",
+            created_at: "2026-01-01T10:00:00.000Z",
+          },
+        ],
+        transfer_discrepancies: [
+          {
+            id: "00000000-0000-0000-0000-000000000041",
+            transfer_number: "TRF-2026-0001",
+            origin_warehouse_id: "00000000-0000-0000-0000-000000000002",
+            destination_warehouse_id: "00000000-0000-0000-0000-000000000003",
+            status: "DISCREPANCY_REVIEW",
+          },
+        ],
+        unidentified_returns: [
+          {
+            id: "00000000-0000-0000-0000-000000000051",
+            return_number: "RET-2026-0001",
+            warehouse_id: "00000000-0000-0000-0000-000000000002",
+            inbound_tracking_number: "1ZTESTRETURN",
+            status: "UNIDENTIFIED",
+          },
+        ],
       }),
     });
   });
