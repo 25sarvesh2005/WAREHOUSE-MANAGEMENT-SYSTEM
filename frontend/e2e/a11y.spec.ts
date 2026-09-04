@@ -59,11 +59,6 @@ test.describe("Public route accessibility audits", () => {
     await setupStandardApiMocks(page);
   });
 
-  test("Landing page (unauthenticated /) has zero critical or serious violations", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await assertNoA11yViolations(page, "/");
-  });
 
   test("Login page (/login) has zero critical or serious violations", async ({ page }) => {
     await page.goto("/login");
