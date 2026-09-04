@@ -10,6 +10,8 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
+  MobileRecordCard,
+  MobileRecordList,
   PageHeader,
   ScannerInputField,
   TableShell,
@@ -162,7 +164,7 @@ function ShipmentsPage() {
       ) : null}
 
       <Card className="mb-5 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="w-full sm:w-80">
             <ScannerInputField
               value={filterQuery}
@@ -185,42 +187,92 @@ function ShipmentsPage() {
           />
         </Card>
       ) : (
-        <TableShell>
-          <thead>
-            <tr>
-              <Th>Shipment ID</Th>
-              <Th>Carrier</Th>
-              <Th>Service Level</Th>
-              <Th>Tracking Number</Th>
-              <Th>Facility</Th>
-              <Th>Status</Th>
-              <Th>Created Date</Th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          <div data-testid="shipments-desktop-table" className="hidden md:block">
+            <TableShell>
+              <thead>
+                <tr>
+                  <Th>Shipment ID</Th>
+                  <Th>Carrier</Th>
+                  <Th>Service Level</Th>
+                  <Th>Tracking Number</Th>
+                  <Th>Facility</Th>
+                  <Th>Status</Th>
+                  <Th>Created Date</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredShipments.map((s: Shipment) => {
+                  const whCode = warehouses.find((w) => w.id === s.warehouse_id)?.code || "WH";
+
+                  return (
+                    <tr key={s.id} className="hover:bg-slate-50">
+                      <Td className="font-mono font-bold text-slate-900">SHIP-{s.id.slice(0, 8)}</Td>
+                      <Td className="font-semibold text-slate-800">{s.carrier}</Td>
+                      <Td className="text-slate-600">{s.service_level}</Td>
+                      <Td className="font-mono font-bold text-blue-700">
+                        {s.tracking_number || "Awaiting Carrier Scan"}
+                      </Td>
+                      <Td>
+                        <FacilityBadge code={whCode} />
+                      </Td>
+                      <Td>
+                        <StatusBadge value={s.status} />
+                      </Td>
+                      <Td className="font-mono text-xs text-slate-500">{formatDate(s.created_at)}</Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </TableShell>
+          </div>
+
+          <MobileRecordList label="Carrier Shipments" testId="shipments-mobile-list">
             {filteredShipments.map((s: Shipment) => {
               const whCode = warehouses.find((w) => w.id === s.warehouse_id)?.code || "WH";
 
               return (
-                <tr key={s.id} className="hover:bg-slate-50">
-                  <Td className="font-mono font-bold text-slate-900">SHIP-{s.id.slice(0, 8)}</Td>
-                  <Td className="font-semibold text-slate-800">{s.carrier}</Td>
-                  <Td className="text-slate-600">{s.service_level}</Td>
-                  <Td className="font-mono font-bold text-blue-700">
-                    {s.tracking_number || "Awaiting Carrier Scan"}
-                  </Td>
-                  <Td>
-                    <FacilityBadge code={whCode} />
-                  </Td>
-                  <Td>
+                <MobileRecordCard key={s.id}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-mono font-bold text-slate-900 break-all text-sm">
+                        SHIP-{s.id.slice(0, 8)}
+                      </p>
+                    </div>
                     <StatusBadge value={s.status} />
-                  </Td>
-                  <Td className="font-mono text-xs text-slate-500">{formatDate(s.created_at)}</Td>
-                </tr>
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs pt-2 border-t border-border">
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Carrier</dt>
+                      <dd className="font-semibold text-slate-800">{s.carrier}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Service Level</dt>
+                      <dd className="text-slate-600">{s.service_level}</dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground text-[11px]">Tracking Number</dt>
+                      <dd className="font-mono font-bold text-blue-700 break-all">
+                        {s.tracking_number || "Awaiting Carrier Scan"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Facility</dt>
+                      <dd className="mt-0.5">
+                        <FacilityBadge code={whCode} />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Created Date</dt>
+                      <dd className="font-mono text-xs text-slate-500 mt-0.5">{formatDate(s.created_at)}</dd>
+                    </div>
+                  </dl>
+                </MobileRecordCard>
               );
             })}
-          </tbody>
-        </TableShell>
+          </MobileRecordList>
+        </>
       )}
 
       {/* Weigh & Print Shipping Label Modal */}

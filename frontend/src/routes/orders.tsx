@@ -26,6 +26,8 @@ import {
   ErrorState,
   IconTile,
   LoadingState,
+  MobileRecordCard,
+  MobileRecordList,
   PageHeader,
   ScannerInputField,
   TableShell,
@@ -358,12 +360,12 @@ function OrdersPage() {
                   placeholder="Search order #, customer, seller..."
                 />
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+              <div className="flex w-full sm:w-auto flex-col sm:flex-row sm:items-center gap-2 text-xs font-bold text-foreground">
                 <span>Sort by:</span>
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
-                  className="rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+                  className="min-h-[44px] sm:min-h-0 w-full sm:w-auto rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                 >
                   <option value="priority">Priority</option>
                   <option value="seller_order_number">Order Number</option>
@@ -382,66 +384,130 @@ function OrdersPage() {
               />
             </Card>
           ) : (
-            <TableShell>
-              <thead>
-                <tr>
-                  <Th>Order Number</Th>
-                  <Th>Seller Tenant</Th>
-                  <Th>Facility</Th>
-                  <Th>Customer Destination</Th>
-                  <Th>Status</Th>
-                  <Th className="text-right">Action</Th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div data-testid="orders-desktop-table" className="hidden md:block">
+                <TableShell>
+                  <thead>
+                    <tr>
+                      <Th>Order Number</Th>
+                      <Th>Seller Tenant</Th>
+                      <Th>Facility</Th>
+                      <Th>Customer Destination</Th>
+                      <Th>Status</Th>
+                      <Th className="text-right">Action</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((order) => {
+                      const isSelected = order.id === activeSelectedId;
+                      const whCode = warehouses.find((w) => w.id === order.warehouse_id)?.code || "WH";
+
+                      return (
+                        <tr
+                          key={order.id}
+                          onClick={() => setSelectedId(order.id)}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected ? "bg-blue-50/80 font-medium" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <Td className="font-mono font-bold text-slate-900">
+                            {order.seller_order_number || `ORD-${order.id.slice(0, 8)}`}
+                          </Td>
+                          <Td className="text-slate-700">{sellerLabel(sellers, order.seller_id)}</Td>
+                          <Td>
+                            <FacilityBadge code={whCode} />
+                          </Td>
+                          <Td className="text-slate-600 truncate max-w-[140px]">
+                            {orderDestination(order)}
+                          </Td>
+                          <Td>
+                            <StatusBadge value={order.status} />
+                          </Td>
+                          <Td className="text-right">
+                            {order.status === "PENDING" ? (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleConfirmReservation(order.id);
+                                }}
+                                disabled={reserveOrderMutation.isPending}
+                                className="text-xs"
+                              >
+                                Reserve
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-blue-600 font-semibold">Inspect</span>
+                            )}
+                          </Td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </TableShell>
+              </div>
+
+              <MobileRecordList label="Customer Orders" testId="orders-mobile-list">
                 {rows.map((order) => {
                   const isSelected = order.id === activeSelectedId;
                   const whCode = warehouses.find((w) => w.id === order.warehouse_id)?.code || "WH";
+                  const orderNum = order.seller_order_number || `ORD-${order.id.slice(0, 8)}`;
 
                   return (
-                    <tr
-                      key={order.id}
-                      onClick={() => setSelectedId(order.id)}
-                      className={`cursor-pointer transition-colors ${
-                        isSelected ? "bg-blue-50/80 font-medium" : "hover:bg-slate-50"
-                      }`}
-                    >
-                      <Td className="font-mono font-bold text-slate-900">
-                        {order.seller_order_number || `ORD-${order.id.slice(0, 8)}`}
-                      </Td>
-                      <Td className="text-slate-700">{sellerLabel(sellers, order.seller_id)}</Td>
-                      <Td>
-                        <FacilityBadge code={whCode} />
-                      </Td>
-                      <Td className="text-slate-600 truncate max-w-[140px]">
-                        {orderDestination(order)}
-                      </Td>
-                      <Td>
+                    <MobileRecordCard key={order.id} selected={isSelected}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-mono font-bold text-slate-900 break-all text-sm">
+                            {orderNum}
+                          </p>
+                        </div>
                         <StatusBadge value={order.status} />
-                      </Td>
-                      <Td className="text-right">
+                      </div>
+
+                      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <dt className="text-muted-foreground text-[11px]">Seller</dt>
+                          <dd className="font-medium text-slate-700">{sellerLabel(sellers, order.seller_id)}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground text-[11px]">Facility</dt>
+                          <dd className="mt-0.5">
+                            <FacilityBadge code={whCode} />
+                          </dd>
+                        </div>
+                        <div className="col-span-2">
+                          <dt className="text-muted-foreground text-[11px]">Customer Destination</dt>
+                          <dd className="font-medium text-slate-600 break-words">{orderDestination(order)}</dd>
+                        </div>
+                      </dl>
+
+                      <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-border">
+                        <Button
+                          variant={isSelected ? "primary" : "outline"}
+                          size="sm"
+                          className="min-h-[44px] flex-1"
+                          onClick={() => setSelectedId(order.id)}
+                        >
+                          View order
+                        </Button>
                         {order.status === "PENDING" ? (
                           <Button
                             variant="primary"
                             size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleConfirmReservation(order.id);
-                            }}
+                            className="min-h-[44px] flex-1"
                             disabled={reserveOrderMutation.isPending}
-                            className="text-xs"
+                            onClick={() => handleConfirmReservation(order.id)}
                           >
                             Reserve
                           </Button>
-                        ) : (
-                          <span className="text-xs text-blue-600 font-semibold">Inspect</span>
-                        )}
-                      </Td>
-                    </tr>
+                        ) : null}
+                      </div>
+                    </MobileRecordCard>
                   );
                 })}
-              </tbody>
-            </TableShell>
+              </MobileRecordList>
+            </>
           )}
         </div>
 

@@ -20,6 +20,8 @@ import {
   ErrorState,
   ExceptionBanner,
   LoadingState,
+  MobileRecordCard,
+  MobileRecordList,
   PageHeader,
   TableShell,
   Td,
@@ -119,6 +121,15 @@ function PickTasksPage() {
     }
   }
 
+  function selectTask(task: PickTask) {
+    setActive(task);
+    const initial: Record<string, string> = {};
+    task.lines?.forEach((line) => {
+      initial[line.id] = String(line.requested_quantity);
+    });
+    setPicked(initial);
+  }
+
   return (
     <AppShell>
       <PageHeader
@@ -159,19 +170,74 @@ function PickTasksPage() {
               />
             </Card>
           ) : (
-            <TableShell>
-              <thead>
-                <tr>
-                  <Th>Pick Task ID</Th>
-                  <Th>Order Reference</Th>
-                  <Th>Lines</Th>
-                  <Th>Facility</Th>
-                  <Th>Priority</Th>
-                  <Th>Status</Th>
-                  <Th className="text-right">Action</Th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div data-testid="pick-tasks-desktop-table" className="hidden md:block">
+                <TableShell>
+                  <thead>
+                    <tr>
+                      <Th>Pick Task ID</Th>
+                      <Th>Order Reference</Th>
+                      <Th>Lines</Th>
+                      <Th>Facility</Th>
+                      <Th>Priority</Th>
+                      <Th>Status</Th>
+                      <Th className="text-right">Action</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tasks.map((task: PickTask) => {
+                      const isSelected = active?.id === task.id;
+                      const orderRef =
+                        orders.find((o) => o.id === task.order_id)?.seller_order_number ||
+                        `ORD-${task.order_id?.slice(0, 6)}`;
+                      const whCode = warehouses.find((w) => w.id === task.warehouse_id)?.code || "WH";
+
+                      return (
+                        <tr
+                          key={task.id}
+                          onClick={() => selectTask(task)}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected ? "bg-blue-50/80 font-medium" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <Td className="font-mono font-bold text-slate-900">
+                            TASK-{task.id.slice(0, 8)}
+                          </Td>
+                          <Td className="font-mono text-slate-700">{orderRef}</Td>
+                          <Td className="font-mono font-semibold text-slate-800">
+                            {task.lines?.length || 0} SKUs
+                          </Td>
+                          <Td>
+                            <FacilityBadge code={whCode} />
+                          </Td>
+                          <Td>
+                            <span className="font-mono font-bold text-slate-800">
+                              P{task.priority ?? 1}
+                            </span>
+                          </Td>
+                          <Td>
+                            <StatusBadge value={task.status} />
+                          </Td>
+                          <Td className="text-right">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                selectTask(task);
+                              }}
+                            >
+                              Pick Lines
+                            </Button>
+                          </Td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </TableShell>
+              </div>
+
+              <MobileRecordList label="Floor Picking Tasks" testId="pick-tasks-mobile-list">
                 {tasks.map((task: PickTask) => {
                   const isSelected = active?.id === task.id;
                   const orderRef =
@@ -180,55 +246,52 @@ function PickTasksPage() {
                   const whCode = warehouses.find((w) => w.id === task.warehouse_id)?.code || "WH";
 
                   return (
-                    <tr
-                      key={task.id}
-                      onClick={() => {
-                        setActive(task);
-                        const initial: Record<string, string> = {};
-                        task.lines?.forEach((line) => {
-                          initial[line.id] = String(line.requested_quantity);
-                        });
-                        setPicked(initial);
-                      }}
-                      className={`cursor-pointer transition-colors ${
-                        isSelected ? "bg-blue-50/80 font-medium" : "hover:bg-slate-50"
-                      }`}
-                    >
-                      <Td className="font-mono font-bold text-slate-900">
-                        TASK-{task.id.slice(0, 8)}
-                      </Td>
-                      <Td className="font-mono text-slate-700">{orderRef}</Td>
-                      <Td className="font-mono font-semibold text-slate-800">
-                        {task.lines?.length || 0} SKUs
-                      </Td>
-                      <Td>
-                        <FacilityBadge code={whCode} />
-                      </Td>
-                      <Td>
-                        <span className="font-mono font-bold text-slate-800">
-                          P{task.priority ?? 1}
-                        </span>
-                      </Td>
-                      <Td>
+                    <MobileRecordCard key={task.id} selected={isSelected}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-mono font-bold text-slate-900 break-all text-sm">
+                            TASK-{task.id.slice(0, 8)}
+                          </p>
+                        </div>
                         <StatusBadge value={task.status} />
-                      </Td>
-                      <Td className="text-right">
+                      </div>
+
+                      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <dt className="text-muted-foreground text-[11px]">Order Reference</dt>
+                          <dd className="font-mono text-slate-700 font-medium break-all">{orderRef}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground text-[11px]">Facility</dt>
+                          <dd className="mt-0.5">
+                            <FacilityBadge code={whCode} />
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground text-[11px]">Lines</dt>
+                          <dd className="font-mono font-semibold text-slate-800">{task.lines?.length || 0} SKUs</dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground text-[11px]">Priority</dt>
+                          <dd className="font-mono font-bold text-slate-800">P{task.priority ?? 1}</dd>
+                        </div>
+                      </dl>
+
+                      <div className="mt-4 pt-3 border-t border-border">
                         <Button
-                          variant="secondary"
+                          variant={isSelected ? "primary" : "secondary"}
                           size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActive(task);
-                          }}
+                          className="min-h-[44px] w-full"
+                          onClick={() => selectTask(task)}
                         >
-                          Pick Lines
+                          Pick lines
                         </Button>
-                      </Td>
-                    </tr>
+                      </div>
+                    </MobileRecordCard>
                   );
                 })}
-              </tbody>
-            </TableShell>
+              </MobileRecordList>
+            </>
           )}
         </div>
 
