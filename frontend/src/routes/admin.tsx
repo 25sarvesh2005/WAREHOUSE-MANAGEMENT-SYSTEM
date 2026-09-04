@@ -399,10 +399,11 @@ function AdminPage() {
                 <Td className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <select
+                      aria-label={`Set status for user ${u.name}`}
                       value={u.status || "ACTIVE"}
                       disabled={updatingUserId === u.id || (!isAdmin && u.role === "ADMINISTRATOR")}
                       onChange={(e) => handleSetUserStatus(u.id, e.target.value)}
-                      className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground outline-none focus:border-primary cursor-pointer disabled:opacity-50"
+                      className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 cursor-pointer disabled:opacity-50"
                     >
                       <option value="ACTIVE">ACTIVE</option>
                       <option value="SUSPENDED">SUSPENDED</option>
@@ -506,10 +507,11 @@ function AdminPage() {
                 <Td className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <select
+                      aria-label={`Set status for seller ${s.name}`}
                       value={s.status || "ACTIVE"}
                       disabled={updatingSellerId === s.id}
                       onChange={(e) => handleSetSellerStatus(s.id, e.target.value)}
-                      className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground outline-none focus:border-primary cursor-pointer disabled:opacity-50"
+                      className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 cursor-pointer disabled:opacity-50"
                     >
                       <option value="ACTIVE">ACTIVE</option>
                       <option value="SUSPENDED">SUSPENDED</option>
