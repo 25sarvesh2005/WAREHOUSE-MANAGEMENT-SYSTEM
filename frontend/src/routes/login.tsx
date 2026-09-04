@@ -70,7 +70,7 @@ function LoginPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6">
       <div className="mx-auto max-w-6xl">
-        <Link to="/" className="inline-flex items-center gap-3">
+        <Link to="/login" className="inline-flex items-center gap-3">
           <span className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary-dark via-primary to-blue-500 text-lg font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.28)]">
             W
           </span>

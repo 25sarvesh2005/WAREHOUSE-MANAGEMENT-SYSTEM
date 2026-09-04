@@ -457,4 +457,37 @@ test.describe("Authentication Flows & Hydration", () => {
     await expect(page).toHaveURL(/.*\/inventory/);
     await expect(page.locator("h1")).toContainText(/Inventory|Balances/);
   });
+
+  test("unauthenticated visit to root / redirects to /login without promotional landing content", async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.goto("/");
+    await page.waitForURL("**/login");
+
+    expect(page.url()).toContain("/login");
+    await expect(page.getByRole("heading", { name: "Sign in to Whitfield WMS" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Sign in/i })).toBeVisible();
+
+    await expect(page.getByText(/Nationwide Fulfillment/i)).toHaveCount(0);
+    await expect(page.getByText(/2-Day delivery/i)).toHaveCount(0);
+    await expect(page.getByText(/Next-Generation Fulfillment/i)).toHaveCount(0);
+    await expect(page.getByText(/SAMPLE_TRACKING_DATA/i)).toHaveCount(0);
+
+    const hydrationErrors = consoleErrors.filter(
+      (msg) =>
+        msg.includes("Hydration failed") ||
+        msg.includes("server rendered HTML didn't match") ||
+        msg.includes("Minified React error #418") ||
+        msg.includes("Minified React error #423") ||
+        msg.includes("Minified React error #425"),
+    );
+    expect(hydrationErrors).toHaveLength(0);
+  });
 });
