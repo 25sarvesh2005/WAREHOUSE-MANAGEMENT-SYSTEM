@@ -19,6 +19,8 @@ import {
   ErrorState,
   LedgerNoticeBanner,
   LoadingState,
+  MobileRecordCard,
+  MobileRecordList,
   PageHeader,
   ScannerInputField,
   TableShell,
@@ -261,15 +263,17 @@ function InventoryPage() {
             />
           </div>
 
-          {/* Facility Dropdown */}
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <label className="flex items-center gap-1.5 font-bold text-foreground">
-              <WarehouseIcon className="size-3.5 text-primary" />
-              <span>Facility:</span>
+          {/* Facility & Seller Dropdowns */}
+          <div className="flex w-full sm:w-auto flex-col sm:flex-row sm:items-center gap-2 text-xs">
+            <label className="flex w-full sm:w-auto flex-col sm:flex-row sm:items-center gap-1.5 font-bold text-foreground">
+              <span className="flex items-center gap-1.5">
+                <WarehouseIcon className="size-3.5 text-primary" />
+                <span>Facility:</span>
+              </span>
               <select
                 value={selectedWarehouseId}
                 onChange={(e) => setSelectedWarehouseId(e.target.value)}
-                className="rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+                className="min-h-[44px] sm:min-h-0 w-full sm:w-auto rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
                 <option value="ALL">All Facilities (RNO & CMH)</option>
                 {warehouses.map((w) => (
@@ -281,12 +285,12 @@ function InventoryPage() {
             </label>
 
             {/* Seller Filter */}
-            <label className="flex items-center gap-1.5 font-bold text-foreground">
+            <label className="flex w-full sm:w-auto flex-col sm:flex-row sm:items-center gap-1.5 font-bold text-foreground">
               <span>Seller:</span>
               <select
                 value={selectedSellerId}
                 onChange={(e) => setSelectedSellerId(e.target.value)}
-                className="rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+                className="min-h-[44px] sm:min-h-0 w-full sm:w-auto rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
                 <option value="ALL">All Sellers</option>
                 {sellers.map((s) => (
@@ -308,7 +312,7 @@ function InventoryPage() {
             <button
               key={s}
               onClick={() => setSelectedState(s)}
-              className={`rounded-md border px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer ${
+              className={`min-h-[44px] sm:min-h-0 flex items-center justify-center rounded-md border px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer ${
                 selectedState === s
                   ? "border-blue-600 bg-blue-600 text-white shadow-xs"
                   : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
@@ -336,59 +340,116 @@ function InventoryPage() {
             />
           </Card>
         ) : (
-          <TableShell>
-            <thead>
-              <tr>
-                <Th>Product SKU</Th>
-                <Th>Product Name</Th>
-                <Th>Seller Tenant</Th>
-                <Th>Warehouse Facility</Th>
-                <Th>Inventory State</Th>
-                <Th>Classification</Th>
-                <Th className="text-right">Quantity</Th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            <div data-testid="inventory-balances-desktop-table" className="hidden md:block">
+              <TableShell>
+                <thead>
+                  <tr>
+                    <Th>Product SKU</Th>
+                    <Th>Product Name</Th>
+                    <Th>Seller Tenant</Th>
+                    <Th>Warehouse Facility</Th>
+                    <Th>Inventory State</Th>
+                    <Th>Classification</Th>
+                    <Th className="text-right">Quantity</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredBalances.map((b) => {
+                    const isSellable = b.inventory_state === "AVAILABLE";
+                    const whCode = warehouses.find((w) => w.id === b.warehouse_id)?.code || "WH";
+
+                    return (
+                      <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
+                        <Td className="font-mono font-bold text-slate-900">
+                          {productSku(products, b.product_id)}
+                        </Td>
+                        <Td className="font-medium text-slate-800">
+                          {productName(products, b.product_id)}
+                        </Td>
+                        <Td className="text-slate-600 font-medium">
+                          {sellerLabel(sellers, b.seller_id)}
+                        </Td>
+                        <Td>
+                          <FacilityBadge code={whCode} />
+                        </Td>
+                        <Td>
+                          <StatusBadge value={b.inventory_state} />
+                        </Td>
+                        <Td>
+                          <span
+                            className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
+                              isSellable
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                : "bg-slate-100 text-slate-600 border-slate-200"
+                            }`}
+                          >
+                            {isSellable ? "Sellable" : "Non-Sellable"}
+                          </span>
+                        </Td>
+                        <Td className="text-right font-mono text-sm font-extrabold text-slate-900">
+                          {formatQty(b.quantity)}
+                        </Td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </TableShell>
+            </div>
+
+            <MobileRecordList label="Current Stock Balances" testId="inventory-balances-mobile-list">
               {filteredBalances.map((b) => {
                 const isSellable = b.inventory_state === "AVAILABLE";
                 const whCode = warehouses.find((w) => w.id === b.warehouse_id)?.code || "WH";
+                const sku = productSku(products, b.product_id);
+                const name = productName(products, b.product_id);
 
                 return (
-                  <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
-                    <Td className="font-mono font-bold text-slate-900">
-                      {productSku(products, b.product_id)}
-                    </Td>
-                    <Td className="font-medium text-slate-800">
-                      {productName(products, b.product_id)}
-                    </Td>
-                    <Td className="text-slate-600 font-medium">
-                      {sellerLabel(sellers, b.seller_id)}
-                    </Td>
-                    <Td>
-                      <FacilityBadge code={whCode} />
-                    </Td>
-                    <Td>
-                      <StatusBadge value={b.inventory_state} />
-                    </Td>
-                    <Td>
-                      <span
-                        className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
-                          isSellable
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                            : "bg-slate-100 text-slate-600 border-slate-200"
-                        }`}
-                      >
-                        {isSellable ? "Sellable" : "Non-Sellable"}
-                      </span>
-                    </Td>
-                    <Td className="text-right font-mono text-sm font-extrabold text-slate-900">
-                      {formatQty(b.quantity)}
-                    </Td>
-                  </tr>
+                  <MobileRecordCard key={b.id}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-mono font-bold text-slate-900 break-all text-sm">{sku}</p>
+                        <p className="text-xs text-slate-700 font-medium break-words mt-0.5">{name}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-mono text-base font-extrabold text-slate-900">
+                          {formatQty(b.quantity)}
+                        </p>
+                        <span
+                          className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold border mt-1 ${
+                            isSellable
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              : "bg-slate-100 text-slate-600 border-slate-200"
+                          }`}
+                        >
+                          {isSellable ? "Sellable" : "Non-Sellable"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <dl className="mt-3 grid grid-cols-2 gap-2 text-xs pt-2 border-t border-border">
+                      <div>
+                        <dt className="text-muted-foreground text-[11px]">Seller</dt>
+                        <dd className="font-medium text-slate-700">{sellerLabel(sellers, b.seller_id)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground text-[11px]">Facility</dt>
+                        <dd className="mt-0.5">
+                          <FacilityBadge code={whCode} />
+                        </dd>
+                      </div>
+                      <div className="col-span-2">
+                        <dt className="text-muted-foreground text-[11px]">Inventory State</dt>
+                        <dd className="mt-0.5">
+                          <StatusBadge value={b.inventory_state} />
+                        </dd>
+                      </div>
+                    </dl>
+                  </MobileRecordCard>
                 );
               })}
-            </tbody>
-          </TableShell>
+            </MobileRecordList>
+          </>
         )}
       </section>
 
@@ -415,55 +476,108 @@ function InventoryPage() {
             />
           </Card>
         ) : (
-          <TableShell>
-            <thead>
-              <tr>
-                <Th>Recorded Timestamp</Th>
-                <Th>Product SKU</Th>
-                <Th>Facility</Th>
-                <Th>Movement Type</Th>
-                <Th>Source Reference</Th>
-                <Th className="text-right">Quantity Delta</Th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            <div data-testid="inventory-movements-desktop-table" className="hidden md:block">
+              <TableShell>
+                <thead>
+                  <tr>
+                    <Th>Recorded Timestamp</Th>
+                    <Th>Product SKU</Th>
+                    <Th>Facility</Th>
+                    <Th>Movement Type</Th>
+                    <Th>Source Reference</Th>
+                    <Th className="text-right">Quantity Delta</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {movements.slice(0, 15).map((m) => {
+                    const deltaNum = Number(m.quantity_delta || 0);
+                    const isPositive = deltaNum >= 0;
+                    const whCode = warehouses.find((w) => w.id === m.warehouse_id)?.code || "WH";
+
+                    return (
+                      <tr key={m.id} className="hover:bg-slate-50">
+                        <Td className="font-mono text-xs text-slate-600">
+                          {formatDate(m.occurred_at)}
+                        </Td>
+                        <Td className="font-mono font-bold text-slate-900">
+                          {productSku(products, m.product_id)}
+                        </Td>
+                        <Td>
+                          <FacilityBadge code={whCode} />
+                        </Td>
+                        <Td>
+                          <StatusBadge value={m.movement_type} />
+                        </Td>
+                        <Td className="font-mono text-xs text-slate-500">
+                          {m.source_type
+                            ? `${m.source_type}: ${m.source_id.slice(0, 8)}`
+                            : m.source_id?.slice(0, 8) || "Ledger Entry"}
+                        </Td>
+                        <Td
+                          className={`text-right font-mono font-extrabold text-sm ${
+                            isPositive ? "text-emerald-700" : "text-rose-700"
+                          }`}
+                        >
+                          {isPositive ? "+" : ""}
+                          {formatQty(m.quantity_delta)}
+                        </Td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </TableShell>
+            </div>
+
+            <MobileRecordList label="Immutable Movement Ledger" testId="inventory-movements-mobile-list">
               {movements.slice(0, 15).map((m) => {
                 const deltaNum = Number(m.quantity_delta || 0);
                 const isPositive = deltaNum >= 0;
                 const whCode = warehouses.find((w) => w.id === m.warehouse_id)?.code || "WH";
+                const sku = productSku(products, m.product_id);
+                const srcRef = m.source_type
+                  ? `${m.source_type}: ${m.source_id.slice(0, 8)}`
+                  : m.source_id?.slice(0, 8) || "Ledger Entry";
 
                 return (
-                  <tr key={m.id} className="hover:bg-slate-50">
-                    <Td className="font-mono text-xs text-slate-600">
-                      {formatDate(m.occurred_at)}
-                    </Td>
-                    <Td className="font-mono font-bold text-slate-900">
-                      {productSku(products, m.product_id)}
-                    </Td>
-                    <Td>
-                      <FacilityBadge code={whCode} />
-                    </Td>
-                    <Td>
-                      <StatusBadge value={m.movement_type} />
-                    </Td>
-                    <Td className="font-mono text-xs text-slate-500">
-                      {m.source_type
-                        ? `${m.source_type}: ${m.source_id.slice(0, 8)}`
-                        : m.source_id?.slice(0, 8) || "Ledger Entry"}
-                    </Td>
-                    <Td
-                      className={`text-right font-mono font-extrabold text-sm ${
-                        isPositive ? "text-emerald-700" : "text-rose-700"
-                      }`}
-                    >
-                      {isPositive ? "+" : ""}
-                      {formatQty(m.quantity_delta)}
-                    </Td>
-                  </tr>
+                  <MobileRecordCard key={m.id}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-mono font-bold text-slate-900 break-all text-sm">{sku}</p>
+                        <p className="font-mono text-xs text-slate-500 mt-0.5">{formatDate(m.occurred_at)}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p
+                          className={`font-mono text-base font-extrabold ${
+                            isPositive ? "text-emerald-700" : "text-rose-700"
+                          }`}
+                        >
+                          {isPositive ? "+" : ""}
+                          {formatQty(m.quantity_delta)}
+                        </p>
+                        <div className="mt-1">
+                          <StatusBadge value={m.movement_type} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <dl className="mt-3 grid grid-cols-2 gap-2 text-xs pt-2 border-t border-border">
+                      <div>
+                        <dt className="text-muted-foreground text-[11px]">Facility</dt>
+                        <dd className="mt-0.5">
+                          <FacilityBadge code={whCode} />
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground text-[11px]">Source Reference</dt>
+                        <dd className="font-mono text-xs text-slate-600 break-all mt-0.5">{srcRef}</dd>
+                      </div>
+                    </dl>
+                  </MobileRecordCard>
                 );
               })}
-            </tbody>
-          </TableShell>
+            </MobileRecordList>
+          </>
         )}
       </section>
     </AppShell>

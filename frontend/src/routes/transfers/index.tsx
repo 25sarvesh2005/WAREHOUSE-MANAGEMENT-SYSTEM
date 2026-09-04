@@ -24,6 +24,8 @@ import {
   ErrorState,
   ExceptionBanner,
   LoadingState,
+  MobileRecordCard,
+  MobileRecordList,
   PageHeader,
   TableShell,
   Td,
@@ -388,51 +390,165 @@ function TransfersPage() {
           />
         </Card>
       ) : (
-        <TableShell>
-          <thead>
-            <tr>
-              <Th>Transfer ID</Th>
-              <Th>Route</Th>
-              <Th>Seller Tenant</Th>
-              <Th>Items</Th>
-              <Th>Status</Th>
-              <Th>Created Date</Th>
-              <Th className="text-right">Actions</Th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          <div data-testid="transfers-desktop-table" className="hidden md:block">
+            <TableShell>
+              <thead>
+                <tr>
+                  <Th>Transfer ID</Th>
+                  <Th>Route</Th>
+                  <Th>Seller Tenant</Th>
+                  <Th>Items</Th>
+                  <Th>Status</Th>
+                  <Th>Created Date</Th>
+                  <Th className="text-right">Actions</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTransfers.map((t: Transfer) => {
+                  const originCode =
+                    warehouses.find((w) => w.id === t.origin_warehouse_id)?.code || "ORIGIN";
+                  const destCode =
+                    warehouses.find((w) => w.id === t.destination_warehouse_id)?.code || "DEST";
+
+                  return (
+                    <tr key={t.id} className="hover:bg-slate-50">
+                      <Td className="font-mono font-bold text-slate-900">
+                        {t.transfer_number || `TRF-${t.id.slice(0, 8)}`}
+                      </Td>
+                      <Td>
+                        <div className="flex items-center gap-1.5 font-mono text-xs font-semibold">
+                          <span className="text-slate-800">{originCode}</span>
+                          <ArrowRight className="size-3 text-slate-400" />
+                          <span className="text-slate-800">{destCode}</span>
+                        </div>
+                      </Td>
+                      <Td className="text-slate-700 font-medium">
+                        {sellerLabel(sellers, t.seller_id)}
+                      </Td>
+                      <Td className="font-mono font-semibold text-slate-900">
+                        {t.lines?.length || 0} SKUs
+                      </Td>
+                      <Td>
+                        <StatusBadge value={t.status} />
+                      </Td>
+                      <Td className="font-mono text-xs text-slate-500">{formatDate(t.created_at)}</Td>
+                      <Td className="text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {t.status === "PENDING_APPROVAL" && isManager ? (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleApprove(t.id)}
+                              disabled={approveMutation.isPending}
+                            >
+                              Approve
+                            </Button>
+                          ) : null}
+
+                          {t.status === "APPROVED" ? (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleDispatch(t.id)}
+                              disabled={dispatchMutation.isPending}
+                            >
+                              Dispatch
+                            </Button>
+                          ) : null}
+
+                          {t.status === "DISPATCHED" ? (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={(event) => {
+                                receiveTransferTriggerRef.current = event.currentTarget;
+                                setReceiving(t);
+                                const initial: Record<string, { good: string; damaged: string }> = {};
+                                t.lines?.forEach((l) => {
+                                  initial[l.id] = { good: String(l.requested_quantity), damaged: "0" };
+                                });
+                                setReceiveLines(initial);
+                              }}
+                            >
+                              Receive Dock
+                            </Button>
+                          ) : null}
+
+                          {t.status === "DISCREPANCY_REVIEW" && isManager ? (
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={(event) => {
+                                resolveDiscrepancyTriggerRef.current = event.currentTarget;
+                                setResolving(t);
+                              }}
+                            >
+                              Resolve Discrepancy
+                            </Button>
+                          ) : null}
+                        </div>
+                      </Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </TableShell>
+          </div>
+
+          <MobileRecordList label="Inter-facility Transfers" testId="transfers-mobile-list">
             {filteredTransfers.map((t: Transfer) => {
               const originCode =
                 warehouses.find((w) => w.id === t.origin_warehouse_id)?.code || "ORIGIN";
               const destCode =
                 warehouses.find((w) => w.id === t.destination_warehouse_id)?.code || "DEST";
+              const hasAction =
+                (t.status === "PENDING_APPROVAL" && isManager) ||
+                t.status === "APPROVED" ||
+                t.status === "DISPATCHED" ||
+                (t.status === "DISCREPANCY_REVIEW" && isManager);
 
               return (
-                <tr key={t.id} className="hover:bg-slate-50">
-                  <Td className="font-mono font-bold text-slate-900">TRF-{t.id.slice(0, 8)}</Td>
-                  <Td>
-                    <div className="flex items-center gap-1.5 font-mono text-xs font-semibold">
-                      <span className="text-slate-800">{originCode}</span>
-                      <ArrowRight className="size-3 text-slate-400" />
-                      <span className="text-slate-800">{destCode}</span>
+                <MobileRecordCard key={t.id}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-mono font-bold text-slate-900 break-all text-sm">
+                        {t.transfer_number || `TRF-${t.id.slice(0, 8)}`}
+                      </p>
                     </div>
-                  </Td>
-                  <Td className="text-slate-700 font-medium">
-                    {sellerLabel(sellers, t.seller_id)}
-                  </Td>
-                  <Td className="font-mono font-semibold text-slate-900">
-                    {t.lines?.length || 0} SKUs
-                  </Td>
-                  <Td>
                     <StatusBadge value={t.status} />
-                  </Td>
-                  <Td className="font-mono text-xs text-slate-500">{formatDate(t.created_at)}</Td>
-                  <Td className="text-right">
-                    <div className="flex items-center justify-end gap-1.5">
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs pt-2 border-t border-border">
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground text-[11px]">Route</dt>
+                      <dd className="mt-0.5 flex items-center gap-1.5 font-mono text-xs font-semibold">
+                        <span className="text-slate-800">{originCode}</span>
+                        <ArrowRight className="size-3 text-slate-400" />
+                        <span className="text-slate-800">{destCode}</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Seller</dt>
+                      <dd className="font-medium text-slate-700">{sellerLabel(sellers, t.seller_id)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Items</dt>
+                      <dd className="font-mono font-semibold text-slate-900">{t.lines?.length || 0} SKUs</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Created Date</dt>
+                      <dd className="font-mono text-xs text-slate-500 mt-0.5">{formatDate(t.created_at)}</dd>
+                    </div>
+                  </dl>
+
+                  {hasAction ? (
+                    <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-border">
                       {t.status === "PENDING_APPROVAL" && isManager ? (
                         <Button
                           variant="primary"
                           size="sm"
+                          className="min-h-[44px] flex-1"
                           onClick={() => handleApprove(t.id)}
                           disabled={approveMutation.isPending}
                         >
@@ -444,6 +560,7 @@ function TransfersPage() {
                         <Button
                           variant="secondary"
                           size="sm"
+                          className="min-h-[44px] flex-1"
                           onClick={() => handleDispatch(t.id)}
                           disabled={dispatchMutation.isPending}
                         >
@@ -455,6 +572,7 @@ function TransfersPage() {
                         <Button
                           variant="primary"
                           size="sm"
+                          className="min-h-[44px] flex-1"
                           onClick={(event) => {
                             receiveTransferTriggerRef.current = event.currentTarget;
                             setReceiving(t);
@@ -473,6 +591,7 @@ function TransfersPage() {
                         <Button
                           variant="danger"
                           size="sm"
+                          className="min-h-[44px] flex-1"
                           onClick={(event) => {
                             resolveDiscrepancyTriggerRef.current = event.currentTarget;
                             setResolving(t);
@@ -482,12 +601,12 @@ function TransfersPage() {
                         </Button>
                       ) : null}
                     </div>
-                  </Td>
-                </tr>
+                  ) : null}
+                </MobileRecordCard>
               );
             })}
-          </tbody>
-        </TableShell>
+          </MobileRecordList>
+        </>
       )}
 
       {/* Create Transfer Modal */}

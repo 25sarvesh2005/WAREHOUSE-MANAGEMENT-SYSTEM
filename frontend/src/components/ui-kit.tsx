@@ -313,3 +313,58 @@ export function Timeline({
     </ol>
   );
 }
+
+export interface MobileRecordListProps {
+  children: ReactNode;
+  label: string;
+  testId: string;
+  className?: string;
+}
+
+export function MobileRecordList({
+  children,
+  label,
+  testId,
+  className = "",
+}: MobileRecordListProps) {
+  const classes = ["grid gap-3 md:hidden", className].filter(Boolean).join(" ");
+  return (
+    <div
+      role="list"
+      aria-label={label}
+      data-testid={testId}
+      className={classes}
+    >
+      {children}
+    </div>
+  );
+}
+
+export interface MobileRecordCardProps {
+  children: ReactNode;
+  className?: string;
+  selected?: boolean;
+}
+
+export function MobileRecordCard({
+  children,
+  className = "",
+  selected = false,
+}: MobileRecordCardProps) {
+  const classes = [
+    "card-surface p-4 min-w-0 transition-colors",
+    selected ? "border-primary ring-2 ring-primary/25 bg-blue-50/50" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <article
+      role="listitem"
+      className={classes}
+    >
+      {children}
+    </article>
+  );
+}
