@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -113,6 +113,7 @@ async def get_return_by_id(session: AsyncSession, return_id: UUID) -> Return | N
 async def list_returns(
     session: AsyncSession,
     *,
+    q: str | None = None,
     seller_id: UUID | None = None,
     seller_ids: Sequence[UUID] | None = None,
     warehouse_id: UUID | None = None,
@@ -121,10 +122,13 @@ async def list_returns(
     offset: int = 0,
 ) -> tuple[Sequence[Return], int]:
     """
-    List returns with optional filters and pagination.
+    List returns with text search, filtering, and pagination.
+
+    Applies identical filtering and search predicates to item and count queries.
 
     Args:
         session: Active transaction session.
+        q: Optional text search string matching return_number, rma_number, or inbound_tracking_number.
         seller_id: Optional seller filter.
         seller_ids: Optional seller scope filter.
         warehouse_id: Optional warehouse filter.
@@ -135,10 +139,23 @@ async def list_returns(
     Returns:
         tuple[Sequence[Return], int]: (returns, total_count)
     """
+    logger.info("Executing return_crud.list_returns")
     stmt = select(Return).options(
         selectinload(Return.lines).selectinload(ReturnLine.dispositions)
     )
     count_stmt = select(func.count(Return.id))
+
+    if q and q.strip():
+        trimmed_q = q.strip()
+        escaped_q = trimmed_q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        search_pattern = f"%{escaped_q}%"
+        search_predicate = or_(
+            Return.return_number.ilike(search_pattern, escape="\\"),
+            Return.rma_number.ilike(search_pattern, escape="\\"),
+            Return.inbound_tracking_number.ilike(search_pattern, escape="\\"),
+        )
+        stmt = stmt.where(search_predicate)
+        count_stmt = count_stmt.where(search_predicate)
 
     if seller_id is not None:
         stmt = stmt.where(Return.seller_id == seller_id)

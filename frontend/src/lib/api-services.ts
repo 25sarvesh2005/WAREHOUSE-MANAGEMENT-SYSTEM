@@ -405,9 +405,46 @@ export async function createShipmentApi(payload: {
   });
 }
 
-export async function getTransfersApi(): Promise<Transfer[]> {
-  const response = await apiRequest<PaginatedResponse<Transfer>>("/transfers");
-  return response.items;
+export interface ListTransfersParams {
+  limit?: number | undefined;
+  offset?: number | undefined;
+  q?: string | undefined;
+  seller_id?: string | undefined;
+  origin_warehouse_id?: string | undefined;
+  destination_warehouse_id?: string | undefined;
+  status?: string | undefined;
+}
+
+export async function getTransfersApi(
+  params?: ListTransfersParams,
+): Promise<PaginatedResponse<Transfer>> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    if (params.limit !== undefined && params.limit !== null) {
+      searchParams.set("limit", String(params.limit));
+    }
+    if (params.offset !== undefined && params.offset !== null) {
+      searchParams.set("offset", String(params.offset));
+    }
+    if (params.q?.trim()) {
+      searchParams.set("q", params.q.trim());
+    }
+    if (params.seller_id?.trim()) {
+      searchParams.set("seller_id", params.seller_id.trim());
+    }
+    if (params.origin_warehouse_id?.trim()) {
+      searchParams.set("origin_warehouse_id", params.origin_warehouse_id.trim());
+    }
+    if (params.destination_warehouse_id?.trim()) {
+      searchParams.set("destination_warehouse_id", params.destination_warehouse_id.trim());
+    }
+    if (params.status?.trim()) {
+      searchParams.set("status", params.status.trim());
+    }
+  }
+  const queryString = searchParams.toString();
+  const endpoint = queryString ? `/transfers?${queryString}` : "/transfers";
+  return apiRequest<PaginatedResponse<Transfer>>(endpoint);
 }
 
 export async function getTransferByIdApi(id: string): Promise<Transfer> {
@@ -460,9 +497,42 @@ export async function resolveDiscrepancyApi(id: string, notes: string): Promise<
   });
 }
 
-export async function getReturnsApi(): Promise<ReturnOrder[]> {
-  const response = await apiRequest<PaginatedResponse<ReturnOrder>>("/returns");
-  return response.items;
+export interface ListReturnsParams {
+  limit?: number | undefined;
+  offset?: number | undefined;
+  q?: string | undefined;
+  seller_id?: string | undefined;
+  warehouse_id?: string | undefined;
+  status?: string | undefined;
+}
+
+export async function getReturnsApi(
+  params?: ListReturnsParams,
+): Promise<PaginatedResponse<ReturnOrder>> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    if (params.limit !== undefined && params.limit !== null) {
+      searchParams.set("limit", String(params.limit));
+    }
+    if (params.offset !== undefined && params.offset !== null) {
+      searchParams.set("offset", String(params.offset));
+    }
+    if (params.q?.trim()) {
+      searchParams.set("q", params.q.trim());
+    }
+    if (params.seller_id?.trim()) {
+      searchParams.set("seller_id", params.seller_id.trim());
+    }
+    if (params.warehouse_id?.trim()) {
+      searchParams.set("warehouse_id", params.warehouse_id.trim());
+    }
+    if (params.status?.trim()) {
+      searchParams.set("status", params.status.trim());
+    }
+  }
+  const queryString = searchParams.toString();
+  const endpoint = queryString ? `/returns?${queryString}` : "/returns";
+  return apiRequest<PaginatedResponse<ReturnOrder>>(endpoint);
 }
 
 export async function getReturnByIdApi(id: string): Promise<ReturnOrder> {

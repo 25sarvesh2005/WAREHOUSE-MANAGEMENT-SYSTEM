@@ -33,6 +33,8 @@ import {
   getShipmentsApi,
   getTransferByIdApi,
   getTransfersApi,
+  type ListReturnsParams,
+  type ListTransfersParams,
   getUsersApi,
   getWarehousesApi,
   inspectReturnApi,
@@ -294,10 +296,10 @@ export function useCreateShipmentMutation() {
   });
 }
 
-export function useTransfersQuery() {
+export function useTransfersQuery(params?: ListTransfersParams) {
   return useQuery({
-    queryKey: ["transfers"],
-    queryFn: getTransfersApi,
+    queryKey: ["transfers", params],
+    queryFn: () => getTransfersApi(params),
   });
 }
 
@@ -370,10 +372,10 @@ export function useResolveDiscrepancyMutation() {
   });
 }
 
-export function useReturnsQuery() {
+export function useReturnsQuery(params?: ListReturnsParams) {
   return useQuery({
-    queryKey: ["returns"],
-    queryFn: getReturnsApi,
+    queryKey: ["returns", params],
+    queryFn: () => getReturnsApi(params),
   });
 }
 

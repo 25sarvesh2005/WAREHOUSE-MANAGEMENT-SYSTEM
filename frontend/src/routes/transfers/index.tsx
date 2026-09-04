@@ -12,7 +12,7 @@ import {
   Trash2,
   Truck,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
@@ -27,6 +27,7 @@ import {
   MobileRecordCard,
   MobileRecordList,
   PageHeader,
+  PaginationControls,
   TableShell,
   Td,
   Th,
@@ -48,14 +49,80 @@ import {
 } from "@/hooks/use-api";
 import type { Product, Seller, Transfer, Warehouse } from "@/lib/types";
 
-interface TransfersSearchParams {
-  q?: string;
+const VALID_TRANSFER_STATUSES = [
+  "DRAFT",
+  "PENDING_APPROVAL",
+  "APPROVED",
+  "DISPATCHED",
+  "PARTIALLY_RECEIVED",
+  "RECEIVED",
+  "DISCREPANCY_REVIEW",
+  "CANCELLED",
+] as const;
+type ValidTransferStatus = (typeof VALID_TRANSFER_STATUSES)[number];
+
+function isValidTransferStatus(val: unknown): val is ValidTransferStatus {
+  return typeof val === "string" && (VALID_TRANSFER_STATUSES as readonly string[]).includes(val);
 }
+
+interface TransfersSearchParams {
+  q?: string | undefined;
+  seller?: string | undefined;
+  origin?: string | undefined;
+  destination?: string | undefined;
+  status?: string | undefined;
+  page?: number | undefined;
+}
+
+const PAGE_SIZE = 25;
 
 export const Route = createFileRoute("/transfers/")({
   validateSearch: (search: Record<string, unknown>): TransfersSearchParams => {
     const q = normalizeSearchQuery(search["q"]);
-    return q ? { q } : {};
+    const seller =
+      typeof search["seller"] === "string" && search["seller"].trim()
+        ? search["seller"].trim()
+        : undefined;
+    const origin =
+      typeof search["origin"] === "string" && search["origin"].trim()
+        ? search["origin"].trim()
+        : undefined;
+    const destination =
+      typeof search["destination"] === "string" && search["destination"].trim()
+        ? search["destination"].trim()
+        : undefined;
+    const rawStatus =
+      typeof search["status"] === "string" && search["status"].trim()
+        ? search["status"].trim()
+        : undefined;
+    const status = isValidTransferStatus(rawStatus) ? rawStatus : undefined;
+    const rawPage = Number(search["page"]);
+    const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : undefined;
+
+    const result: TransfersSearchParams = {};
+    if (q) result.q = q;
+    if (seller) result.seller = seller;
+    if (origin) result.origin = origin;
+    if (destination) result.destination = destination;
+    if (status) result.status = status;
+    if (page && page > 1) result.page = page;
+    return result;
+  },
+  search: {
+    middlewares: [
+      ({ search, next, meta }) => {
+        const nextResult = next(search);
+        const result = { ...nextResult } as Record<string, unknown>;
+        const rawStatus = typeof result["status"] === "string" ? result["status"] : undefined;
+        if (rawStatus && !isValidTransferStatus(rawStatus)) {
+          delete result["status"];
+          if (meta) {
+            (meta.removedAny ||= new Set()).add("status");
+          }
+        }
+        return result as TransfersSearchParams;
+      },
+    ],
   },
   head: () => ({
     meta: [
@@ -95,32 +162,99 @@ function newLineDraft(): TransferLineDraft {
 }
 
 function TransfersPage() {
-  const { q } = Route.useSearch();
+  const { q, seller, origin, destination, status, page } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { user } = useAuth();
-  const transfersQuery = useTransfersQuery();
+  const currentPage = page ?? 1;
+  const offset = (currentPage - 1) * PAGE_SIZE;
+
+  const transfersQuery = useTransfersQuery({
+    q,
+    seller_id: seller,
+    origin_warehouse_id: origin,
+    destination_warehouse_id: destination,
+    status,
+    limit: PAGE_SIZE,
+    offset,
+  });
   const sellersQuery = useSellersQuery();
   const warehousesQuery = useWarehousesQuery();
   const productsQuery = useProductsQuery();
 
-  const transfers = transfersQuery.data ?? EMPTY_TRANSFERS;
+  const transfers = transfersQuery.data?.items ?? EMPTY_TRANSFERS;
+  const totalTransfers = transfersQuery.data?.total ?? 0;
   const sellers = sellersQuery.data ?? EMPTY_SELLERS;
   const warehouses = warehousesQuery.data ?? EMPTY_WAREHOUSES;
   const products = productsQuery.data ?? EMPTY_PRODUCTS;
 
-  const handleSearchChange = (val: string) => {
+  const maxTransferPage = totalTransfers > 0 ? Math.ceil(totalTransfers / PAGE_SIZE) : 1;
+  const isNormalizingTransferPage = transfersQuery.isSuccess && currentPage > maxTransferPage;
+
+  const updateSearch = (patch: Partial<TransfersSearchParams>, resetPage = true) => {
     navigate({
       search: (prev) => {
-        const normalized = normalizeSearchQuery(val);
-        if (!normalized) {
-          const { q: _, ...rest } = prev;
-          return rest;
+        const next: TransfersSearchParams = { ...prev, ...patch };
+        if (resetPage) {
+          delete next.page;
         }
-        return { ...prev, q: normalized };
+        (Object.keys(next) as Array<keyof TransfersSearchParams>).forEach((key) => {
+          if (next[key] === undefined || next[key] === "") {
+            delete next[key];
+          }
+        });
+        return next;
       },
       replace: true,
     });
   };
+
+  const handlePageChange = (newPage: number) => {
+    navigate({
+      search: (prev) => {
+        const next: TransfersSearchParams = { ...prev };
+        if (newPage > 1) {
+          next.page = newPage;
+        } else {
+          delete next.page;
+        }
+        return next;
+      },
+      replace: false,
+    });
+  };
+
+
+  useEffect(() => {
+    if (!transfersQuery.isSuccess) return;
+    if (currentPage > maxTransferPage) {
+      navigate({
+        search: (prev) => {
+          const next = { ...prev };
+          if (maxTransferPage > 1) {
+            next.page = maxTransferPage;
+          } else {
+            delete next.page;
+          }
+          return next;
+        },
+        replace: true,
+      });
+    }
+  }, [transfersQuery.isSuccess, currentPage, maxTransferPage, navigate]);
+
+  const handleSearchChange = (val: string) => {
+    const normalized = normalizeSearchQuery(val);
+    updateSearch({ q: normalized || undefined });
+  };
+
+  const clearAllFilters = () => {
+    navigate({
+      search: () => ({}),
+      replace: true,
+    });
+  };
+
+  const hasActiveFilters = Boolean(q || seller || origin || destination || status);
 
   const approveMutation = useApproveTransferMutation();
   const dispatchMutation = useDispatchTransferMutation();
@@ -269,32 +403,7 @@ function TransfersPage() {
     }
   }
 
-  const filteredTransfers = useMemo(() => {
-    if (!q) return transfers;
-    const search = q.toLowerCase();
-    return transfers.filter((t: Transfer) => {
-      const num = (t.transfer_number || "").toLowerCase();
-      const synthetic = `trf-${t.id.slice(0, 8)}`.toLowerCase();
-      const id = (t.id || "").toLowerCase();
-      const origin = (
-        warehouses.find((w) => w.id === t.origin_warehouse_id)?.code || ""
-      ).toLowerCase();
-      const dest = (
-        warehouses.find((w) => w.id === t.destination_warehouse_id)?.code || ""
-      ).toLowerCase();
-      const seller = sellerLabel(sellers, t.seller_id).toLowerCase();
-      const status = (t.status || "").toLowerCase();
-      return (
-        num.includes(search) ||
-        synthetic.includes(search) ||
-        id.includes(search) ||
-        origin.includes(search) ||
-        dest.includes(search) ||
-        seller.includes(search) ||
-        status.includes(search)
-      );
-    });
-  }, [transfers, q, warehouses, sellers]);
+
 
   return (
     <AppShell>
@@ -316,7 +425,7 @@ function TransfersPage() {
 
       {discrepancies > 0 ? (
         <ExceptionBanner>
-          <strong>{discrepancies} Transfer Discrepancy(ies) Active:</strong> Quantity received did
+          <strong>{discrepancies} Transfer Discrepancy(ies) on this page:</strong> Quantity received did
           not match dispatched count. Manager review required to adjust ledger variances.
         </ExceptionBanner>
       ) : null}
@@ -334,7 +443,7 @@ function TransfersPage() {
           <p className="mt-1 font-mono text-2xl font-extrabold text-amber-900">
             {pendingApprovals}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500">Requires authorization</p>
+          <p className="mt-1 text-[11px] text-slate-500">Requires authorization on this page</p>
         </Card>
 
         <Card className="border-l-4 border-l-blue-600 p-4">
@@ -342,7 +451,7 @@ function TransfersPage() {
             In-Transit (RNO ⇄ CMH)
           </span>
           <p className="mt-1 font-mono text-2xl font-extrabold text-blue-900">{inTransitCount}</p>
-          <p className="mt-1 text-[11px] text-slate-500">Tracked on IN_TRANSIT ledger</p>
+          <p className="mt-1 text-[11px] text-slate-500">Tracked on this page</p>
         </Card>
 
         <Card className="border-l-4 border-l-purple-600 p-4">
@@ -350,43 +459,157 @@ function TransfersPage() {
             Discrepancy Review Queue
           </span>
           <p className="mt-1 font-mono text-2xl font-extrabold text-purple-900">{discrepancies}</p>
-          <p className="mt-1 text-[11px] text-slate-500">Variance investigation</p>
+          <p className="mt-1 text-[11px] text-slate-500">Variance review on this page</p>
         </Card>
       </div>
 
-      {/* Search Bar */}
+      {/* Filters Bar */}
       <Card className="mb-5 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative flex items-center w-full sm:w-80">
-            <Search className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" />
-            <label htmlFor="transfer-search" className="sr-only">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5 items-end">
+          {/* Search Input */}
+          <div className="lg:col-span-1">
+            <label htmlFor="transfer-search" className="block text-xs font-semibold text-foreground mb-1">
               Search transfers
             </label>
-            <input
-              id="transfer-search"
-              type="search"
-              maxLength={100}
-              value={q ?? ""}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search transfer number, route, seller, or status…"
-              className="w-full min-h-[44px] rounded-full border border-input bg-white py-2.5 pr-4 pl-10 font-mono text-sm font-semibold text-foreground outline-none placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
-            />
+            <div className="relative flex items-center">
+              <Search className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
+              <input
+                id="transfer-search"
+                type="search"
+                maxLength={100}
+                value={q ?? ""}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Number or notes…"
+                className="w-full min-h-[44px] rounded-lg border border-input bg-card py-2 pr-3 pl-9 text-xs font-medium text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+              />
+            </div>
+          </div>
+
+          {/* Origin Facility */}
+          <div>
+            <label htmlFor="transfer-origin-filter" className="block text-xs font-semibold text-foreground mb-1">
+              Origin Facility
+            </label>
+            <select
+              id="transfer-origin-filter"
+              aria-label="Filter by origin facility"
+              value={origin ?? ""}
+              onChange={(e) => updateSearch({ origin: e.target.value || undefined })}
+              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              <option value="">All Origins</option>
+              {warehouses.map((wh) => (
+                <option key={wh.id} value={wh.id}>
+                  {wh.code} — {wh.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Destination Facility */}
+          <div>
+            <label htmlFor="transfer-destination-filter" className="block text-xs font-semibold text-foreground mb-1">
+              Destination Facility
+            </label>
+            <select
+              id="transfer-destination-filter"
+              aria-label="Filter by destination facility"
+              value={destination ?? ""}
+              onChange={(e) => updateSearch({ destination: e.target.value || undefined })}
+              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              <option value="">All Destinations</option>
+              {warehouses.map((wh) => (
+                <option key={wh.id} value={wh.id}>
+                  {wh.code} — {wh.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Seller Tenant */}
+          <div>
+            <label htmlFor="transfer-seller-filter" className="block text-xs font-semibold text-foreground mb-1">
+              Seller Tenant
+            </label>
+            <select
+              id="transfer-seller-filter"
+              aria-label="Filter by seller tenant"
+              value={seller ?? ""}
+              onChange={(e) => updateSearch({ seller: e.target.value || undefined })}
+              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              <option value="">All Sellers</option>
+              {sellers.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.code} — {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label htmlFor="transfer-status-filter" className="block text-xs font-semibold text-foreground mb-1">
+              Status
+            </label>
+            <select
+              id="transfer-status-filter"
+              aria-label="Filter by status"
+              value={status ?? ""}
+              onChange={(e) => updateSearch({ status: e.target.value || undefined })}
+              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              <option value="">All Statuses</option>
+              <option value="DRAFT">Draft</option>
+              <option value="PENDING_APPROVAL">Pending Approval</option>
+              <option value="APPROVED">Approved</option>
+              <option value="DISPATCHED">Dispatched</option>
+              <option value="PARTIALLY_RECEIVED">Partially Received</option>
+              <option value="RECEIVED">Received</option>
+              <option value="DISCREPANCY_REVIEW">Discrepancy Review</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
           </div>
         </div>
+
+        {hasActiveFilters ? (
+          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+            <span className="text-xs text-muted-foreground">
+              Filtered by active criteria
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={clearAllFilters}
+              aria-label="Clear all filters"
+              className="min-h-[44px] sm:min-h-0 text-xs"
+            >
+              Clear filters
+            </Button>
+          </div>
+        ) : null}
       </Card>
 
-      {transfers.length === 0 ? (
+      {isNormalizingTransferPage ? (
+        <LoadingState message="Opening the last available transfers page..." />
+      ) : totalTransfers === 0 ? (
         <Card className="p-8">
           <EmptyState
-            message="No inter-facility transfers recorded"
-            hint="Create a stock transfer above to balance inventory between Reno and Columbus."
-          />
-        </Card>
-      ) : filteredTransfers.length === 0 ? (
-        <Card className="p-8">
-          <EmptyState
-            message="No transfers match this search"
-            hint="Clear or adjust the search query to see other transfers."
+            message={
+              q && !seller && !origin && !destination && !status
+                ? "No transfers match this search"
+                : hasActiveFilters
+                  ? "No transfers match this search and filter criteria"
+                  : "No inter-facility transfers recorded"
+            }
+            hint={
+              q && !seller && !origin && !destination && !status
+                ? "Clear or adjust the search query to see other transfers."
+                : hasActiveFilters
+                  ? "Clear or adjust the filters above to see more transfers."
+                  : "Create a stock transfer above to balance inventory between Reno and Columbus."
+            }
           />
         </Card>
       ) : (
@@ -405,7 +628,7 @@ function TransfersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredTransfers.map((t: Transfer) => {
+                {transfers.map((t: Transfer) => {
                   const originCode =
                     warehouses.find((w) => w.id === t.origin_warehouse_id)?.code || "ORIGIN";
                   const destCode =
@@ -414,7 +637,12 @@ function TransfersPage() {
                   return (
                     <tr key={t.id} className="hover:bg-slate-50">
                       <Td className="font-mono font-bold text-slate-900">
-                        {t.transfer_number || `TRF-${t.id.slice(0, 8)}`}
+                        <div>{t.transfer_number || `TRF-${t.id.slice(0, 8)}`}</div>
+                        {t.transfer_number ? (
+                          <span className="block text-[11px] font-normal text-muted-foreground font-mono">
+                            TRF-{t.id.slice(0, 8)}
+                          </span>
+                        ) : null}
                       </Td>
                       <Td>
                         <div className="flex items-center gap-1.5 font-mono text-xs font-semibold">
@@ -497,7 +725,7 @@ function TransfersPage() {
           </div>
 
           <MobileRecordList label="Inter-facility Transfers" testId="transfers-mobile-list">
-            {filteredTransfers.map((t: Transfer) => {
+            {transfers.map((t: Transfer) => {
               const originCode =
                 warehouses.find((w) => w.id === t.origin_warehouse_id)?.code || "ORIGIN";
               const destCode =
@@ -515,6 +743,11 @@ function TransfersPage() {
                       <p className="font-mono font-bold text-slate-900 break-all text-sm">
                         {t.transfer_number || `TRF-${t.id.slice(0, 8)}`}
                       </p>
+                      {t.transfer_number ? (
+                        <span className="block text-[11px] font-normal text-muted-foreground font-mono">
+                          TRF-{t.id.slice(0, 8)}
+                        </span>
+                      ) : null}
                     </div>
                     <StatusBadge value={t.status} />
                   </div>
@@ -606,6 +839,15 @@ function TransfersPage() {
               );
             })}
           </MobileRecordList>
+          <PaginationControls
+            currentPage={currentPage}
+            pageSize={PAGE_SIZE}
+            totalCount={totalTransfers}
+            visibleCount={transfers.length}
+            itemLabel="transfers"
+            onPageChange={handlePageChange}
+            disabled={transfersQuery.isFetching}
+          />
         </>
       )}
 

@@ -499,6 +499,7 @@ class TransferController:
         self,
         scope: dict[str, Any],
         *,
+        q: str | None = None,
         seller_id: UUID | None = None,
         origin_warehouse_id: UUID | None = None,
         destination_warehouse_id: UUID | None = None,
@@ -506,10 +507,29 @@ class TransferController:
         limit: int = 50,
         offset: int = 0,
     ) -> tuple[list[Transfer], int]:
-        """List transfers with tenant security filtering."""
+        """
+        List transfers with tenant security filtering and server-backed search.
+
+        Retrieves transfer records matching query filters and scope restrictions.
+
+        Args:
+            scope: Requester security context containing accessible tenants and facilities.
+            q: Optional case-insensitive text search string.
+            seller_id: Optional seller filter.
+            origin_warehouse_id: Optional origin warehouse filter.
+            destination_warehouse_id: Optional destination warehouse filter.
+            status_val: Optional transfer status string.
+            limit: Maximum records to return.
+            offset: Number of records to skip.
+
+        Returns:
+            tuple[list[Transfer], int]: Tuple containing transfer entities and total record count.
+        """
+        logger.info("Executing TransferController.list_transfers")
         async with transaction_session() as session:
             transfers, total = await transfer_crud.list_transfers(
                 session,
+                q=q,
                 seller_id=seller_id,
                 origin_warehouse_id=origin_warehouse_id,
                 destination_warehouse_id=destination_warehouse_id,

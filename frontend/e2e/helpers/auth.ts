@@ -42,6 +42,72 @@ export async function clearAuthSession(page: Page) {
   });
 }
 
+export const MOCK_TRANSFERS = Array.from({ length: 30 }, (_, i) => {
+  const index = i + 1;
+  const numStr = String(index).padStart(4, "0");
+  const idNum = String(index).padStart(2, "0");
+  const id =
+    index === 1
+      ? "00000000-0000-0000-0000-000000000050"
+      : `00000000-0000-0000-0000-0000000000${idNum}`;
+  const statuses = ["DRAFT", "PENDING_APPROVAL", "APPROVED", "DISPATCHED", "RECEIVED", "DISCREPANCY_REVIEW"];
+  const status = index === 1 ? "DRAFT" : statuses[(index - 1) % statuses.length];
+  return {
+    id,
+    transfer_number: `TRN-2026-${numStr}`,
+    origin_warehouse_code: index % 2 === 0 ? "DAL" : "RENO",
+    origin_warehouse_id:
+      index % 2 === 0
+        ? "00000000-0000-0000-0000-000000000003"
+        : "00000000-0000-0000-0000-000000000002",
+    destination_warehouse_code: index % 2 === 0 ? "RENO" : "DAL",
+    destination_warehouse_id:
+      index % 2 === 0
+        ? "00000000-0000-0000-0000-000000000002"
+        : "00000000-0000-0000-0000-000000000003",
+    seller_id: "00000000-0000-0000-0000-000000000004",
+    status,
+    notes: index === 3 ? "Priority restock note" : undefined,
+    lines: [
+      {
+        id: `00000000-0000-0000-0001-0000000000${idNum}`,
+        product_id: "00000000-0000-0000-0000-000000000005",
+        requested_quantity: 10 + index,
+      },
+    ],
+    created_at: new Date(Date.now() - index * 3600000).toISOString(),
+  };
+});
+
+export const MOCK_RETURNS = Array.from({ length: 30 }, (_, i) => {
+  const index = i + 1;
+  const numStr = String(index).padStart(4, "0");
+  const idNum = String(index).padStart(2, "0");
+  const id =
+    index === 1
+      ? "00000000-0000-0000-0000-000000000060"
+      : `00000000-0000-0000-0002-0000000000${idNum}`;
+  const statuses = ["EXPECTED", "INSPECTION", "COMPLETED", "REJECTED"];
+  const status = index === 1 ? "EXPECTED" : statuses[(index - 1) % statuses.length];
+  return {
+    id,
+    return_number: `RET-2026-${numStr}`,
+    rma_number: `RMA-2026-${numStr}`,
+    inbound_tracking_number: `1ZTRACK${numStr}`,
+    seller_code: "ALPHA",
+    seller_id: "00000000-0000-0000-0000-000000000004",
+    warehouse_code: index % 2 === 0 ? "DAL" : "RENO",
+    warehouse_id:
+      index % 2 === 0
+        ? "00000000-0000-0000-0000-000000000003"
+        : "00000000-0000-0000-0000-000000000002",
+    status,
+    notes: index === 5 ? "Return damaged box note" : undefined,
+    lines: [],
+    created_at: new Date(Date.now() - index * 3600000).toISOString(),
+  };
+});
+
 /**
  * Standard mock route responder for all primary warehouse resources.
  * Intercepts ONLY API endpoints under /api/v1/ to prevent colliding with Vite frontend source files.
@@ -315,51 +381,103 @@ export async function setupStandardApiMocks(page: Page) {
     });
   });
 
+
+
   // Transfers
-  await page.route(/\/api\/v1\/transfers/, async (route) => {
+  await page.route(/\/api\/v1\/transfers(?:\?.*)?$/, async (route) => {
+    if (route.request().method() !== "GET") {
+      await route.continue();
+      return;
+    }
+    const url = new URL(route.request().url());
+    const limit = parseInt(url.searchParams.get("limit") || "25", 10);
+    const offset = parseInt(url.searchParams.get("offset") || "0", 10);
+    const q = url.searchParams.get("q")?.trim().toLowerCase();
+    const status = url.searchParams.get("status")?.trim();
+    const origin = url.searchParams.get("origin_warehouse_id")?.trim();
+    const dest = url.searchParams.get("destination_warehouse_id")?.trim();
+    const seller = url.searchParams.get("seller_id")?.trim();
+
+    let items = [...MOCK_TRANSFERS];
+    if (q) {
+      items = items.filter(
+        (t) =>
+          t.transfer_number.toLowerCase().includes(q) ||
+          (t.notes && t.notes.toLowerCase().includes(q)),
+      );
+    }
+    if (status) {
+      items = items.filter((t) => t.status === status);
+    }
+    if (origin) {
+      items = items.filter((t) => t.origin_warehouse_id === origin);
+    }
+    if (dest) {
+      items = items.filter((t) => t.destination_warehouse_id === dest);
+    }
+    if (seller) {
+      items = items.filter((t) => t.seller_id === seller);
+    }
+
+    const total = items.length;
+    const paginatedItems = items.slice(offset, offset + limit);
+
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        total: 1,
-        items: [
-          {
-            id: "00000000-0000-0000-0000-000000000050",
-            transfer_number: "TRN-2026-0001",
-            origin_warehouse_code: "RENO",
-            origin_warehouse_id: "00000000-0000-0000-0000-000000000002",
-            destination_warehouse_code: "DAL",
-            destination_warehouse_id: "00000000-0000-0000-0000-000000000003",
-            seller_id: "00000000-0000-0000-0000-000000000004",
-            status: "DRAFT",
-            lines: [],
-            created_at: new Date().toISOString(),
-          },
-        ],
+        items: paginatedItems,
+        total,
+        limit,
+        offset,
       }),
     });
   });
 
   // Returns
-  await page.route(/\/api\/v1\/returns/, async (route) => {
+  await page.route(/\/api\/v1\/returns(?:\?.*)?$/, async (route) => {
+    if (route.request().method() !== "GET") {
+      await route.continue();
+      return;
+    }
+    const url = new URL(route.request().url());
+    const limit = parseInt(url.searchParams.get("limit") || "25", 10);
+    const offset = parseInt(url.searchParams.get("offset") || "0", 10);
+    const q = url.searchParams.get("q")?.trim().toLowerCase();
+    const status = url.searchParams.get("status")?.trim();
+    const warehouse = url.searchParams.get("warehouse_id")?.trim();
+    const seller = url.searchParams.get("seller_id")?.trim();
+
+    let items = [...MOCK_RETURNS];
+    if (q) {
+      items = items.filter(
+        (r) =>
+          r.return_number.toLowerCase().includes(q) ||
+          (r.rma_number && r.rma_number.toLowerCase().includes(q)) ||
+          (r.inbound_tracking_number && r.inbound_tracking_number.toLowerCase().includes(q)),
+      );
+    }
+    if (status) {
+      items = items.filter((r) => r.status === status);
+    }
+    if (warehouse) {
+      items = items.filter((r) => r.warehouse_id === warehouse);
+    }
+    if (seller) {
+      items = items.filter((r) => r.seller_id === seller);
+    }
+
+    const total = items.length;
+    const paginatedItems = items.slice(offset, offset + limit);
+
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        total: 1,
-        items: [
-          {
-            id: "00000000-0000-0000-0000-000000000060",
-            rma_number: "RMA-2026-0001",
-            seller_code: "ALPHA",
-            seller_id: "00000000-0000-0000-0000-000000000004",
-            warehouse_code: "RENO",
-            warehouse_id: "00000000-0000-0000-0000-000000000002",
-            status: "PENDING_RECEIPT",
-            lines: [],
-            created_at: new Date().toISOString(),
-          },
-        ],
+        items: paginatedItems,
+        total,
+        limit,
+        offset,
       }),
     });
   });
