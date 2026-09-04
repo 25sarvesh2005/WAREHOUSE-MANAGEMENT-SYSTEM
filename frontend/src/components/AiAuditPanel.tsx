@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -34,6 +34,8 @@ export function AiAuditPanel() {
   const [selectedInteractionId, setSelectedInteractionId] = useState<string | null>(null);
   const [rejectingDraftId, setRejectingDraftId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const rejectDraftTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const interactionDetailTriggerRef = useRef<HTMLElement | null>(null);
 
   const healthQuery = useAiProviderHealthQuery();
   const interactionsQuery = useAiInteractionsQuery({
@@ -204,7 +206,10 @@ export function AiAuditPanel() {
                         <div className="flex justify-end gap-1.5">
                           <button
                             type="button"
-                            onClick={() => setRejectingDraftId(d.id)}
+                            onClick={(event) => {
+                              rejectDraftTriggerRef.current = event.currentTarget;
+                              setRejectingDraftId(d.id);
+                            }}
                             className="rounded px-2 py-1 text-[11px] font-semibold text-status-red hover:bg-status-red/10 border border-status-red/20"
                           >
                             Reject Draft
@@ -234,6 +239,7 @@ export function AiAuditPanel() {
         description="Rejecting this recommendation marks it as rejected in the audit log without executing any mutation."
         className="max-w-md"
         pending={rejectDraftMutation.isPending}
+        returnFocusRef={rejectDraftTriggerRef}
       >
         <div className="space-y-3">
           <textarea
@@ -343,7 +349,10 @@ export function AiAuditPanel() {
                 return (
                   <tr
                     key={item.id}
-                    onClick={() => setSelectedInteractionId(item.id)}
+                    onClick={(event) => {
+                      interactionDetailTriggerRef.current = event.currentTarget;
+                      setSelectedInteractionId(item.id);
+                    }}
                     className="hover:bg-primary-tint/30 cursor-pointer transition-colors"
                   >
                     <Td className="text-xs text-muted-foreground whitespace-nowrap">
@@ -398,6 +407,7 @@ export function AiAuditPanel() {
                         className="text-xs py-1 px-2.5"
                         onClick={(e) => {
                           e.stopPropagation();
+                          interactionDetailTriggerRef.current = e.currentTarget;
                           setSelectedInteractionId(item.id);
                         }}
                       >
@@ -422,6 +432,7 @@ export function AiAuditPanel() {
         description={detail ? detail.id : ""}
         className="max-w-3xl"
         pending={false}
+        returnFocusRef={interactionDetailTriggerRef}
       >
         {detail ? (
           <div className="space-y-4">

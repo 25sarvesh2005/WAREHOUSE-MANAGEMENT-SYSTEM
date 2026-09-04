@@ -13,7 +13,7 @@ import {
   Truck,
   XCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
@@ -118,6 +118,7 @@ function OrdersPage() {
   const [sort, setSort] = useState<SortKey>("priority");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState<string | null>(null);
+  const createOrderTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [openCreate, setOpenCreate] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [orderForm, setOrderForm] = useState({
@@ -280,7 +281,13 @@ function OrdersPage() {
         title="Customer Orders & Allocation"
         subtitle="Manage customer orders with server-confirmed inventory reservations to eliminate oversell race conditions."
         actions={
-          <Button onClick={() => setOpenCreate(true)} className="gap-2">
+          <Button
+            onClick={(event) => {
+              createOrderTriggerRef.current = event.currentTarget;
+              setOpenCreate(true);
+            }}
+            className="gap-2"
+          >
             <Plus className="size-4" /> New Customer Order
           </Button>
         }
@@ -572,6 +579,7 @@ function OrdersPage() {
         description="Enter the customer, fulfillment location, delivery, and line-item details."
         className="max-w-xl"
         pending={createOrderMutation.isPending}
+        returnFocusRef={createOrderTriggerRef}
       >
         {createError ? (
           <div className="mb-3">

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   CheckCircle2,
   PackagePlus,
@@ -108,6 +108,8 @@ function AdminPage() {
   );
 
   // Add User Modal State
+  const onboardStaffTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const createProductTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [openAddUser, setOpenAddUser] = useState(false);
   const [openAddProduct, setOpenAddProduct] = useState(false);
   const [form, setForm] = useState({
@@ -280,12 +282,23 @@ function AdminPage() {
         actions={
           <>
             {isManager ? (
-              <Button onClick={() => setOpenAddUser(true)}>
+              <Button
+                onClick={(event) => {
+                  onboardStaffTriggerRef.current = event.currentTarget;
+                  setOpenAddUser(true);
+                }}
+              >
                 <UserPlus className="size-4" /> Onboard Staff Member
               </Button>
             ) : null}
             {isAdmin && activeTab === "Products" ? (
-              <Button variant="outline" onClick={() => setOpenAddProduct(true)}>
+              <Button
+                variant="outline"
+                onClick={(event) => {
+                  createProductTriggerRef.current = event.currentTarget;
+                  setOpenAddProduct(true);
+                }}
+              >
                 <PackagePlus className="size-4" /> New Product
               </Button>
             ) : null}
@@ -581,6 +594,7 @@ function AdminPage() {
         }
         className="max-w-md"
         pending={createUserMutation.isPending}
+        returnFocusRef={onboardStaffTriggerRef}
       >
         {error ? (
           <p className="mb-3 rounded-xl border border-status-red/30 bg-status-red/5 px-3 py-2 text-sm text-status-red">
@@ -676,6 +690,7 @@ function AdminPage() {
         description="Product master data is tenant-scoped to a seller and defaults to active status."
         className="max-w-2xl"
         pending={createProductMutation.isPending}
+        returnFocusRef={createProductTriggerRef}
       >
         {productError ? (
           <p className="mb-3 rounded-xl border border-status-red/30 bg-status-red/5 px-3 py-2 text-sm text-status-red">

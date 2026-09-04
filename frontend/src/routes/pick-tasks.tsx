@@ -9,7 +9,7 @@ import {
   Plus,
   ShieldAlert,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
@@ -70,6 +70,7 @@ function PickTasksPage() {
   const warehouses = warehousesQuery.data ?? [];
 
   const [active, setActive] = useState<PickTask | null>(null);
+  const generatePickTaskTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newTask, setNewTask] = useState({
     order_id: "",
@@ -124,7 +125,13 @@ function PickTasksPage() {
         title="Floor Picking & Packing Tasks"
         subtitle="Execute warehouse pick waves with bin verification and real-time short-pick exception handling."
         actions={
-          <Button onClick={() => setShowCreate(true)} className="gap-2">
+          <Button
+            onClick={(event) => {
+              generatePickTaskTriggerRef.current = event.currentTarget;
+              setShowCreate(true);
+            }}
+            className="gap-2"
+          >
             <Plus className="size-4" /> Generate Pick Task
           </Button>
         }
@@ -335,6 +342,7 @@ function PickTasksPage() {
         description="Select an eligible reserved order and assign its picking priority."
         className="max-w-md"
         pending={createPickTaskMutation.isPending}
+        returnFocusRef={generatePickTaskTriggerRef}
       >
         <div className="space-y-3.5 text-xs">
           <div>

@@ -11,7 +11,7 @@ import {
   Trash2,
   Undo2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
@@ -122,6 +122,7 @@ function ReturnsPage() {
   const products = productsQuery.data ?? EMPTY_PRODUCTS;
   const orders = ordersQuery.data ?? EMPTY_ORDERS;
 
+  const logReturnTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -244,7 +245,13 @@ function ReturnsPage() {
         title="Customer Returns & Quarantine Inspection"
         subtitle="Manage returned stock with mandatory physical inspection before any item re-enters sellable inventory."
         actions={
-          <Button onClick={() => setOpen(true)} className="gap-2">
+          <Button
+            onClick={(event) => {
+              logReturnTriggerRef.current = event.currentTarget;
+              setOpen(true);
+            }}
+            className="gap-2"
+          >
             <Plus className="size-4" /> Log Customer Return
           </Button>
         }
@@ -379,6 +386,7 @@ function ReturnsPage() {
         description="Record the related order, facility, return reason, and received item quantities."
         className="max-w-xl"
         pending={createReturnMutation.isPending}
+        returnFocusRef={logReturnTriggerRef}
       >
         {error ? (
           <div className="mb-3">

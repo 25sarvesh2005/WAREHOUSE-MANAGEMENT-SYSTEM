@@ -12,7 +12,7 @@ import {
   Trash2,
   Truck,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
@@ -126,6 +126,9 @@ function TransfersPage() {
   const resolveMutation = useResolveDiscrepancyMutation();
   const createMutation = useCreateTransferMutation();
 
+  const createTransferTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const receiveTransferTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const resolveDiscrepancyTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const [receiving, setReceiving] = useState<Transfer | null>(null);
   const [resolving, setResolving] = useState<Transfer | null>(null);
@@ -297,7 +300,13 @@ function TransfersPage() {
         title="Inter-Facility Transfers (RNO ⇄ CMH)"
         subtitle="Orchestrate stock balancing between Reno and Columbus with in-transit ledger accounting and discrepancy reconciliation."
         actions={
-          <Button onClick={() => setOpen(true)} className="gap-2">
+          <Button
+            onClick={(event) => {
+              createTransferTriggerRef.current = event.currentTarget;
+              setOpen(true);
+            }}
+            className="gap-2"
+          >
             <Plus className="size-4" /> Create Stock Transfer
           </Button>
         }
@@ -446,7 +455,8 @@ function TransfersPage() {
                         <Button
                           variant="primary"
                           size="sm"
-                          onClick={() => {
+                          onClick={(event) => {
+                            receiveTransferTriggerRef.current = event.currentTarget;
                             setReceiving(t);
                             const initial: Record<string, { good: string; damaged: string }> = {};
                             t.lines?.forEach((l) => {
@@ -460,7 +470,14 @@ function TransfersPage() {
                       ) : null}
 
                       {t.status === "DISCREPANCY_REVIEW" && isManager ? (
-                        <Button variant="danger" size="sm" onClick={() => setResolving(t)}>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={(event) => {
+                            resolveDiscrepancyTriggerRef.current = event.currentTarget;
+                            setResolving(t);
+                          }}
+                        >
                           Resolve Discrepancy
                         </Button>
                       ) : null}
@@ -481,6 +498,7 @@ function TransfersPage() {
         description="Define the origin, destination, seller, and stock lines for this transfer."
         className="max-w-xl"
         pending={createMutation.isPending}
+        returnFocusRef={createTransferTriggerRef}
       >
         {error ? (
           <div className="mb-3">
@@ -629,6 +647,7 @@ function TransfersPage() {
         description="Verify incoming quantities and record damaged or missing stock separately."
         className="max-w-lg"
         pending={receiveMutation.isPending}
+        returnFocusRef={receiveTransferTriggerRef}
       >
         {receiving ? (
           <div>
@@ -730,6 +749,7 @@ function TransfersPage() {
         description="Provide formal operational notes explaining the variance before closing this discrepancy."
         className="max-w-md"
         pending={resolveMutation.isPending}
+        returnFocusRef={resolveDiscrepancyTriggerRef}
       >
         {resolving ? (
           <div>

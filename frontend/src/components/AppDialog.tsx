@@ -22,6 +22,7 @@ export interface AppDialogProps {
   contentClassName?: string;
   preventCloseWhilePending?: boolean;
   pending?: boolean;
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
 export function AppDialog({
@@ -35,6 +36,7 @@ export function AppDialog({
   contentClassName,
   preventCloseWhilePending = true,
   pending = false,
+  returnFocusRef,
 }: AppDialogProps) {
   const isCloseBlocked = pending && preventCloseWhilePending;
 
@@ -53,6 +55,13 @@ export function AppDialog({
           "max-w-lg w-[calc(100%-2rem)] max-h-[calc(100dvh-2rem)] md:max-h-[85vh] p-0 flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-panel",
           className,
         )}
+        onCloseAutoFocus={(event) => {
+          const target = returnFocusRef?.current;
+          if (target?.isConnected) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
         onEscapeKeyDown={(e) => {
           if (isCloseBlocked) {
             e.preventDefault();
