@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Barcode,
   Boxes,
@@ -100,6 +100,8 @@ function ReceiptsPage() {
     });
   };
 
+  const newReceiptTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const voiceIntakeTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const [sourceType, setSourceType] = useState<"CARRIER_TRACKING" | "SELLER_DROP_OFF">(
     "CARRIER_TRACKING",
@@ -214,7 +216,10 @@ function ReceiptsPage() {
             <Button
               variant="outline"
               size="md"
-              onClick={() => setVoiceOpen(true)}
+              onClick={(event) => {
+                voiceIntakeTriggerRef.current = event.currentTarget;
+                setVoiceOpen(true);
+              }}
               className="gap-2 border-primary/40 bg-primary-tint/50 text-primary hover:bg-primary hover:text-white transition-colors"
             >
               <Mic className="size-4" />
@@ -232,7 +237,15 @@ function ReceiptsPage() {
                 <span>Sync {offlineDrafts.length} Offline Drafts</span>
               </Button>
             ) : null}
-            <Button variant="primary" size="md" onClick={() => setOpen(true)} className="gap-2">
+            <Button
+              variant="primary"
+              size="md"
+              onClick={(event) => {
+                newReceiptTriggerRef.current = event.currentTarget;
+                setOpen(true);
+              }}
+              className="gap-2"
+            >
               <PackagePlus className="size-4" />
               <span>New Inbound Receipt</span>
             </Button>
@@ -311,6 +324,7 @@ function ReceiptsPage() {
         description="Create a draft receipt for a carrier delivery or seller drop-off."
         className="max-w-lg"
         pending={createReceiptMutation.isPending}
+        returnFocusRef={newReceiptTriggerRef}
       >
         {error ? (
           <div className="mb-3">
@@ -516,6 +530,7 @@ function ReceiptsPage() {
         description="Create an inbound receipt draft from a spoken intake."
         className="max-w-4xl"
         pending={false}
+        returnFocusRef={voiceIntakeTriggerRef}
       >
         <div className="p-2">
           <ReceivingVoiceDraftPanel />

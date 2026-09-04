@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Barcode, CheckCircle2, Package, Plus, Scale, Search, Truck } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
@@ -55,6 +55,7 @@ function ShipmentsPage() {
   const orders = ordersQuery.data ?? [];
   const warehouses = warehousesQuery.data ?? [];
 
+  const createShippingLabelTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newShipment, setNewShipment] = useState({
     order_id: "",
@@ -144,7 +145,13 @@ function ShipmentsPage() {
         title="Carrier Shipments & Dispatch"
         subtitle="Weigh and measure packed orders, print carrier shipping labels, and track carrier pickup dispatch."
         actions={
-          <Button onClick={() => setShowCreate(true)} className="gap-2">
+          <Button
+            onClick={(event) => {
+              createShippingLabelTriggerRef.current = event.currentTarget;
+              setShowCreate(true);
+            }}
+            className="gap-2"
+          >
             <Plus className="size-4" /> Create Shipping Label
           </Button>
         }
@@ -224,6 +231,7 @@ function ShipmentsPage() {
         description="Select the fulfilled order and record its carrier, service, package, and tracking details."
         className="max-w-lg"
         pending={createShipmentMutation.isPending}
+        returnFocusRef={createShippingLabelTriggerRef}
       >
         {error ? (
           <div className="mb-3">
