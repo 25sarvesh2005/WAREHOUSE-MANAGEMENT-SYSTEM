@@ -49,7 +49,10 @@ test.describe("Warehouse Operational Pages", () => {
   test("loads migration panel and displays staged/applied batches", async ({ page }) => {
     await page.goto("/migration");
 
-    await expect(page.locator("text=MIG-20260814-001").first()).toBeVisible();
+    const activeBatchSelect = page.getByRole("combobox", { name: /active batch/i });
+    await expect(activeBatchSelect).toBeVisible();
+    await expect(activeBatchSelect.locator("option:checked")).toContainText("MIG-20260814-001");
+    await expect(activeBatchSelect.locator("option:checked")).toContainText("APPLIED");
     await expect(page.locator("text=APPLIED").first()).toBeVisible();
   });
 });

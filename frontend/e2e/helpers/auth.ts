@@ -687,14 +687,17 @@ export async function setupStandardApiMocks(page: Page) {
       contentType: "application/json",
       body: JSON.stringify({
         interaction_id: "00000000-0000-0000-0000-000000000083",
-        provider_name: "google_genai",
-        model_name: "gemini-3.1-flash-lite-preview",
-        safety_decision: "DRAFT_ONLY",
-        draft_action_id: "00000000-0000-0000-0000-000000000084",
-        recommendation_type: "INSPECTION_PRIORITY",
+        draft_id: "DRF-2026-0001",
+        action_type: "REBALANCE",
         status: "DRAFT",
-        summary: "Prioritize inspection for high-turnover returned goods.",
-        details: {},
+        recommendation_summary:
+          "Suggested transfer of 50 units of SKU-AURA-ANC100 from Reno to Columbus to balance stock velocity.",
+        draft_payload: {
+          origin_warehouse: "RNO",
+          destination_warehouse: "CMH",
+          sku: "SKU-AURA-ANC100",
+          quantity: 50,
+        },
         references: [],
       }),
     });
