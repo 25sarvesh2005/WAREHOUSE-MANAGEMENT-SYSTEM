@@ -45,7 +45,7 @@ export function IconTile({
     <span
       className={`inline-flex shrink-0 items-center justify-center ${toneClasses} ${sizeClasses}`}
     >
-      <Icon className={iconSizes} />
+      <Icon className={iconSizes} aria-hidden="true" />
     </span>
   );
 }
@@ -93,9 +93,12 @@ export function EmptyState({
   icon?: LucideIcon;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2.5 px-6 py-14 text-center">
+    <div
+      role="status"
+      className="flex flex-col items-center justify-center gap-2.5 px-6 py-14 text-center"
+    >
       <span className="flex size-16 items-center justify-center rounded-full bg-primary-tint text-primary">
-        <Icon className="size-6" />
+        <Icon className="size-6" aria-hidden="true" />
       </span>
       <p className="text-sm font-medium text-foreground">{message}</p>
       {hint ? <p className="max-w-md text-sm text-muted-foreground">{hint}</p> : null}
@@ -105,8 +108,13 @@ export function EmptyState({
 
 export function LoadingState({ message = "Loading operational data..." }: { message?: string }) {
   return (
-    <div className="flex items-center justify-center gap-2 px-6 py-16 text-sm text-muted-foreground">
-      <Loader2 className="size-5 animate-spin text-primary" />
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="flex items-center justify-center gap-2 px-6 py-16 text-sm text-muted-foreground"
+    >
+      <Loader2 className="size-5 animate-spin text-primary" aria-hidden="true" />
       <span>{message}</span>
     </div>
   );
@@ -114,16 +122,21 @@ export function LoadingState({ message = "Loading operational data..." }: { mess
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="my-4 rounded-2xl border border-status-red/30 bg-status-red/5 p-4 text-sm text-status-red">
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="my-4 rounded-2xl border border-status-red/30 bg-status-red/5 p-4 text-sm text-status-red"
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <ShieldAlert className="size-4 shrink-0 text-rose-600" />
+          <ShieldAlert className="size-4 shrink-0 text-rose-600" aria-hidden="true" />
           <span className="font-medium">{message}</span>
         </div>
         {onRetry ? (
           <button
+            type="button"
             onClick={onRetry}
-            className="rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary-tint"
+            className="min-h-[44px] inline-flex items-center justify-center rounded-full border border-primary px-4 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary-tint focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
           >
             Retry
           </button>
@@ -136,7 +149,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 export function ExceptionBanner({ children }: { children: ReactNode }) {
   return (
     <div className="mb-5 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary-tint px-4 py-3 text-sm text-primary">
-      <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+      <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       <div className="flex-1 text-foreground/80">{children}</div>
     </div>
   );
@@ -149,7 +162,7 @@ export function LedgerNoticeBanner({
 }) {
   return (
     <div className="mb-5 flex items-center gap-2.5 rounded-2xl border border-primary/20 bg-primary-tint px-4 py-3 text-sm text-primary">
-      <Database className="size-4 shrink-0" />
+      <Database className="size-4 shrink-0" aria-hidden="true" />
       <span>
         <strong className="font-semibold">Ledger-backed truth:</strong> {message}
       </span>
@@ -164,7 +177,7 @@ export function DuplicateProtectionBanner({
 }) {
   return (
     <div className="mb-4 flex items-center gap-2.5 rounded-2xl border border-primary/20 bg-primary-tint px-4 py-3 text-sm text-primary">
-      <ShieldCheck className="size-4 shrink-0" />
+      <ShieldCheck className="size-4 shrink-0" aria-hidden="true" />
       <span>
         <strong className="font-semibold">Duplicate safe:</strong> {message}
       </span>
@@ -175,6 +188,7 @@ export function DuplicateProtectionBanner({
 export function ScannerInputField({
   value,
   onChange,
+  ariaLabel,
   placeholder = "Scan UPC barcode or enter SKU...",
   disabled = false,
   className = "",
@@ -183,6 +197,7 @@ export function ScannerInputField({
 }: {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  ariaLabel: string;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -191,7 +206,7 @@ export function ScannerInputField({
 }) {
   return (
     <div className={`relative flex items-center ${className}`}>
-      <Barcode className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
+      <Barcode className="pointer-events-none absolute left-3 size-4 text-muted-foreground" aria-hidden="true" />
       <input
         type="text"
         value={value}
@@ -200,6 +215,7 @@ export function ScannerInputField({
         placeholder={placeholder}
         disabled={disabled}
         autoFocus={autoFocus}
+        aria-label={ariaLabel}
         className="w-full rounded-full border border-input bg-white py-2.5 pr-4 pl-9 font-mono text-sm font-semibold text-foreground outline-none placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:bg-muted disabled:text-muted-foreground"
       />
     </div>
@@ -251,7 +267,7 @@ export function Button({
       className={`inline-flex cursor-pointer items-center justify-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${styles} ${sizeStyles} ${className}`}
       {...props}
     >
-      {loading ? <Loader2 className="size-4 animate-spin shrink-0" /> : null}
+      {loading ? <Loader2 className="size-4 animate-spin shrink-0" aria-hidden="true" /> : null}
       {loading && loadingLabel ? loadingLabel : children}
     </button>
   );

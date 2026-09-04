@@ -170,8 +170,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const sidebarContent = (
     <div className="flex h-full w-[240px] flex-col border-r border-border bg-card">
       <div className="px-5 py-5 border-b border-border/60">
-        <Link to="/" className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary-dark via-primary to-blue-500 text-sm font-bold text-white shadow-[0_8px_18px_rgba(37,99,235,0.24)]">
+        <Link
+          to="/"
+          aria-label="Whitfield Logistics dashboard"
+          className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-xl"
+        >
+          <span
+            aria-hidden="true"
+            className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary-dark via-primary to-blue-500 text-sm font-bold text-white shadow-[0_8px_18px_rgba(37,99,235,0.24)]"
+          >
             W
           </span>
           <div className="min-w-0">
@@ -187,14 +194,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="mx-4 my-3 grid grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-2 text-center text-[11px] font-bold">
         <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-white px-2 py-1 text-primary shadow-sm">
-          <span className="size-1.5 rounded-full bg-emerald-500" /> RNO Hub
+          <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> RNO Hub
         </span>
         <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-white px-2 py-1 text-primary shadow-sm">
-          <span className="size-1.5 rounded-full bg-emerald-500" /> CMH Hub
+          <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> CMH Hub
         </span>
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
+      <nav aria-label="Primary navigation" className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
         {accessibleGroups.map((group) => (
           <div key={group.name} className="space-y-1">
             <p className="px-3 text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase select-none">
@@ -208,7 +215,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 rounded-xl px-3.5 py-2 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 [&.active]:bg-primary-tint [&.active]:text-primary min-h-[44px]"
               >
-                <Icon className="size-4.5 shrink-0" />
+                <Icon className="size-4.5 shrink-0" aria-hidden="true" />
                 <span>{label}</span>
               </Link>
             ))}
@@ -348,14 +355,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             </p>
           </div>
           <button
+            type="button"
             aria-label="Sign out"
             onClick={async () => {
               await signOutAsync();
               navigate({ to: "/login" });
             }}
-            className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary cursor-pointer"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
           >
-            <LogOut className="size-4" />
+            <LogOut className="size-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -397,12 +405,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                 aria-controls="mobile-navigation"
                 className="rounded-full p-2.5 text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
               >
-                <Menu className="size-5" />
+                <Menu className="size-5" aria-hidden="true" />
               </button>
             </SheetTrigger>
 
             <form onSubmit={handleGlobalSearch} className="relative max-w-xl flex-1 min-w-0">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               <input
                 aria-label="Search warehouse records"
                 maxLength={100}

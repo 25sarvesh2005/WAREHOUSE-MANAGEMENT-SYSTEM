@@ -169,6 +169,7 @@ function ShipmentsPage() {
             <ScannerInputField
               value={filterQuery}
               onChange={(e) => setFilterQuery(e.target.value)}
+              ariaLabel="Search shipments by tracking number or carrier"
               placeholder="Search carrier tracking # or carrier..."
             />
           </div>

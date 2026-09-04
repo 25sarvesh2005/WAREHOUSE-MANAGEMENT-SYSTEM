@@ -357,12 +357,14 @@ function OrdersPage() {
                 <ScannerInputField
                   value={q ?? ""}
                   onChange={(e) => handleSearchChange(e.target.value)}
+                  ariaLabel="Search orders by order number, customer, or seller"
                   placeholder="Search order #, customer, seller..."
                 />
               </div>
               <div className="flex w-full sm:w-auto flex-col sm:flex-row sm:items-center gap-2 text-xs font-bold text-foreground">
                 <span>Sort by:</span>
                 <select
+                  aria-label="Sort orders"
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
                   className="min-h-[44px] sm:min-h-0 w-full sm:w-auto rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"

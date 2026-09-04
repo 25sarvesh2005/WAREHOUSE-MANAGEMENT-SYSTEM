@@ -259,6 +259,7 @@ function InventoryPage() {
             <ScannerInputField
               value={q ?? ""}
               onChange={(e) => handleSearchChange(e.target.value)}
+              ariaLabel="Search inventory by barcode, SKU, or product name"
               placeholder="Scan barcode, SKU, product name..."
             />
           </div>

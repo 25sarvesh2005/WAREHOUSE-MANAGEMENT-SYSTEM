@@ -299,6 +299,7 @@ function ReceiptsPage() {
             <ScannerInputField
               value={q ?? ""}
               onChange={(e) => handleSearchChange(e.target.value)}
+              ariaLabel="Search receipts by tracking number or receipt"
               placeholder="Scan tracking # or search receipt..."
             />
           </div>
@@ -379,6 +380,11 @@ function ReceiptsPage() {
               <ScannerInputField
                 value={form.source_reference}
                 onChange={(e) => setForm({ ...form, source_reference: e.target.value })}
+                ariaLabel={
+                  sourceType === "CARRIER_TRACKING"
+                    ? "Carrier tracking number"
+                    : "Seller drop-off ticket number"
+                }
                 placeholder={
                   sourceType === "CARRIER_TRACKING"
                     ? "e.g. 1Z9999999999999999 or scan shipping label"
