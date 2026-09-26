@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master, develop, ux-remediation]
   pull_request:
     branches: [main, master]
 
@@ -91,6 +91,18 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
+      JWT_SECRET: replace-with-long-random-secret-for-ci-testing-purposes-only
+      APP_ENV: test
+      INITIALIZE_SCHEMA_ON_STARTUP: "true"
+      BOOTSTRAP_ADMIN_EMAIL: admin@whitfield.local
+      BOOTSTRAP_ADMIN_PASSWORD: change-this-before-use
+      PHASE2_E2E_API_BASE_URL: http://127.0.0.1:8080/api/v1
+      PHASE3_E2E_API_BASE_URL: http://127.0.0.1:8080/api/v1
+      PHASE4_E2E_API_BASE_URL: http://127.0.0.1:8080/api/v1
+      WAREHOUSE_API_BASE_URL: http://127.0.0.1:8080/api/v1
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -110,11 +122,6 @@ jobs:
 
       - name: Start FastAPI API Server in Background
         working-directory: backend
-        env:
-          DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
-          JWT_SECRET: replace-with-long-random-secret-for-ci-testing-purposes-only
-          APP_ENV: test
-          INITIALIZE_SCHEMA_ON_STARTUP: "true"
         run: |
           uvicorn main:app --host 127.0.0.1 --port 8080 &
           sleep 5

@@ -119,6 +119,20 @@ async def initialize_schema_for_development() -> None:
         await connection.execute(text('CREATE EXTENSION IF NOT EXISTS "pgcrypto"'))
         await connection.run_sync(Base.metadata.create_all)
         await _secure_public_tables_for_supabase(connection)
+        await connection.execute(
+            text(
+                'CREATE TABLE IF NOT EXISTS alembic_version ('
+                'version_num VARCHAR(32) NOT NULL PRIMARY KEY'
+                ')'
+            )
+        )
+        await connection.execute(
+            text(
+                "INSERT INTO alembic_version (version_num) "
+                "VALUES ('d2e3f4a5b6c7') "
+                "ON CONFLICT DO NOTHING"
+            )
+        )
 
 
 async def seed_initial_data() -> None:
