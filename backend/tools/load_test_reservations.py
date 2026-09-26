@@ -137,7 +137,6 @@ async def run_reservation_load_test(
                 result = await order_controller.reserve_order(
                     order_id,
                     scope,
-                    allow_backorder=True,
                 )
                 lat = (time.perf_counter() - t0) * 1000
                 latencies.append(lat)
