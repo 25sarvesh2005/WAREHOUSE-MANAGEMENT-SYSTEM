@@ -343,7 +343,7 @@ class Phase3E2ERunner:
         order_id: str,
     ) -> None:
         """
-        Verify a short pick releases the shorted RESERVED quantity to AVAILABLE.
+        Verify a short pick routes the shorted RESERVED quantity to QUARANTINED.
 
         Args:
             seller_id: Seller UUID owning the order.
@@ -382,11 +382,11 @@ class Phase3E2ERunner:
         if completed_task["status"] != "SHORT_PICK_EXCEPTION":
             raise RuntimeError(f"Expected SHORT_PICK_EXCEPTION, got {completed_task['status']}.")
 
-        available = await self.get_balance_quantity(seller_id, product_id, "AVAILABLE")
-        if available != Decimal("2.00"):
-            raise RuntimeError(f"Expected AVAILABLE=2.00 after short pick, got {available}.")
+        quarantined = await self.get_balance_quantity(seller_id, product_id, "QUARANTINED")
+        if quarantined != Decimal("2.00"):
+            raise RuntimeError(f"Expected QUARANTINED=2.00 after short pick, got {quarantined}.")
 
-        self.mark_passed("Short-pick exception releases shorted stock to available")
+        self.mark_passed("Short-pick exception routes shorted stock to quarantine")
 
     async def verify_strict_partial_policy(
         self,

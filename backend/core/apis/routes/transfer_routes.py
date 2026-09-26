@@ -57,6 +57,11 @@ async def create_transfer(
 )
 async def list_transfers(
     scope: Annotated[dict, Depends(get_warehouse_scope)],
+    q: str | None = Query(
+        default=None,
+        max_length=100,
+        description="Case-insensitive transfer number or notes search",
+    ),
     seller_id: UUID | None = Query(None, description="Filter by seller tenant UUID"),
     origin_warehouse_id: UUID | None = Query(None, description="Filter by origin warehouse UUID"),
     destination_warehouse_id: UUID | None = Query(
@@ -68,12 +73,30 @@ async def list_transfers(
 ) -> TransferListResponse:
     """List transfers with optional query filters.
 
-    Scopes results to accessible sellers and warehouses for the authenticated requester.
+    Supports text search across transfer number and notes, alongside tenant and warehouse scoping.
+
+    Args:
+        scope: Security context containing accessible sellers and warehouses.
+        q: Optional case-insensitive text search query.
+        seller_id: Optional seller filter.
+        origin_warehouse_id: Optional origin warehouse filter.
+        destination_warehouse_id: Optional destination warehouse filter.
+        status_val: Optional transfer status filter.
+        limit: Max pagination records.
+        offset: Pagination offset.
+
+    Returns:
+        TransferListResponse: Paginated transfers and total count.
+
+    Raises:
+        HTTPException: 500 if an unexpected error occurs during query execution.
     """
     try:
         logger.info("Calling GET /v1/transfers endpoint")
+        normalized_q = q.strip() if q and q.strip() else None
         transfers, total = await transfer_controller.list_transfers(
             scope,
+            q=normalized_q,
             seller_id=seller_id,
             origin_warehouse_id=origin_warehouse_id,
             destination_warehouse_id=destination_warehouse_id,

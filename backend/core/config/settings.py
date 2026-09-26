@@ -151,6 +151,7 @@ class Settings(BaseSettings):
     bootstrap_admin_password: str = "change-this-before-use"
     initialize_schema_on_startup: bool = True
     trusted_hosts: str = "*"
+    rate_limiting_enabled: bool = True
 
     @property
     def runtime_database_url(self) -> str:

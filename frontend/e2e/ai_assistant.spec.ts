@@ -7,25 +7,40 @@ test.describe("AI Assistant Interface", () => {
     await injectAuthSession(page);
   });
 
-  test("renders AI assistant with safety banner and mode tabs", async ({ page }) => {
+  test("renders AI safety messaging and read-only guardrails", async ({ page }) => {
     await page.goto("/ai-assistant");
 
-    // Safety banner
-    await expect(page.locator("#ai-safety-notice")).toBeVisible();
-    await expect(page.locator("#ai-safety-notice")).toContainText(
-      "AI is strictly read-only and draft-only",
-    );
+    await expect(page.getByText("Read-Only Guard Active")).toBeVisible();
+    await expect(page.getByText("Read-Only Safe")).toBeVisible();
+    await expect(page.getByText("AI cannot mutate stock or finalize shipments")).toBeVisible();
+  });
 
-    // Mode tabs
-    await expect(page.locator("#ai-tab-inventory-availability")).toBeVisible();
-    await expect(page.locator("#ai-tab-ledger-explanation")).toBeVisible();
-    await expect(page.locator("#ai-tab-exceptions-summary")).toBeVisible();
-    await expect(page.locator("#ai-tab-draft-recommendation")).toBeVisible();
-    await expect(page.locator("#ai-tab-order")).toBeVisible();
-    await expect(page.locator("#ai-tab-receipt")).toBeVisible();
-    await expect(page.locator("#ai-tab-transfer")).toBeVisible();
-    await expect(page.locator("#ai-tab-shipment")).toBeVisible();
-    await expect(page.locator("#ai-tab-return")).toBeVisible();
+  test("exposes inquiry domains with selected state via aria-pressed", async ({ page }) => {
+    await page.goto("/ai-assistant");
+
+    const domainGroup = page.getByRole("group", { name: /inquiry domain/i });
+    await expect(domainGroup).toBeVisible();
+
+    const inventoryBtn = page.getByRole("button", { name: "Inventory & Stock" });
+    const trackingBtn = page.getByRole("button", { name: "Track & Trace" });
+    const exceptionsBtn = page.getByRole("button", { name: "Facility Exceptions" });
+    const rebalanceBtn = page.getByRole("button", { name: "Smart Rebalance" });
+
+    await expect(inventoryBtn).toBeVisible();
+    await expect(trackingBtn).toBeVisible();
+    await expect(exceptionsBtn).toBeVisible();
+    await expect(rebalanceBtn).toBeVisible();
+
+    // Initially Inventory & Stock is selected
+    await expect(inventoryBtn).toHaveAttribute("aria-pressed", "true");
+    await expect(trackingBtn).toHaveAttribute("aria-pressed", "false");
+    await expect(exceptionsBtn).toHaveAttribute("aria-pressed", "false");
+    await expect(rebalanceBtn).toHaveAttribute("aria-pressed", "false");
+
+    // Switch to Track & Trace
+    await trackingBtn.click();
+    await expect(trackingBtn).toHaveAttribute("aria-pressed", "true");
+    await expect(inventoryBtn).toHaveAttribute("aria-pressed", "false");
   });
 
   test("submits inventory availability query and renders response with feedback widget", async ({
@@ -33,42 +48,100 @@ test.describe("AI Assistant Interface", () => {
   }) => {
     await page.goto("/ai-assistant");
 
-    // Fill SKU
-    const skuInput = page.locator("#ai-sku-input");
-    await skuInput.fill("SKU-TEST-001");
+    // Locate textbox by its accessible name
+    const queryInput = page.getByRole("textbox", {
+      name: /AI Warehouse Copilot & Stock Inquiry/i,
+    });
+    await expect(queryInput).toBeVisible();
+    await queryInput.fill("SKU-TEST-001");
 
     // Submit
-    const askBtn = page.locator("#ai-ask-button");
-    await expect(askBtn).toBeEnabled();
-    await askBtn.click();
+    const askButton = page.getByRole("button", { name: /Ask AI/i });
+    await expect(askButton).toBeEnabled();
+    await askButton.click();
 
-    // Verify AI response rendering
+    // Verify mocked availability response
     await expect(
-      page.locator("text=SKU-TEST-001 currently has 150 units available at RENO").first(),
+      page.getByText("SKU-TEST-001 currently has 150 units available at RENO"),
     ).toBeVisible();
 
-    // Verify Provider and Safety badges
-    await expect(page.locator("text=Gemini AI model").first()).toBeVisible();
-    await expect(page.locator("text=Read-only verified").first()).toBeVisible();
+    // Verify Google Gemini provider and Read-Only Verified safety badges
+    await expect(page.getByText("Google Gemini")).toBeVisible();
+    await expect(page.getByText("Read-Only Verified")).toBeVisible();
 
-    // Verify Feedback buttons exist
-    await expect(page.locator("button:has-text('Yes')").first()).toBeVisible();
-    await expect(page.locator("button:has-text('No')").first()).toBeVisible();
+    // Verify Yes and No feedback buttons
+    await expect(page.getByRole("button", { name: "Yes" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "No" })).toBeVisible();
   });
 
-  test("switches to exceptions summary mode and draft recommendation mode", async ({ page }) => {
+  test("switches inquiry domains and updates inquiry context", async ({ page }) => {
     await page.goto("/ai-assistant");
 
-    // Exceptions summary mode
-    await page.locator("#ai-tab-exceptions-summary").click();
-    await expect(page.locator("#ai-ask-button")).toContainText(/Ask AI Assistant|Processing/);
+    // Switch to Facility Exceptions
+    const exceptionsBtn = page.getByRole("button", { name: "Facility Exceptions" });
+    await exceptionsBtn.click();
+    await expect(exceptionsBtn).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      page.getByRole("textbox", { name: /Summarize Operational Exceptions/i }),
+    ).toBeVisible();
 
-    // Draft recommendation mode
-    await page.locator("#ai-tab-draft-recommendation").click();
-    await expect(page.locator("#ai-rec-type")).toBeVisible();
-    await expect(page.locator("#ai-target-type")).toBeVisible();
-    await expect(page.locator("#ai-ask-button")).toContainText(
-      /Generate Draft Recommendation|Processing/,
-    );
+    // Switch to Smart Rebalance
+    const rebalanceBtn = page.getByRole("button", { name: "Smart Rebalance" });
+    await rebalanceBtn.click();
+    await expect(rebalanceBtn).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      page.getByRole("textbox", { name: /Generate Bicoastal Rebalance Draft/i }),
+    ).toBeVisible();
+  });
+
+  test("submits smart rebalance draft with empty query and confirms draft-only safety", async ({
+    page,
+  }) => {
+    let inventoryMutationAttempted = false;
+    page.on("request", (req) => {
+      const url = req.url();
+      const method = req.method();
+      if (
+        method === "POST" &&
+        (url.includes("/api/v1/inventory") ||
+          url.includes("/api/v1/transfers") ||
+          url.includes("/api/v1/adjustments"))
+      ) {
+        inventoryMutationAttempted = true;
+      }
+    });
+
+    await page.goto("/ai-assistant");
+
+    // Switch to Smart Rebalance
+    await page.getByRole("button", { name: "Smart Rebalance" }).click();
+
+    const queryInput = page.getByRole("textbox", {
+      name: /Generate Bicoastal Rebalance Draft/i,
+    });
+    await expect(queryInput).toBeVisible();
+    await expect(queryInput).toHaveValue("");
+
+    // Submit with empty query
+    const askButton = page.getByRole("button", { name: /Ask AI/i });
+    await expect(askButton).toBeEnabled();
+    await askButton.click();
+
+    // Draft ID and recommendation summary appear
+    await expect(page.getByText("DRF-2026-0001")).toBeVisible();
+    await expect(
+      page.getByText(
+        "Suggested transfer of 50 units of SKU-AURA-ANC100 from Reno to Columbus to balance stock velocity.",
+      ),
+    ).toBeVisible();
+
+    // UI confirms human approval is required
+    await expect(page.getByText("PENDING APPROVAL")).toBeVisible();
+    await expect(
+      page.getByText(/This draft is saved in staging and ready for manager review/i),
+    ).toBeVisible();
+
+    // Confirm no direct inventory mutation occurred
+    expect(inventoryMutationAttempted).toBe(false);
   });
 });

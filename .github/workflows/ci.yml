@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master, develop, ux-remediation]
   pull_request:
     branches: [main, master]
 
@@ -91,6 +91,19 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
+      JWT_SECRET: replace-with-long-random-secret-for-ci-testing-purposes-only
+      APP_ENV: test
+      INITIALIZE_SCHEMA_ON_STARTUP: "true"
+      BOOTSTRAP_ADMIN_EMAIL: admin@whitfield.local
+      BOOTSTRAP_ADMIN_PASSWORD: change-this-before-use
+      PHASE2_E2E_API_BASE_URL: http://127.0.0.1:8080/api/v1
+      PHASE3_E2E_API_BASE_URL: http://127.0.0.1:8080/api/v1
+      PHASE4_E2E_API_BASE_URL: http://127.0.0.1:8080/api/v1
+      WAREHOUSE_API_BASE_URL: http://127.0.0.1:8080/api/v1
+      RATE_LIMITING_ENABLED: "false"
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -110,11 +123,6 @@ jobs:
 
       - name: Start FastAPI API Server in Background
         working-directory: backend
-        env:
-          DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
-          JWT_SECRET: replace-with-long-random-secret-for-ci-testing-purposes-only
-          APP_ENV: test
-          INITIALIZE_SCHEMA_ON_STARTUP: "true"
         run: |
           uvicorn main:app --host 127.0.0.1 --port 8080 &
           sleep 5
@@ -155,7 +163,7 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
-        run: python tools/load_test_reservations.py
+        run: python -m tools.load_test_reservations
 
   frontend-checks:
     name: Frontend Typecheck, Lint & Production Build
@@ -215,3 +223,11 @@ jobs:
       - name: Run Playwright E2E & Accessibility Tests
         working-directory: frontend
         run: npx playwright test
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7

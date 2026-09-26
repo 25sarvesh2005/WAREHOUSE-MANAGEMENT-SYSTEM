@@ -57,6 +57,11 @@ async def create_return(
 )
 async def list_returns(
     scope: Annotated[dict, Depends(get_warehouse_scope)],
+    q: str | None = Query(
+        default=None,
+        max_length=100,
+        description="Case-insensitive return number, RMA, or tracking search",
+    ),
     seller_id: UUID | None = Query(None, description="Filter by seller tenant UUID"),
     warehouse_id: UUID | None = Query(None, description="Filter by warehouse UUID"),
     status_val: str | None = Query(None, alias="status", description="Filter by return status"),
@@ -65,12 +70,29 @@ async def list_returns(
 ) -> ReturnListResponse:
     """List returns with optional query filters.
 
-    Scopes results to accessible sellers and warehouses for the authenticated requester.
+    Supports text search across return number, RMA, or tracking number, alongside tenant and warehouse scoping.
+
+    Args:
+        scope: Security context containing accessible sellers and warehouses.
+        q: Optional case-insensitive text search query.
+        seller_id: Optional seller filter.
+        warehouse_id: Optional warehouse filter.
+        status_val: Optional return status filter.
+        limit: Max pagination records.
+        offset: Pagination offset.
+
+    Returns:
+        ReturnListResponse: Paginated returns and total count.
+
+    Raises:
+        HTTPException: 500 if an unexpected error occurs during query execution.
     """
     try:
         logger.info("Calling GET /v1/returns endpoint")
+        normalized_q = q.strip() if q and q.strip() else None
         returns, total = await return_controller.list_returns(
             scope,
+            q=normalized_q,
             seller_id=seller_id,
             warehouse_id=warehouse_id,
             status_val=status_val,
