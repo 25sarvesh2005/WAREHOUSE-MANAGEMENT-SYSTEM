@@ -441,6 +441,14 @@ test.describe("Authentication Flows & Hydration", () => {
       });
     });
 
+    await page.route(/\/api\/v1\/auth\/refresh/, async (route) => {
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ detail: "Invalid refresh token", code: "UNAUTHORIZED" }),
+      });
+    });
+
     await page.goto("/inventory");
     await page.waitForURL("**/login");
     await expect(page.locator("#login-submit-button")).toBeVisible();
