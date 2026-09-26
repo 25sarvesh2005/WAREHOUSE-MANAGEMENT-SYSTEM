@@ -70,6 +70,14 @@ class RateLimiter:
         Raises:
             HTTPException: 429 Too Many Requests if limit exceeded.
         """
+        import os
+
+        if (
+            os.getenv("RATE_LIMITING_ENABLED", "true").lower() in ("false", "0", "no")
+            or os.getenv("RATE_LIMIT_ENABLED", "true").lower() in ("false", "0", "no")
+        ):
+            return
+
         key = self.key_func(request)
         now = time.time()
         cutoff = now - self.window_seconds
@@ -95,6 +103,12 @@ class RateLimiter:
                 )
 
             queue.append(now)
+
+    def reset(self) -> None:
+        """Clear all recorded request timestamps."""
+        with self._lock:
+            self._records.clear()
+
 
 
 # Global default: applied to ALL API routes via the api_router dependency.
