@@ -8,9 +8,15 @@ and measure throughput and latency on reservation endpoints.
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
+import sys
 import time
 from decimal import Decimal
 from uuid import UUID, uuid4
+
+_backend_dir = str(Path(__file__).resolve().parent.parent)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
 
 from core.constants import BusinessStatus, InventoryMovementType, InventoryState, OrderStatus, UserRole
 from core.controllers.order_controller import order_controller
