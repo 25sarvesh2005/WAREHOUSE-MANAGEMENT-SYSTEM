@@ -325,16 +325,35 @@ class ReturnController:
         self,
         scope: dict[str, Any],
         *,
+        q: str | None = None,
         seller_id: UUID | None = None,
         warehouse_id: UUID | None = None,
         status_val: str | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> tuple[list[Return], int]:
-        """List returns with tenant security filtering."""
+        """
+        List returns with tenant security filtering and server-backed search.
+
+        Retrieves return records matching query filters and scope restrictions.
+
+        Args:
+            scope: Requester security context containing accessible tenants and facilities.
+            q: Optional case-insensitive text search string.
+            seller_id: Optional seller filter.
+            warehouse_id: Optional warehouse filter.
+            status_val: Optional return status string.
+            limit: Maximum records to return.
+            offset: Number of records to skip.
+
+        Returns:
+            tuple[list[Return], int]: Tuple containing return entities and total record count.
+        """
+        logger.info("Executing ReturnController.list_returns")
         async with transaction_session() as session:
             returns, total = await return_crud.list_returns(
                 session,
+                q=q,
                 seller_id=seller_id,
                 warehouse_id=warehouse_id,
                 status=status_val,

@@ -61,24 +61,29 @@ async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = readRefreshToken();
   if (!refreshToken) return null;
 
-  const base = getApiBaseUrl();
-  const response = await fetch(`${base}/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  });
+  try {
+    const base = getApiBaseUrl();
+    const response = await fetch(`${base}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      clearSession();
+      return null;
+    }
+
+    const body = (await response.json()) as {
+      access_token: string;
+      refresh_token?: string;
+    };
+    storeTokens(body.access_token, body.refresh_token);
+    return body.access_token;
+  } catch {
     clearSession();
     return null;
   }
-
-  const body = (await response.json()) as {
-    access_token: string;
-    refresh_token?: string;
-  };
-  storeTokens(body.access_token, body.refresh_token);
-  return body.access_token;
 }
 
 async function parseError(response: Response): Promise<ApiError> {

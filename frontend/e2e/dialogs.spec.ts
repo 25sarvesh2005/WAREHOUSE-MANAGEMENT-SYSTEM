@@ -109,6 +109,7 @@ test.describe("Standardized Dialogs & Confirmations", () => {
     await closeButton.click();
 
     await expect(dialog).toBeHidden();
+    await expect(generateButton).toBeFocused();
   });
 
   test("Test D — Keyboard Escape Must Not Execute Confirmation", async ({ page }) => {

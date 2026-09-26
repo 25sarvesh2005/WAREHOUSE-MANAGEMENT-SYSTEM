@@ -258,19 +258,25 @@ export function MigrationPanel() {
       <Card className="p-5">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="flex flex-wrap items-center gap-3">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+            <label htmlFor="migration-active-batch" className="text-xs font-bold text-slate-700 uppercase tracking-wider text-[10px]">
               Active Batch:
             </label>
             <select
+              id="migration-active-batch"
+              aria-label="Active Batch"
               value={effectiveBatchId}
               onChange={(event) => setSelectedBatchId(event.target.value)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs font-bold text-slate-900 focus:outline-none"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs font-bold text-slate-900 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
-              {batches.map((batch) => (
-                <option key={batch.id} value={batch.id}>
-                  {batch.source_notes || "Batch"} ({batch.status}) — {batch.id.slice(0, 8)}
-                </option>
-              ))}
+              {batches.map((batch) => {
+                const batchNum = batch.batch_number || `BATCH-${batch.id.slice(0, 8)}`;
+                const notes = batch.source_notes ? ` — ${batch.source_notes}` : "";
+                return (
+                  <option key={batch.id} value={batch.id}>
+                    {batchNum}{notes} ({batch.status})
+                  </option>
+                );
+              })}
             </select>
             {selectedBatch ? <StatusBadge value={selectedBatch.status} /> : null}
           </div>
@@ -307,10 +313,11 @@ export function MigrationPanel() {
 
         {/* Upload File into Active Batch */}
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <label className="text-xs font-semibold text-slate-700">
+          <label htmlFor="migration-upload-file" className="text-xs font-semibold text-slate-700">
             Upload Spreadsheet (CSV/XLSX):
           </label>
           <input
+            id="migration-upload-file"
             type="file"
             accept=".csv,.xlsx,.xls"
             onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}

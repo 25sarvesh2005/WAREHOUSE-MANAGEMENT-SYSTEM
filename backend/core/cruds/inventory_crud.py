@@ -50,6 +50,43 @@ async def record_movement(
     return movement
 
 
+async def get_balance(
+    session: AsyncSession,
+    seller_id: UUID,
+    product_id: UUID,
+    warehouse_id: UUID,
+    inventory_state: str,
+    location_id: UUID | None = None,
+) -> InventoryBalance | None:
+    """
+    Retrieve operational inventory balance row without row locking.
+
+    Args:
+        session: Active transaction session.
+        seller_id: Seller UUID.
+        product_id: Product UUID.
+        warehouse_id: Warehouse UUID.
+        inventory_state: Inventory state string.
+        location_id: Optional location UUID.
+
+    Returns:
+        InventoryBalance | None: Balance model if found, else None.
+    """
+    stmt = select(InventoryBalance).where(
+        InventoryBalance.seller_id == seller_id,
+        InventoryBalance.product_id == product_id,
+        InventoryBalance.warehouse_id == warehouse_id,
+        (
+            InventoryBalance.location_id == location_id
+            if location_id is not None
+            else InventoryBalance.location_id.is_(None)
+        ),
+        InventoryBalance.inventory_state == inventory_state,
+    )
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
 async def get_balance_for_update(
     session: AsyncSession,
     seller_id: UUID,

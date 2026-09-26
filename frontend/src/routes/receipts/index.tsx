@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Barcode,
   Boxes,
@@ -24,6 +24,8 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
+  MobileRecordCard,
+  MobileRecordList,
   PageHeader,
   ScannerInputField,
   TableShell,
@@ -100,6 +102,8 @@ function ReceiptsPage() {
     });
   };
 
+  const newReceiptTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const voiceIntakeTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const [sourceType, setSourceType] = useState<"CARRIER_TRACKING" | "SELLER_DROP_OFF">(
     "CARRIER_TRACKING",
@@ -207,15 +211,18 @@ function ReceiptsPage() {
   return (
     <AppShell>
       <PageHeader
-        title="Inbound Receiving Dock"
+        title="Inbound Receipts & Receiving Dock"
         subtitle="Log carrier deliveries and seller drop-off shipments with UPC barcode scanning and physical condition separation."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex w-full sm:w-auto flex-col sm:flex-row sm:items-center gap-2">
             <Button
               variant="outline"
               size="md"
-              onClick={() => setVoiceOpen(true)}
-              className="gap-2 border-primary/40 bg-primary-tint/50 text-primary hover:bg-primary hover:text-white transition-colors"
+              onClick={(event) => {
+                voiceIntakeTriggerRef.current = event.currentTarget;
+                setVoiceOpen(true);
+              }}
+              className="w-full sm:w-auto min-h-[44px] gap-2 border-primary/40 bg-primary-tint/50 text-primary hover:bg-primary hover:text-white transition-colors"
             >
               <Mic className="size-4" />
               <span>Voice AI Intake</span>
@@ -226,13 +233,21 @@ function ReceiptsPage() {
                 size="sm"
                 onClick={handleSync}
                 disabled={isSyncing}
-                className="border-amber-300 text-amber-800 hover:bg-amber-50"
+                className="w-full sm:w-auto min-h-[44px] border-amber-300 text-amber-800 hover:bg-amber-50"
               >
                 <RefreshCw className={`size-3.5 ${isSyncing ? "animate-spin" : ""}`} />
                 <span>Sync {offlineDrafts.length} Offline Drafts</span>
               </Button>
             ) : null}
-            <Button variant="primary" size="md" onClick={() => setOpen(true)} className="gap-2">
+            <Button
+              variant="primary"
+              size="md"
+              onClick={(event) => {
+                newReceiptTriggerRef.current = event.currentTarget;
+                setOpen(true);
+              }}
+              className="w-full sm:w-auto min-h-[44px] gap-2"
+            >
               <PackagePlus className="size-4" />
               <span>New Inbound Receipt</span>
             </Button>
@@ -252,7 +267,7 @@ function ReceiptsPage() {
 
       {/* Offline Drafts Alert if any exist */}
       {offlineDrafts.length > 0 ? (
-        <div className="mb-5 flex items-center justify-between rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 shadow-xs">
+        <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 shadow-xs">
           <div className="flex items-center gap-2.5">
             <WifiOff className="size-5 text-amber-600 shrink-0" />
             <div>
@@ -270,7 +285,7 @@ function ReceiptsPage() {
             size="sm"
             onClick={handleSync}
             disabled={isSyncing}
-            className="bg-white border-amber-300 text-amber-900"
+            className="w-full sm:w-auto min-h-[44px] shrink-0 bg-white border-amber-300 text-amber-900"
           >
             {isSyncing ? "Syncing..." : "Sync to Server Now"}
           </Button>
@@ -279,15 +294,16 @@ function ReceiptsPage() {
 
       {/* Filter & Barcode Search Bar */}
       <Card className="mb-5 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="w-full sm:w-80">
             <ScannerInputField
               value={q ?? ""}
               onChange={(e) => handleSearchChange(e.target.value)}
+              ariaLabel="Search receipts by tracking number or receipt"
               placeholder="Scan tracking # or search receipt..."
             />
           </div>
-          <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium">
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-amber-500" />
               <span>DRAFT: Line entry open</span>
@@ -311,6 +327,7 @@ function ReceiptsPage() {
         description="Create a draft receipt for a carrier delivery or seller drop-off."
         className="max-w-lg"
         pending={createReceiptMutation.isPending}
+        returnFocusRef={newReceiptTriggerRef}
       >
         {error ? (
           <div className="mb-3">
@@ -363,6 +380,11 @@ function ReceiptsPage() {
               <ScannerInputField
                 value={form.source_reference}
                 onChange={(e) => setForm({ ...form, source_reference: e.target.value })}
+                ariaLabel={
+                  sourceType === "CARRIER_TRACKING"
+                    ? "Carrier tracking number"
+                    : "Seller drop-off ticket number"
+                }
                 placeholder={
                   sourceType === "CARRIER_TRACKING"
                     ? "e.g. 1Z9999999999999999 or scan shipping label"
@@ -452,60 +474,117 @@ function ReceiptsPage() {
           />
         </Card>
       ) : (
-        <TableShell>
-          <thead>
-            <tr>
-              <Th>Receipt Reference</Th>
-              <Th>Delivery Type</Th>
-              <Th>Seller Tenant</Th>
-              <Th>Warehouse Dock</Th>
-              <Th>Created Date</Th>
-              <Th>Status</Th>
-              <Th className="text-right">Action</Th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          <div data-testid="receipts-desktop-table" className="hidden md:block">
+            <TableShell>
+              <thead>
+                <tr>
+                  <Th>Receipt Reference</Th>
+                  <Th>Delivery Type</Th>
+                  <Th>Seller Tenant</Th>
+                  <Th>Warehouse Dock</Th>
+                  <Th>Created Date</Th>
+                  <Th>Status</Th>
+                  <Th className="text-right">Action</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredReceipts.map((r: Receipt) => {
+                  const whCode = warehouses.find((w) => w.id === r.warehouse_id)?.code || "WH";
+
+                  return (
+                    <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
+                      <Td className="font-mono font-bold text-slate-900">
+                        <Link
+                          to="/receipts/$id"
+                          params={{ id: r.id }}
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {r.receipt_number || r.source_reference || `REC-${r.id.slice(0, 8)}`}
+                        </Link>
+                      </Td>
+                      <Td className="text-slate-600 font-medium">
+                        {r.source_type === "CARRIER_TRACKING" ? "Carrier Tracking" : "Seller Drop-Off"}
+                      </Td>
+                      <Td className="text-slate-800 font-medium">
+                        {sellerLabel(sellers, r.seller_id)}
+                      </Td>
+                      <Td>
+                        <FacilityBadge code={whCode} />
+                      </Td>
+                      <Td className="font-mono text-xs text-slate-500">{formatDate(r.created_at)}</Td>
+                      <Td>
+                        <StatusBadge value={r.status} />
+                      </Td>
+                      <Td className="text-right">
+                        <Link
+                          to="/receipts/$id"
+                          params={{ id: r.id }}
+                          className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          {r.status === "DRAFT" ? "Scan Line Items" : "View Details"}
+                        </Link>
+                      </Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </TableShell>
+          </div>
+
+          <MobileRecordList label="Inbound Receipts" testId="receipts-mobile-list">
             {filteredReceipts.map((r: Receipt) => {
               const whCode = warehouses.find((w) => w.id === r.warehouse_id)?.code || "WH";
+              const refNumber = r.receipt_number || r.source_reference || `REC-${r.id.slice(0, 8)}`;
 
               return (
-                <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
-                  <Td className="font-mono font-bold text-slate-900">
-                    <Link
-                      to="/receipts/$id"
-                      params={{ id: r.id }}
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {r.receipt_number || r.source_reference || `REC-${r.id.slice(0, 8)}`}
-                    </Link>
-                  </Td>
-                  <Td className="text-slate-600 font-medium">
-                    {r.source_type === "CARRIER_TRACKING" ? "Carrier Tracking" : "Seller Drop-Off"}
-                  </Td>
-                  <Td className="text-slate-800 font-medium">
-                    {sellerLabel(sellers, r.seller_id)}
-                  </Td>
-                  <Td>
-                    <FacilityBadge code={whCode} />
-                  </Td>
-                  <Td className="font-mono text-xs text-slate-500">{formatDate(r.created_at)}</Td>
-                  <Td>
+                <MobileRecordCard key={r.id}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-mono font-bold text-slate-900 break-all text-sm">
+                        {refNumber}
+                      </p>
+                    </div>
                     <StatusBadge value={r.status} />
-                  </Td>
-                  <Td className="text-right">
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs pt-2 border-t border-border">
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Delivery Type</dt>
+                      <dd className="font-medium text-slate-700">
+                        {r.source_type === "CARRIER_TRACKING" ? "Carrier Tracking" : "Seller Drop-Off"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Seller</dt>
+                      <dd className="font-medium text-slate-700">{sellerLabel(sellers, r.seller_id)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Warehouse Dock</dt>
+                      <dd className="mt-0.5">
+                        <FacilityBadge code={whCode} />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Created Date</dt>
+                      <dd className="font-mono text-xs text-slate-500 mt-0.5">{formatDate(r.created_at)}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-4 pt-3 border-t border-border">
                     <Link
                       to="/receipts/$id"
                       params={{ id: r.id }}
-                      className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                      className="min-h-[44px] w-full inline-flex items-center justify-center gap-1 rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-700 transition-colors"
                     >
                       {r.status === "DRAFT" ? "Scan Line Items" : "View Details"}
                     </Link>
-                  </Td>
-                </tr>
+                  </div>
+                </MobileRecordCard>
               );
             })}
-          </tbody>
-        </TableShell>
+          </MobileRecordList>
+        </>
       )}
 
       {/* Voice AI Intake Station Modal */}
@@ -516,6 +595,7 @@ function ReceiptsPage() {
         description="Create an inbound receipt draft from a spoken intake."
         className="max-w-4xl"
         pending={false}
+        returnFocusRef={voiceIntakeTriggerRef}
       >
         <div className="p-2">
           <ReceivingVoiceDraftPanel />

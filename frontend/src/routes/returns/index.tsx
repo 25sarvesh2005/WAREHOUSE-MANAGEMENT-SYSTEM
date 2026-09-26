@@ -11,7 +11,7 @@ import {
   Trash2,
   Undo2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
@@ -22,7 +22,10 @@ import {
   ErrorState,
   ExceptionBanner,
   LoadingState,
+  MobileRecordCard,
+  MobileRecordList,
   PageHeader,
+  PaginationControls,
   TableShell,
   Td,
   Th,
@@ -40,14 +43,73 @@ import {
 } from "@/hooks/use-api";
 import type { Order, Product, ReturnOrder, Seller, Warehouse } from "@/lib/types";
 
-interface ReturnsSearchParams {
-  q?: string;
+const VALID_RETURN_STATUSES = [
+  "EXPECTED",
+  "RECEIVED",
+  "INSPECTION",
+  "PARTIALLY_DISPOSED",
+  "COMPLETED",
+  "REJECTED",
+  "UNIDENTIFIED",
+] as const;
+type ValidReturnStatus = (typeof VALID_RETURN_STATUSES)[number];
+
+function isValidReturnStatus(val: unknown): val is ValidReturnStatus {
+  return typeof val === "string" && (VALID_RETURN_STATUSES as readonly string[]).includes(val);
 }
+
+interface ReturnsSearchParams {
+  q?: string | undefined;
+  seller?: string | undefined;
+  warehouse?: string | undefined;
+  status?: string | undefined;
+  page?: number | undefined;
+}
+
+const PAGE_SIZE = 25;
 
 export const Route = createFileRoute("/returns/")({
   validateSearch: (search: Record<string, unknown>): ReturnsSearchParams => {
     const q = normalizeSearchQuery(search["q"]);
-    return q ? { q } : {};
+    const seller =
+      typeof search["seller"] === "string" && search["seller"].trim()
+        ? search["seller"].trim()
+        : undefined;
+    const warehouse =
+      typeof search["warehouse"] === "string" && search["warehouse"].trim()
+        ? search["warehouse"].trim()
+        : undefined;
+    const rawStatus =
+      typeof search["status"] === "string" && search["status"].trim()
+        ? search["status"].trim()
+        : undefined;
+    const status = isValidReturnStatus(rawStatus) ? rawStatus : undefined;
+    const rawPage = Number(search["page"]);
+    const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : undefined;
+
+    const result: ReturnsSearchParams = {};
+    if (q) result.q = q;
+    if (seller) result.seller = seller;
+    if (warehouse) result.warehouse = warehouse;
+    if (status) result.status = status;
+    if (page && page > 1) result.page = page;
+    return result;
+  },
+  search: {
+    middlewares: [
+      ({ search, next, meta }) => {
+        const nextResult = next(search);
+        const result = { ...nextResult } as Record<string, unknown>;
+        const rawStatus = typeof result["status"] === "string" ? result["status"] : undefined;
+        if (rawStatus && !isValidReturnStatus(rawStatus)) {
+          delete result["status"];
+          if (meta) {
+            (meta.removedAny ||= new Set()).add("status");
+          }
+        }
+        return result as ReturnsSearchParams;
+      },
+    ],
   },
   head: () => ({
     meta: [
@@ -93,35 +155,102 @@ function newReturnLineDraft(): ReturnLineDraft {
 }
 
 function ReturnsPage() {
-  const { q } = Route.useSearch();
+  const { q, seller, warehouse, status, page } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const returnsQuery = useReturnsQuery();
+  const currentPage = page ?? 1;
+  const offset = (currentPage - 1) * PAGE_SIZE;
+
+  const returnsQuery = useReturnsQuery({
+    q,
+    seller_id: seller,
+    warehouse_id: warehouse,
+    status,
+    limit: PAGE_SIZE,
+    offset,
+  });
   const sellersQuery = useSellersQuery();
   const warehousesQuery = useWarehousesQuery();
   const productsQuery = useProductsQuery();
   const ordersQuery = useOrdersQuery();
   const createReturnMutation = useCreateReturnMutation();
 
-  const handleSearchChange = (val: string) => {
-    navigate({
-      search: (prev) => {
-        const normalized = normalizeSearchQuery(val);
-        if (!normalized) {
-          const { q: _, ...rest } = prev;
-          return rest;
-        }
-        return { ...prev, q: normalized };
-      },
-      replace: true,
-    });
-  };
-
-  const returns = returnsQuery.data ?? EMPTY_RETURNS;
+  const returns = returnsQuery.data?.items ?? EMPTY_RETURNS;
+  const totalReturns = returnsQuery.data?.total ?? 0;
   const sellers = sellersQuery.data ?? EMPTY_SELLERS;
   const warehouses = warehousesQuery.data ?? EMPTY_WAREHOUSES;
   const products = productsQuery.data ?? EMPTY_PRODUCTS;
   const orders = ordersQuery.data ?? EMPTY_ORDERS;
 
+  const maxReturnPage = totalReturns > 0 ? Math.ceil(totalReturns / PAGE_SIZE) : 1;
+  const isNormalizingReturnPage = returnsQuery.isSuccess && currentPage > maxReturnPage;
+
+  const updateSearch = (patch: Partial<ReturnsSearchParams>, resetPage = true) => {
+    navigate({
+      search: (prev) => {
+        const next: ReturnsSearchParams = { ...prev, ...patch };
+        if (resetPage) {
+          delete next.page;
+        }
+        (Object.keys(next) as Array<keyof ReturnsSearchParams>).forEach((key) => {
+          if (next[key] === undefined || next[key] === "") {
+            delete next[key];
+          }
+        });
+        return next;
+      },
+      replace: true,
+    });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    navigate({
+      search: (prev) => {
+        const next: ReturnsSearchParams = { ...prev };
+        if (newPage > 1) {
+          next.page = newPage;
+        } else {
+          delete next.page;
+        }
+        return next;
+      },
+      replace: false,
+    });
+  };
+
+
+  useEffect(() => {
+    if (!returnsQuery.isSuccess) return;
+    if (currentPage > maxReturnPage) {
+      navigate({
+        search: (prev) => {
+          const next = { ...prev };
+          if (maxReturnPage > 1) {
+            next.page = maxReturnPage;
+          } else {
+            delete next.page;
+          }
+          return next;
+        },
+        replace: true,
+      });
+    }
+  }, [returnsQuery.isSuccess, currentPage, maxReturnPage, navigate]);
+
+  const handleSearchChange = (val: string) => {
+    const normalized = normalizeSearchQuery(val);
+    updateSearch({ q: normalized || undefined });
+  };
+
+  const clearAllFilters = () => {
+    navigate({
+      search: () => ({}),
+      replace: true,
+    });
+  };
+
+  const hasActiveFilters = Boolean(q || seller || warehouse || status);
+
+  const logReturnTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -211,32 +340,7 @@ function ReturnsPage() {
     }
   }
 
-  const filteredReturns = useMemo(() => {
-    if (!q) return returns;
-    const search = q.toLowerCase();
-    return returns.filter((r: ReturnOrder) => {
-      const retNum = (r.return_number || "").toLowerCase();
-      const rma = (r.rma_number || "").toLowerCase();
-      const track = (r.inbound_tracking_number || "").toLowerCase();
-      const id = (r.id || "").toLowerCase();
-      const seller = sellerLabel(sellers, r.seller_id).toLowerCase();
-      const warehouse = (
-        warehouses.find((w) => w.id === r.warehouse_id)?.code ||
-        warehouseLabel(warehouses, r.warehouse_id) ||
-        ""
-      ).toLowerCase();
-      const status = (r.status || "").toLowerCase();
-      return (
-        retNum.includes(search) ||
-        rma.includes(search) ||
-        track.includes(search) ||
-        id.includes(search) ||
-        seller.includes(search) ||
-        warehouse.includes(search) ||
-        status.includes(search)
-      );
-    });
-  }, [returns, q, sellers, warehouses]);
+
 
   return (
     <AppShell>
@@ -244,7 +348,13 @@ function ReturnsPage() {
         title="Customer Returns & Quarantine Inspection"
         subtitle="Manage returned stock with mandatory physical inspection before any item re-enters sellable inventory."
         actions={
-          <Button onClick={() => setOpen(true)} className="gap-2">
+          <Button
+            onClick={(event) => {
+              logReturnTriggerRef.current = event.currentTarget;
+              setOpen(true);
+            }}
+            className="gap-2"
+          >
             <Plus className="size-4" /> Log Customer Return
           </Button>
         }
@@ -261,7 +371,7 @@ function ReturnsPage() {
 
       {awaitingInspection > 0 ? (
         <ExceptionBanner>
-          <strong>{awaitingInspection} Return(s) Awaiting Physical Inspection:</strong> Units in
+          <strong>{awaitingInspection} Return(s) Awaiting Physical Inspection on this page:</strong> Units in
           quarantine dock must be inspected for seal integrity, carton crushing, and defect
           disposition.
         </ExceptionBanner>
@@ -271,104 +381,271 @@ function ReturnsPage() {
         <LoadingState message="Loading returns queue..." />
       ) : null}
 
-      {/* Search Bar */}
+      {/* Filters Bar */}
       <Card className="mb-5 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative flex items-center w-full sm:w-80">
-            <Search className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" />
-            <label htmlFor="return-search" className="sr-only">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 items-end">
+          {/* Search Input */}
+          <div className="lg:col-span-1">
+            <label htmlFor="return-search" className="block text-xs font-semibold text-foreground mb-1">
               Search returns
             </label>
-            <input
-              id="return-search"
-              type="search"
-              maxLength={100}
-              value={q ?? ""}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search return, RMA, tracking number, seller, or facility…"
-              className="w-full min-h-[44px] rounded-full border border-input bg-white py-2.5 pr-4 pl-10 font-mono text-sm font-semibold text-foreground outline-none placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
-            />
+            <div className="relative flex items-center">
+              <Search className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
+              <input
+                id="return-search"
+                type="search"
+                maxLength={100}
+                value={q ?? ""}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Return, RMA, or tracking…"
+                className="w-full min-h-[44px] rounded-lg border border-input bg-card py-2 pr-3 pl-9 text-xs font-medium text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+              />
+            </div>
+          </div>
+
+          {/* Facility */}
+          <div>
+            <label htmlFor="return-warehouse-filter" className="block text-xs font-semibold text-foreground mb-1">
+              Facility
+            </label>
+            <select
+              id="return-warehouse-filter"
+              aria-label="Filter by facility"
+              value={warehouse ?? ""}
+              onChange={(e) => updateSearch({ warehouse: e.target.value || undefined })}
+              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              <option value="">All Facilities</option>
+              {warehouses.map((wh) => (
+                <option key={wh.id} value={wh.id}>
+                  {wh.code} — {wh.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Seller Tenant */}
+          <div>
+            <label htmlFor="return-seller-filter" className="block text-xs font-semibold text-foreground mb-1">
+              Seller Tenant
+            </label>
+            <select
+              id="return-seller-filter"
+              aria-label="Filter by seller tenant"
+              value={seller ?? ""}
+              onChange={(e) => updateSearch({ seller: e.target.value || undefined })}
+              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              <option value="">All Sellers</option>
+              {sellers.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.code} — {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label htmlFor="return-status-filter" className="block text-xs font-semibold text-foreground mb-1">
+              Status
+            </label>
+            <select
+              id="return-status-filter"
+              aria-label="Filter by status"
+              value={status ?? ""}
+              onChange={(e) => updateSearch({ status: e.target.value || undefined })}
+              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              <option value="">All Statuses</option>
+              <option value="EXPECTED">Expected</option>
+              <option value="RECEIVED">Received</option>
+              <option value="INSPECTION">In Inspection</option>
+              <option value="PARTIALLY_DISPOSED">Partially Disposed</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="UNIDENTIFIED">Unidentified</option>
+            </select>
           </div>
         </div>
+
+        {hasActiveFilters ? (
+          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+            <span className="text-xs text-muted-foreground">
+              Filtered by active criteria
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={clearAllFilters}
+              aria-label="Clear all filters"
+              className="min-h-[44px] sm:min-h-0 text-xs"
+            >
+              Clear filters
+            </Button>
+          </div>
+        ) : null}
       </Card>
 
-      {returns.length === 0 ? (
+      {isNormalizingReturnPage ? (
+        <LoadingState message="Opening the last available returns page..." />
+      ) : totalReturns === 0 ? (
         <Card className="p-8">
           <EmptyState
-            message="No customer returns recorded"
-            hint="Log an expected RMA or unidentified customer return package above."
-          />
-        </Card>
-      ) : filteredReturns.length === 0 ? (
-        <Card className="p-8">
-          <EmptyState
-            message="No returns match this search"
-            hint="Clear or adjust the search query to see other returns."
+            message={
+              q && !seller && !warehouse && !status
+                ? "No returns match this search"
+                : hasActiveFilters
+                  ? "No returns match this search and filter criteria"
+                  : "No customer returns recorded"
+            }
+            hint={
+              q && !seller && !warehouse && !status
+                ? "Clear or adjust the search query to see other returns."
+                : hasActiveFilters
+                  ? "Clear or adjust the filters above to see more returns."
+                  : "Log an expected RMA or unidentified customer return package above."
+            }
           />
         </Card>
       ) : (
-        <TableShell>
-          <thead>
-            <tr>
-              <Th>RMA / Return ID</Th>
-              <Th>Seller Tenant</Th>
-              <Th>Facility</Th>
-              <Th>Type</Th>
-              <Th>Status</Th>
-              <Th>Created Date</Th>
-              <Th className="text-right">Action</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredReturns.map((r: ReturnOrder) => {
+        <>
+          <div data-testid="returns-desktop-table" className="hidden md:block">
+            <TableShell>
+              <thead>
+                <tr>
+                  <Th>RMA / Return ID</Th>
+                  <Th>Seller Tenant</Th>
+                  <Th>Facility</Th>
+                  <Th>Type</Th>
+                  <Th>Status</Th>
+                  <Th>Created Date</Th>
+                  <Th className="text-right">Action</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {returns.map((r: ReturnOrder) => {
+                  const whCode = warehouses.find((w) => w.id === r.warehouse_id)?.code || "WH";
+
+                  return (
+                    <tr key={r.id} className="hover:bg-slate-50">
+                      <Td className="font-mono font-bold text-slate-900">
+                        <Link
+                          to="/returns/$id"
+                          params={{ id: r.id }}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {r.rma_number || `RET-${r.id.slice(0, 8)}`}
+                        </Link>
+                      </Td>
+                      <Td className="text-slate-700 font-medium">
+                        {sellerLabel(sellers, r.seller_id)}
+                      </Td>
+                      <Td>
+                        <FacilityBadge code={whCode} />
+                      </Td>
+                      <Td>
+                        <span
+                          className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
+                            !r.rma_number
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-blue-50 text-blue-800 border-blue-200"
+                          }`}
+                        >
+                          {!r.rma_number ? "Unidentified Drop" : "Expected RMA"}
+                        </span>
+                      </Td>
+                      <Td>
+                        <StatusBadge value={r.status} />
+                      </Td>
+                      <Td className="font-mono text-xs text-slate-500">{formatDate(r.created_at)}</Td>
+                      <Td className="text-right">
+                        <Link
+                          to="/returns/$id"
+                          params={{ id: r.id }}
+                          className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          Inspect & Dispose
+                        </Link>
+                      </Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </TableShell>
+          </div>
+
+          <MobileRecordList label="Customer Returns" testId="returns-mobile-list">
+            {returns.map((r: ReturnOrder) => {
               const whCode = warehouses.find((w) => w.id === r.warehouse_id)?.code || "WH";
+              const rmaText = r.rma_number || `RET-${r.id.slice(0, 8)}`;
+              const isExpected = Boolean(r.rma_number);
 
               return (
-                <tr key={r.id} className="hover:bg-slate-50">
-                  <Td className="font-mono font-bold text-slate-900">
-                    <Link
-                      to="/returns/$id"
-                      params={{ id: r.id }}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {r.rma_number || `RET-${r.id.slice(0, 8)}`}
-                    </Link>
-                  </Td>
-                  <Td className="text-slate-700 font-medium">
-                    {sellerLabel(sellers, r.seller_id)}
-                  </Td>
-                  <Td>
-                    <FacilityBadge code={whCode} />
-                  </Td>
-                  <Td>
-                    <span
-                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
-                        !r.rma_number
-                          ? "bg-amber-50 text-amber-800 border-amber-200"
-                          : "bg-blue-50 text-blue-800 border-blue-200"
-                      }`}
-                    >
-                      {!r.rma_number ? "Unidentified Drop" : "Expected RMA"}
-                    </span>
-                  </Td>
-                  <Td>
+                <MobileRecordCard key={r.id}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-mono font-bold text-slate-900 break-all text-sm">
+                        {rmaText}
+                      </p>
+                    </div>
                     <StatusBadge value={r.status} />
-                  </Td>
-                  <Td className="font-mono text-xs text-slate-500">{formatDate(r.created_at)}</Td>
-                  <Td className="text-right">
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs pt-2 border-t border-border">
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Type</dt>
+                      <dd className="mt-0.5">
+                        <span
+                          className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
+                            !isExpected
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-blue-50 text-blue-800 border-blue-200"
+                          }`}
+                        >
+                          {!isExpected ? "Unidentified Drop" : "Expected RMA"}
+                        </span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Seller</dt>
+                      <dd className="font-medium text-slate-700">{sellerLabel(sellers, r.seller_id)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Facility</dt>
+                      <dd className="mt-0.5">
+                        <FacilityBadge code={whCode} />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-[11px]">Created Date</dt>
+                      <dd className="font-mono text-xs text-slate-500 mt-0.5">{formatDate(r.created_at)}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-4 pt-3 border-t border-border">
                     <Link
                       to="/returns/$id"
                       params={{ id: r.id }}
-                      className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                      className="min-h-[44px] w-full inline-flex items-center justify-center gap-1 rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-700 transition-colors"
                     >
                       Inspect & Dispose
                     </Link>
-                  </Td>
-                </tr>
+                  </div>
+                </MobileRecordCard>
               );
             })}
-          </tbody>
-        </TableShell>
+          </MobileRecordList>
+          <PaginationControls
+            currentPage={currentPage}
+            pageSize={PAGE_SIZE}
+            totalCount={totalReturns}
+            visibleCount={returns.length}
+            itemLabel="returns"
+            onPageChange={handlePageChange}
+            disabled={returnsQuery.isFetching}
+          />
+        </>
       )}
 
       {/* Log Return Modal */}
@@ -379,6 +656,7 @@ function ReturnsPage() {
         description="Record the related order, facility, return reason, and received item quantities."
         className="max-w-xl"
         pending={createReturnMutation.isPending}
+        returnFocusRef={logReturnTriggerRef}
       >
         {error ? (
           <div className="mb-3">
