@@ -163,7 +163,7 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops
-        run: python tools/load_test_reservations.py
+        run: python -m tools.load_test_reservations
 
   frontend-checks:
     name: Frontend Typecheck, Lint & Production Build
