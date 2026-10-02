@@ -3,7 +3,7 @@
 ## System Authority & Purpose
 This runbook governs the opening inventory migration, rehearsal validation, reconciliation sign-off, rollback boundary, and controlled pilot cutover for the Whitfield Fulfillment Warehouse Operations Platform.
 
-As specified in **IMPLEMENTATION.md Section 18**, the transactional database and append-only inventory movement ledger (`inventory_movements`) constitute the operational source of truth upon cutover. Spreadsheet workbooks are used solely for controlled migration staging and historical comparison.
+As specified in the [Architecture Reference](../ARCHITECTURE.md), the transactional database and append-only inventory movement ledger (`inventory_movements`) constitute the operational source of truth upon cutover. Spreadsheet workbooks are used solely for controlled migration staging and historical comparison.
 
 ---
 
