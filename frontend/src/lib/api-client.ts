@@ -14,7 +14,13 @@ export function getApiBaseUrl(): string {
     }
   }
   const envMap = import.meta.env as unknown as Record<string, string>;
-  const raw = envMap["VITE_API_BASE_URL"] || "http://127.0.0.1:8080";
+  const isProdHost =
+    import.meta.env.PROD ||
+    (typeof window !== "undefined" &&
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1");
+  const fallback = isProdHost ? "https://whitfield-wms-api.onrender.com" : "http://127.0.0.1:8080";
+  const raw = envMap["VITE_API_BASE_URL"] || fallback;
   const trimmed = String(raw).trim().replace(/\/+$/, "");
   return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
 }
