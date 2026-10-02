@@ -107,7 +107,7 @@ class Settings(BaseSettings):
 
     app_env: Literal["development", "test", "staging", "production"] = "development"
     app_host: str = "127.0.0.1"
-    app_port: int = 8000
+    app_port: int = 8080
     database_url: str = Field(
         default="postgresql+asyncpg://warehouse_app:change-me@localhost:5432/warehouse_ops"
     )

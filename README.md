@@ -12,13 +12,14 @@
 [![FastMCP](https://img.shields.io/badge/Model_Context_Protocol-FastMCP_2024--11--05-7C3AED?style=for-the-badge&logo=anthropic&logoColor=white)](https://modelcontextprotocol.io)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16_Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.5_Flash-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![CI](https://github.com/25sarvesh2005/WAREHOUSE-MANAGEMENT-SYSTEM/actions/workflows/ci.yml/badge.svg)](https://github.com/25sarvesh2005/WAREHOUSE-MANAGEMENT-SYSTEM/actions/workflows/ci.yml)
 
 <br />
 
 **Whitfield WMS** is a mission-critical, bicoastal fulfillment and warehouse operations platform. Engineered to eliminate spreadsheet fragmentation, it combines an **immutable double-entry inventory ledger**, **strict concurrency row-locking (`SELECT FOR UPDATE`)**, an **autonomous transactional outbox**, **real-time SLA background monitoring jobs**, an **enterprise Model Context Protocol (FastMCP) server**, a **multilingual hands-free voice intake station (Web Speech API / Sarvam)**, and a **Google Gemini-powered conversational AI copilot** across nationwide logistics centers.
 
-[🚀 Explore Live Web App](https://warehouse-management-system-jade-seven.vercel.app) • [📖 Interactive Swagger API Docs](https://whitfield-wms-api.onrender.com/docs) • [🤖 Model Context Protocol (`/mcp`)](#-model-context-protocol-fastmcp-server) • [📊 Implementation Status](#-implementation-status--progress-tracker) • [🏗️ Architecture](#-architecture--system-design) • [👥 Demo Personas](#-role-based-access-control-rbac) • [🧪 Test Verification](#-automated-testing--ci-verification)
+[🚀 Explore Live Web App](https://warehouse-management-system-jade-seven.vercel.app) • [📖 Interactive Swagger API Docs](https://whitfield-wms-api.onrender.com/docs) • [🏛️ Architecture Reference](docs/ARCHITECTURE.md) • [🤖 Model Context Protocol (`/mcp`)](#-model-context-protocol-fastmcp-server) • [🏗️ Architecture](#-architecture--system-design) • [👥 Demo Personas](#-role-based-access-control-rbac) • [🧪 Test Verification](#-automated-testing--ci-verification)
 
 </div>
 
@@ -129,6 +130,8 @@ The system comes pre-configured with 5 distinct personas. You can use either `.c
 
 ## 🏗️ Architecture & System Design
 
+> For full technical architecture, ledger double-entry mechanics, schema definitions, and invariant rules, see the comprehensive [Architecture Reference Document](docs/ARCHITECTURE.md).
+
 ```mermaid
 flowchart TB
     subgraph Client["Frontend Layer (React 19 + TanStack Router + Vite)"]
@@ -223,6 +226,7 @@ The entire backend and frontend pipelines are continuously verified with a **4-J
 - **Node.js:** `v20+` (or `v22+`)
 - **Python:** `3.11+` (or `3.13+`)
 - **PostgreSQL:** Local instance or cloud database (Supabase / Neon)
+- **API Explorer:** Interactive Swagger docs available at `http://127.0.0.1:8080/docs` once the backend is running (disabled in `APP_ENV=production`)
 
 ### 1. Clone the Repository
 ```bash
@@ -284,7 +288,11 @@ python backend/tools/audit_frontend_secrets.py
 Comprehensive runbooks and operational checklists are maintained in the [`docs/runbooks/`](docs/runbooks/) directory:
 - [`reconciliation_operations_runbook.md`](docs/runbooks/reconciliation_operations_runbook.md): Ledger reconciliation, migration rehearsal, and background job monitoring.
 - [`phase5_controlled_launch_checklist.md`](docs/runbooks/phase5_controlled_launch_checklist.md): Pre-flight, cutover, rollback criteria, and SLA compliance checks.
-- [`eigi_skills_integration_runbook.md`](docs/runbooks/eigi_skills_integration_runbook.md): Coding and architectural standards reference.
+- [`security_operations_runbook.md`](docs/runbooks/security_operations_runbook.md): Secret rotation, JWT expiry policy, and audit log review.
+- [`phase5_migration_runbook.md`](docs/runbooks/phase5_migration_runbook.md): Opening inventory import staging, validation, rehearsal, and apply.
+- [`ui_acceptance_runbook.md`](docs/runbooks/ui_acceptance_runbook.md): UI/UX validation, cross-role workflows, and accessibility smoke testing.
+- [`voice_receiving_runbook.md`](docs/runbooks/voice_receiving_runbook.md): Voice dock setup, browser permissions, and Sarvam key configuration.
+- [`ai_operations_runbook.md`](docs/runbooks/ai_operations_runbook.md): AI copilot health check, Gemini API key rotation, and audit review.
 
 ---
 
@@ -319,10 +327,13 @@ WAREHOUSE-MANAGEMENT-SYSTEM/
 │   ├── e2e/                        # Playwright E2E and axe-core accessibility tests
 │   ├── Dockerfile                  # Production frontend container build
 │   └── package.json                # Frontend dependencies
-├── docs/                           # Documentation & operational runbooks
-├── .github/workflows/ci.yml        # 4-Job CI pipeline (backend, e2e, frontend, a11y)
+├── docs/
+│   ├── ARCHITECTURE.md             # System design, layers, invariants, config reference
+│   └── runbooks/                   # Operational runbooks and launch checklists
+├── .github/workflows/ci.yml        # 4-job CI pipeline (backend, e2e, frontend, a11y)
 ├── docker-compose.yml              # Multi-container local/cloud orchestration
-└── README.md                       # Platform documentation
+├── LICENSE                         # MIT License
+└── README.md                       # Platform overview and quick-start guide
 ```
 
 ---
@@ -330,3 +341,4 @@ WAREHOUSE-MANAGEMENT-SYSTEM/
 ## 📄 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
