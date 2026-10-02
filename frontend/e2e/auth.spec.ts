@@ -86,8 +86,8 @@ test.describe("Authentication Flows & Hydration", () => {
 
     await page.waitForURL((url) => !url.pathname.includes("/login"));
     expect(loginRequests).toHaveLength(1);
-    expect(loginRequests[0].email).toBe("admin@whitfield.local");
-    expect(loginRequests[0].password).toBe("WhitfieldAdmin123!");
+    expect(loginRequests[0]?.email).toBe("admin@whitfield.local");
+    expect(loginRequests[0]?.password).toBe("WhitfieldAdmin123!");
   });
 
   test("7.3 — Login validation, error semantics, and password toggle", async ({ page }) => {

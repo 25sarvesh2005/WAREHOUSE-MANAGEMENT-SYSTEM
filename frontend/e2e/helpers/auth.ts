@@ -17,10 +17,22 @@ export const MOCK_TOKENS = {
   token_type: "bearer",
 };
 
+export type MockAuthUser = {
+  id?: string;
+  user_id?: string;
+  email: string;
+  name: string;
+  role: string;
+  status?: string;
+  seller_ids?: string[];
+  warehouse_ids?: string[];
+  [key: string]: unknown;
+};
+
 /**
  * Injects mock authentication session into localStorage so tests start in authenticated state.
  */
-export async function injectAuthSession(page: Page, user = MOCK_ADMIN_USER) {
+export async function injectAuthSession(page: Page, user: MockAuthUser = MOCK_ADMIN_USER) {
   await page.addInitScript(
     ({ user, tokens }) => {
       window.localStorage.setItem("whitfield_access_token", tokens.access_token);
