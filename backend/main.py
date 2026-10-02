@@ -176,18 +176,25 @@ async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
     for warning in warnings:
         logger.warning("Configuration Warning: %s", warning)
 
-    await connect_to_database()
+    try:
+        await connect_to_database()
 
-    if runtime_settings.initialize_schema_on_startup:
-        logger.info("Schema auto-init enabled (INITIALIZE_SCHEMA_ON_STARTUP=true)")
-        await initialize_schema_for_development()
-    else:
-        logger.info(
-            "Schema auto-init skipped (INITIALIZE_SCHEMA_ON_STARTUP=false) "
-            "— Alembic migrations are expected to be applied externally."
-        )
+        if runtime_settings.initialize_schema_on_startup:
+            logger.info("Schema auto-init enabled (INITIALIZE_SCHEMA_ON_STARTUP=true)")
+            await initialize_schema_for_development()
+        else:
+            logger.info(
+                "Schema auto-init skipped (INITIALIZE_SCHEMA_ON_STARTUP=false) "
+                "— Alembic migrations are expected to be applied externally."
+            )
 
-    await seed_initial_data()
+        await seed_initial_data()
+    except Exception as error:
+        logger.error("Startup database initialization failed: %s", error, exc_info=True)
+        if runtime_settings.app_env not in ("development", "test"):
+            logger.warning("Continuing startup in %s mode — database connection will be retried on demand.", runtime_settings.app_env)
+        else:
+            raise
     expiry_task = asyncio.create_task(_periodic_reservation_expiry_worker())
     outbox_task = asyncio.create_task(_periodic_outbox_dispatch_worker())
     sla_task = asyncio.create_task(_periodic_operational_sla_worker())
