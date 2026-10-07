@@ -268,7 +268,18 @@ async def root() -> dict[str, str]:
     return {"service": "whitfield-warehouse-operations", "status": "running"}
 
 
-@app.get("/health/live", status_code=status.HTTP_200_OK, summary="Liveness health check")
+@app.api_route(
+    "/health/live",
+    methods=["GET", "HEAD"],
+    status_code=status.HTTP_200_OK,
+    summary="Liveness health check",
+)
+@app.api_route(
+    "/api/v1/health/live",
+    methods=["GET", "HEAD"],
+    status_code=status.HTTP_200_OK,
+    summary="Liveness health check alias",
+)
 async def liveness() -> dict[str, str]:
     """
     Return process liveness status.
@@ -285,7 +296,18 @@ async def liveness() -> dict[str, str]:
     return {"status": "live"}
 
 
-@app.get("/health/ready", status_code=status.HTTP_200_OK, summary="Readiness health check")
+@app.api_route(
+    "/health/ready",
+    methods=["GET", "HEAD"],
+    status_code=status.HTTP_200_OK,
+    summary="Readiness health check",
+)
+@app.api_route(
+    "/api/v1/health/ready",
+    methods=["GET", "HEAD"],
+    status_code=status.HTTP_200_OK,
+    summary="Readiness health check alias",
+)
 async def readiness() -> dict[str, str]:
     """
     Return application readiness status.
@@ -310,10 +332,17 @@ async def readiness() -> dict[str, str]:
         ) from error
 
 
-@app.get(
+@app.api_route(
     "/health/status",
+    methods=["GET", "HEAD"],
     status_code=status.HTTP_200_OK,
     summary="Structured operational status and diagnostic health report",
+)
+@app.api_route(
+    "/api/v1/health/status",
+    methods=["GET", "HEAD"],
+    status_code=status.HTTP_200_OK,
+    summary="Structured operational status and diagnostic health report alias",
 )
 async def operational_status() -> dict[str, object]:
     """

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: whitfield-wms-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /health/live
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: APP_ENV
+        value: production
+      - key: INITIALIZE_SCHEMA_ON_STARTUP
+        value: "true"
+      - key: TRUSTED_HOSTS
+        value: "*"

@@ -13,6 +13,7 @@ Responsibilities:
 */
 
 import { createReceiptApi, saveReceiptLineApi } from "./api-services";
+import { safeStorage } from "./storage";
 
 export interface OfflineReceiptLine {
   id: string;
@@ -102,9 +103,7 @@ async function withDraftStore<T>(
 }
 
 async function migrateLegacyLocalStorageDrafts(): Promise<void> {
-  if (typeof localStorage === "undefined") return;
-
-  const rawDrafts = localStorage.getItem(LEGACY_STORAGE_KEY);
+  const rawDrafts = safeStorage.getItem(LEGACY_STORAGE_KEY);
   if (!rawDrafts) return;
 
   try {
@@ -112,7 +111,7 @@ async function migrateLegacyLocalStorageDrafts(): Promise<void> {
     for (const draft of drafts) {
       await withDraftStore("readwrite", (store) => store.put(draft));
     }
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    safeStorage.removeItem(LEGACY_STORAGE_KEY);
   } catch (error) {
     console.error("Failed to migrate legacy offline receipt drafts:", error);
   }

@@ -50,8 +50,9 @@ export default defineConfig({
       server: { entry: "server" },
     }),
     nitro({
-      defaultPreset:
-        process.env["NITRO_PRESET"] || (process.env["VERCEL"] ? "vercel" : "cloudflare-module"),
+      preset:
+        process.env["NITRO_PRESET"] ||
+        (process.env["VERCEL"] ? "vercel" : "vercel"),
       hooks: {
         "rollup:before": (_nitro: unknown, config: NitroBundlerConfig) => {
           delete config.output?.inlineDynamicImports;

@@ -1,8 +1,9 @@
 import { clearSession, readAccessToken, readRefreshToken, storeTokens } from "./session";
+import { safeStorage } from "./storage";
 
 export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
-    const custom = localStorage.getItem("wms_api_base_url");
+    const custom = safeStorage.getItem("wms_api_base_url");
     if (custom && custom.trim()) {
       const trimmed = custom.trim().replace(/\/+$/, "");
       return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
@@ -26,12 +27,10 @@ export function getApiBaseUrl(): string {
 }
 
 export function setCustomApiBaseUrl(url: string): void {
-  if (typeof window !== "undefined") {
-    if (url.trim()) {
-      localStorage.setItem("wms_api_base_url", url.trim());
-    } else {
-      localStorage.removeItem("wms_api_base_url");
-    }
+  if (url.trim()) {
+    safeStorage.setItem("wms_api_base_url", url.trim());
+  } else {
+    safeStorage.removeItem("wms_api_base_url");
   }
 }
 
