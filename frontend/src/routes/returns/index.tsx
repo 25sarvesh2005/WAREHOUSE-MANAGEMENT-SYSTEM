@@ -21,11 +21,13 @@ import {
   EmptyState,
   ErrorState,
   ExceptionBanner,
+  FormField,
   LoadingState,
   MobileRecordCard,
   MobileRecordList,
   PageHeader,
   PaginationControls,
+  Select,
   TableShell,
   Td,
   Th,
@@ -404,16 +406,12 @@ function ReturnsPage() {
           </div>
 
           {/* Facility */}
-          <div>
-            <label htmlFor="return-warehouse-filter" className="block text-xs font-semibold text-foreground mb-1">
-              Facility
-            </label>
-            <select
+          <FormField label="Facility" htmlFor="return-warehouse-filter">
+            <Select
               id="return-warehouse-filter"
               aria-label="Filter by facility"
               value={warehouse ?? ""}
               onChange={(e) => updateSearch({ warehouse: e.target.value || undefined })}
-              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
               <option value="">All Facilities</option>
               {warehouses.map((wh) => (
@@ -421,20 +419,16 @@ function ReturnsPage() {
                   {wh.code} — {wh.name}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
           {/* Seller Tenant */}
-          <div>
-            <label htmlFor="return-seller-filter" className="block text-xs font-semibold text-foreground mb-1">
-              Seller Tenant
-            </label>
-            <select
+          <FormField label="Seller Tenant" htmlFor="return-seller-filter">
+            <Select
               id="return-seller-filter"
               aria-label="Filter by seller tenant"
               value={seller ?? ""}
               onChange={(e) => updateSearch({ seller: e.target.value || undefined })}
-              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
               <option value="">All Sellers</option>
               {sellers.map((s) => (
@@ -442,20 +436,16 @@ function ReturnsPage() {
                   {s.code} — {s.name}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
           {/* Status */}
-          <div>
-            <label htmlFor="return-status-filter" className="block text-xs font-semibold text-foreground mb-1">
-              Status
-            </label>
-            <select
+          <FormField label="Status" htmlFor="return-status-filter">
+            <Select
               id="return-status-filter"
               aria-label="Filter by status"
               value={status ?? ""}
               onChange={(e) => updateSearch({ status: e.target.value || undefined })}
-              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
               <option value="">All Statuses</option>
               <option value="EXPECTED">Expected</option>
@@ -465,8 +455,8 @@ function ReturnsPage() {
               <option value="COMPLETED">Completed</option>
               <option value="REJECTED">Rejected</option>
               <option value="UNIDENTIFIED">Unidentified</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
         </div>
 
         {hasActiveFilters ? (

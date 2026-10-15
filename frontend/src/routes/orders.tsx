@@ -24,12 +24,15 @@ import {
   Card,
   EmptyState,
   ErrorState,
+  FormField,
   IconTile,
+  Input,
   LoadingState,
   MobileRecordCard,
   MobileRecordList,
   PageHeader,
   ScannerInputField,
+  Select,
   TableShell,
   Td,
   Th,
@@ -657,46 +660,40 @@ function OrdersPage() {
 
         <form onSubmit={createOrder} className="space-y-4 text-xs">
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                Seller Account
-              </label>
-              <select
+            <FormField label="Seller Account" htmlFor="order-seller-select" required>
+              <Select
+                id="order-seller-select"
+                aria-label="Seller Account"
                 value={orderForm.seller_id}
                 onChange={(e) => setOrderForm({ ...orderForm, seller_id: e.target.value })}
-                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
                 {sellers.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} ({s.code})
                   </option>
                 ))}
-              </select>
-            </div>
+              </Select>
+            </FormField>
 
-            <div>
-              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                Fulfillment Warehouse
-              </label>
-              <select
+            <FormField label="Fulfillment Warehouse" htmlFor="order-warehouse-select" required>
+              <Select
+                id="order-warehouse-select"
+                aria-label="Fulfillment Warehouse"
                 value={orderForm.warehouse_id}
                 onChange={(e) => setOrderForm({ ...orderForm, warehouse_id: e.target.value })}
-                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
                 {warehouses.map((w) => (
                   <option key={w.id} value={w.id}>
                     {w.code} ({w.city || "Hub"}, {w.state || ""})
                   </option>
                 ))}
-              </select>
-            </div>
+              </Select>
+            </FormField>
           </div>
 
-          <div>
-            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-              Seller Order Number
-            </label>
-            <input
+          <FormField label="Seller Order Number" htmlFor="order-seller-number" required>
+            <Input
+              id="order-seller-number"
               type="text"
               required
               placeholder="e.g. SO-2026-9041"
@@ -704,23 +701,19 @@ function OrdersPage() {
               onChange={(e) =>
                 setOrderForm({ ...orderForm, seller_order_number: e.target.value })
               }
-              className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-              Customer Full Name
-            </label>
-            <input
+          <FormField label="Customer Full Name" htmlFor="order-customer-name" required>
+            <Input
+              id="order-customer-name"
               type="text"
               required
               placeholder="e.g. Jane Doe"
               value={orderForm.customer_name}
               onChange={(e) => setOrderForm({ ...orderForm, customer_name: e.target.value })}
-              className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
             />
-          </div>
+          </FormField>
 
           {/* Physical Delivery Address */}
           <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-200 space-y-2.5">

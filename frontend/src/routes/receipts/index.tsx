@@ -23,11 +23,13 @@ import {
   DuplicateProtectionBanner,
   EmptyState,
   ErrorState,
+  FormField,
   LoadingState,
   MobileRecordCard,
   MobileRecordList,
   PageHeader,
   ScannerInputField,
+  Select,
   TableShell,
   Td,
   Th,
@@ -401,40 +403,36 @@ function ReceiptsPage() {
 
           {/* Warehouse Selection */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                Receiving Warehouse
-              </label>
-              <select
+            <FormField label="Receiving Warehouse" htmlFor="receipt-warehouse-select">
+              <Select
+                id="receipt-warehouse-select"
+                aria-label="Receiving Warehouse"
                 value={form.warehouse_id}
                 onChange={(e) => setForm({ ...form, warehouse_id: e.target.value })}
-                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
                 {warehouses.map((w) => (
                   <option key={w.id} value={w.id}>
                     {w.code} ({w.city || "Hub"}, {w.state || ""})
                   </option>
                 ))}
-              </select>
-            </div>
+              </Select>
+            </FormField>
 
             {/* Seller Tenant Selection */}
-            <div>
-              <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                Seller Account
-              </label>
-              <select
+            <FormField label="Seller Account" htmlFor="receipt-seller-select">
+              <Select
+                id="receipt-seller-select"
+                aria-label="Seller Account"
                 value={form.seller_id}
                 onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
-                className="mt-1.5 w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
                 {sellers.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} ({s.code})
                   </option>
                 ))}
-              </select>
-            </div>
+              </Select>
+            </FormField>
           </div>
         </div>
 

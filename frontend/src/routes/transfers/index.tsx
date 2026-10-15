@@ -23,11 +23,13 @@ import {
   EmptyState,
   ErrorState,
   ExceptionBanner,
+  FormField,
   LoadingState,
   MobileRecordCard,
   MobileRecordList,
   PageHeader,
   PaginationControls,
+  Select,
   TableShell,
   Td,
   Th,
@@ -486,16 +488,12 @@ function TransfersPage() {
           </div>
 
           {/* Origin Facility */}
-          <div>
-            <label htmlFor="transfer-origin-filter" className="block text-xs font-semibold text-foreground mb-1">
-              Origin Facility
-            </label>
-            <select
+          <FormField label="Origin Facility" htmlFor="transfer-origin-filter">
+            <Select
               id="transfer-origin-filter"
               aria-label="Filter by origin facility"
               value={origin ?? ""}
               onChange={(e) => updateSearch({ origin: e.target.value || undefined })}
-              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
               <option value="">All Origins</option>
               {warehouses.map((wh) => (
@@ -503,20 +501,16 @@ function TransfersPage() {
                   {wh.code} — {wh.name}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
           {/* Destination Facility */}
-          <div>
-            <label htmlFor="transfer-destination-filter" className="block text-xs font-semibold text-foreground mb-1">
-              Destination Facility
-            </label>
-            <select
+          <FormField label="Destination Facility" htmlFor="transfer-destination-filter">
+            <Select
               id="transfer-destination-filter"
               aria-label="Filter by destination facility"
               value={destination ?? ""}
               onChange={(e) => updateSearch({ destination: e.target.value || undefined })}
-              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
               <option value="">All Destinations</option>
               {warehouses.map((wh) => (
@@ -524,20 +518,16 @@ function TransfersPage() {
                   {wh.code} — {wh.name}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
           {/* Seller Tenant */}
-          <div>
-            <label htmlFor="transfer-seller-filter" className="block text-xs font-semibold text-foreground mb-1">
-              Seller Tenant
-            </label>
-            <select
+          <FormField label="Seller Tenant" htmlFor="transfer-seller-filter">
+            <Select
               id="transfer-seller-filter"
               aria-label="Filter by seller tenant"
               value={seller ?? ""}
               onChange={(e) => updateSearch({ seller: e.target.value || undefined })}
-              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
               <option value="">All Sellers</option>
               {sellers.map((s) => (
@@ -545,20 +535,16 @@ function TransfersPage() {
                   {s.code} — {s.name}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
           {/* Status */}
-          <div>
-            <label htmlFor="transfer-status-filter" className="block text-xs font-semibold text-foreground mb-1">
-              Status
-            </label>
-            <select
+          <FormField label="Status" htmlFor="transfer-status-filter">
+            <Select
               id="transfer-status-filter"
               aria-label="Filter by status"
               value={status ?? ""}
               onChange={(e) => updateSearch({ status: e.target.value || undefined })}
-              className="w-full min-h-[44px] rounded-lg border border-input bg-card px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
               <option value="">All Statuses</option>
               <option value="DRAFT">Draft</option>
@@ -569,8 +555,8 @@ function TransfersPage() {
               <option value="RECEIVED">Received</option>
               <option value="DISCREPANCY_REVIEW">Discrepancy Review</option>
               <option value="CANCELLED">Cancelled</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
         </div>
 
         {hasActiveFilters ? (
