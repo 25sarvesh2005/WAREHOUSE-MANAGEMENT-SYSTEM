@@ -107,7 +107,7 @@ async def release_expired_reservations(session: AsyncSession) -> dict[str, Any]:
         order_line.backordered_quantity += rel_qty
 
         # Re-evaluate order status
-        has_any_reserved = any(l.reserved_quantity > Decimal("0.00") for l in order.lines)
+        has_any_reserved = any(line.reserved_quantity > Decimal("0.00") for line in order.lines)
         if not has_any_reserved:
             order.status = OrderStatus.BACKORDERED.value
         else:

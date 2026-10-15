@@ -60,7 +60,7 @@ async def login(request: LoginRequest) -> TokenResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -85,7 +85,7 @@ async def register_seller(request: RegisterSellerRequest) -> UserResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -111,7 +111,7 @@ async def refresh_token(request: RefreshRequest) -> TokenResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -138,7 +138,7 @@ async def logout(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -162,7 +162,7 @@ async def read_me(scope: Annotated[dict, Depends(get_warehouse_scope)]) -> dict:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -190,7 +190,7 @@ async def create_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -218,7 +218,7 @@ async def approve_seller(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.patch(
@@ -247,7 +247,7 @@ async def update_user_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -276,7 +276,7 @@ async def list_users(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -304,7 +304,7 @@ async def create_seller(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.patch(
@@ -333,7 +333,7 @@ async def update_seller_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -362,7 +362,7 @@ async def list_sellers(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -393,7 +393,7 @@ async def create_warehouse(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -422,7 +422,7 @@ async def list_warehouses(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -453,7 +453,7 @@ async def assign_user_to_seller(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -484,4 +484,4 @@ async def assign_user_to_warehouse(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error

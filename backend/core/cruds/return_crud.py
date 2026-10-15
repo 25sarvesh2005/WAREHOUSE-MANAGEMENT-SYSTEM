@@ -128,7 +128,8 @@ async def list_returns(
 
     Args:
         session: Active transaction session.
-        q: Optional text search string matching return_number, rma_number, or inbound_tracking_number.
+        q: Optional text search matching return_number, rma_number,
+            or inbound_tracking_number.
         seller_id: Optional seller filter.
         seller_ids: Optional seller scope filter.
         warehouse_id: Optional warehouse filter.

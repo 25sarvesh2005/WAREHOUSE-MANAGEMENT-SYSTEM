@@ -268,7 +268,10 @@ def validate_production_configuration(settings: Settings) -> list[str]:
         "test",
     }
     if len(settings.jwt_secret) < 32 or settings.jwt_secret in insecure_jwt_secrets:
-        msg = "JWT_SECRET is weak or uses a default placeholder (minimum 32 characters recommended)."
+        msg = (
+            "JWT_SECRET is weak or uses a default placeholder "
+            "(minimum 32 characters recommended)."
+        )
         if is_prod:
             raise ValueError(f"CRITICAL PRODUCTION CONFIGURATION ERROR: {msg}")
         warnings.append(msg)
@@ -291,7 +294,10 @@ def validate_production_configuration(settings: Settings) -> list[str]:
     if settings.ai_enabled and settings.ai_provider == "google_genai":
         has_key = bool(settings.google_genai_api_key.strip() or settings.google_api_key.strip())
         if not has_key:
-            msg = "AI is enabled with google_genai provider, but no GOOGLE_GENAI_API_KEY is configured."
+            msg = (
+                "AI is enabled with google_genai provider, "
+                "but no GOOGLE_GENAI_API_KEY is configured."
+            )
             if is_prod:
                 raise ValueError(f"CRITICAL PRODUCTION CONFIGURATION ERROR: {msg}")
             warnings.append(msg)

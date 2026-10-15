@@ -165,7 +165,12 @@ class GoogleGenAIProvider:
 
         client = genai.Client(api_key=self._api_key)
         preferred_model = self._default_model_name
-        candidate_models = [preferred_model, "gemini-3-flash-preview", "gemini-flash-latest", "gemini-2.5-flash"]
+        candidate_models = [
+            preferred_model,
+            "gemini-3-flash-preview",
+            "gemini-flash-latest",
+            "gemini-2.5-flash",
+        ]
         # Deduplicate while preserving order
         unique_models = list(dict.fromkeys(candidate_models))
 

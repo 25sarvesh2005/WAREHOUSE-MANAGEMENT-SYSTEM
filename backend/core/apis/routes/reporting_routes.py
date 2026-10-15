@@ -40,7 +40,7 @@ async def get_manager_dashboard(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -66,7 +66,7 @@ async def get_manager_exceptions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -95,4 +95,4 @@ async def get_reconciliation_report(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error

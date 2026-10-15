@@ -1,5 +1,6 @@
 """
-SQLAlchemy ORM models for catalog products, identifiers, warehouse locations, and seller order policies.
+SQLAlchemy ORM models for catalog products, identifiers, warehouse locations,
+and seller order policies.
 """
 
 from __future__ import annotations

@@ -195,7 +195,15 @@ async def lookup_available_inventory(
         tokens = [t for t in clean_query.split() if len(t) > 2 and t.lower() not in stop_words]
         is_general_query = any(
             phrase in clean_query.lower()
-            for phrase in ["0 quantity", "zero", "low stock", "all products", "all items", "no stock", "out of stock"]
+            for phrase in [
+                "0 quantity",
+                "zero",
+                "low stock",
+                "all products",
+                "all items",
+                "no stock",
+                "out of stock",
+            ]
         )
 
         if tokens and not is_general_query:

@@ -89,7 +89,11 @@ async def transcribe_receiving_audio(
             draft_id=draft_record.id,
             interaction_id=interaction.id,
             transcript=parsed_draft.raw_transcript,
-            confidence=float(interaction.transcript_confidence) if interaction.transcript_confidence else None,
+            confidence=(
+                float(interaction.transcript_confidence)
+                if interaction.transcript_confidence
+                else None
+            ),
             lines=[
                 VoiceParsedLineResponse(
                     quantity=line.quantity,
@@ -115,7 +119,7 @@ async def transcribe_receiving_audio(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -185,7 +189,7 @@ async def parse_receiving_transcript_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -235,7 +239,7 @@ async def synthesize_voice_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -307,7 +311,7 @@ async def discard_voice_draft_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -360,7 +364,11 @@ async def list_voice_interactions_endpoint(
                     tts_provider=item.tts_provider,
                     language_code=item.language_code,
                     transcript_text=item.transcript_text,
-                    transcript_confidence=float(item.transcript_confidence) if item.transcript_confidence else None,
+                    transcript_confidence=(
+                        float(item.transcript_confidence)
+                        if item.transcript_confidence
+                        else None
+                    ),
                     status=item.status,
                     created_at=item.created_at,
                 )
@@ -374,4 +382,4 @@ async def list_voice_interactions_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error

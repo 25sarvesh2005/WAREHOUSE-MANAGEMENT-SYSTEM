@@ -293,7 +293,9 @@ class ReceivingController:
             )
 
             # Check if line already exists on receipt
-            existing_line = next((l for l in receipt.lines if l.product_id == product_id), None)
+            existing_line = next(
+                (line for line in receipt.lines if line.product_id == product_id), None
+            )
             if existing_line is None:
                 line = ReceiptLine(
                     receipt_id=receipt_id,

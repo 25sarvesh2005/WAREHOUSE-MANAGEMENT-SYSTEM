@@ -6,8 +6,8 @@ Purpose     : Parse spoken receiving transcripts into structured receiving draft
 Responsibilities:
     - Extract quantities, inventory states (AVAILABLE, DAMAGED, QUARANTINED), and notes.
     - Leverage Gemini LLM provider when configured for complex conversational utterances.
-    - Provide a robust, deterministic rule-based fallback parser for high-reliability offline/no-key usage.
-    - Guarantee product identity is NOT invented from speech; only operational quantities/states are drafted.
+    - Provide a robust, deterministic rule-based fallback parser for high reliability.
+    - Guarantee product identity is NOT invented from speech; only quantities/states are drafted.
 
 Flow:
     Voice Controller
@@ -167,13 +167,13 @@ def parse_deterministic_transcript(transcript: str) -> VoiceParsedReceivingDraft
 
     lines: list[VoiceParsedLine] = []
     warnings: list[str] = []
-    general_notes: str | None = None
 
     # Check for general condition notes in transcript
     note_match = re.search(r"\bnote\b[:\s]+(.+)", normalized_text, re.IGNORECASE)
     extracted_note = note_match.group(1).strip() if note_match else None
 
-    # Pattern: Match <number> followed by state keywords (available, good, damaged, broken, quarantine, etc.)
+    # Pattern: Match <number> followed by state keywords
+    # (available, good, damaged, broken, quarantine, etc.)
     # Example: "12 available", "2 damaged", "1 quarantined"
     clause_pattern = re.compile(
         r"(\d+(?:\.\d+)?)\s*(?:units?|pieces?|boxes?|items?|qty)?\s*"
@@ -268,9 +268,10 @@ async def parse_receiving_transcript(
                 "Parse the operator's spoken receipt description into a JSON structure.\n"
                 "Allowed inventory_state values: 'AVAILABLE', 'DAMAGED', 'QUARANTINED'.\n"
                 "Format numbers as decimal strings with 2 decimal places (e.g., '12.00').\n"
-                "DO NOT invent product identity or SKU. Only parse quantities, states, and condition notes.\n"
-                "Return ONLY valid JSON with keys: lines (array of {quantity, inventory_state, condition_note}), "
-                "general_notes (string or null), needs_manual_review (boolean), warnings (array of strings)."
+                "DO NOT invent product identity or SKU. Only parse quantities and states.\n"
+                "Return ONLY valid JSON with keys: lines (array of {quantity, inventory_state, "
+                "condition_note}), general_notes (string or null), needs_manual_review (boolean), "
+                "warnings (array of strings)."
             )
             request = AIProviderRequest(
                 prompt=f"Spoken transcript: \"{clean_transcript}\"",
@@ -303,7 +304,10 @@ async def parse_receiving_transcript(
                     raw_transcript=clean_transcript,
                 )
         except Exception as exc:
-            logger.info("AI LLM transcript parsing failed (%s); falling back to deterministic parser.", exc)
+            logger.info(
+                "AI LLM transcript parsing failed (%s); falling back to deterministic parser.",
+                exc,
+            )
 
     # Deterministic fallback
     return parse_deterministic_transcript(clean_transcript)

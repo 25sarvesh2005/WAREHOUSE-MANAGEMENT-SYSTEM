@@ -44,11 +44,11 @@ def _validate_permissive_email(v: object) -> str:
     try:
         info = email_validator.validate_email(s, check_deliverability=False)
         return info.normalized
-    except email_validator.EmailNotValidError:
+    except email_validator.EmailNotValidError as err:
         user, domain = s.rsplit("@", 1)
         if user and domain and ("." in domain or domain == "localhost"):
             return s
-        raise ValueError("Invalid email address")
+        raise ValueError("Invalid email address") from err
 
 
 class LoginRequest(BaseModel):
@@ -70,7 +70,9 @@ class RegisterSellerRequest(BaseModel):
     name: str = Field(min_length=1, max_length=200, description="Full contact name.")
     password: str = Field(min_length=6, max_length=128, description="Account password.")
     company_name: str = Field(min_length=1, max_length=200, description="Company / Brand name.")
-    seller_code: str | None = Field(default=None, max_length=50, description="Optional custom seller code.")
+    seller_code: str | None = Field(
+        default=None, max_length=50, description="Optional custom seller code."
+    )
 
     @field_validator("email")
     @classmethod
@@ -156,7 +158,9 @@ class RefreshRequest(BaseModel):
 class UserStatusUpdateRequest(BaseModel):
     """Request body for updating a user's account status."""
 
-    status: UserStatus = Field(description="New account status (ACTIVE, INACTIVE, SUSPENDED, PENDING_APPROVAL).")
+    status: UserStatus = Field(
+        description="New account status (ACTIVE, INACTIVE, SUSPENDED, PENDING_APPROVAL)."
+    )
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -164,6 +168,8 @@ class UserStatusUpdateRequest(BaseModel):
 class SellerStatusUpdateRequest(BaseModel):
     """Request body for updating a seller's business status."""
 
-    status: BusinessStatus = Field(description="New seller business status (ACTIVE, INACTIVE, SUSPENDED).")
+    status: BusinessStatus = Field(
+        description="New seller business status (ACTIVE, INACTIVE, SUSPENDED)."
+    )
 
     model_config = ConfigDict(use_enum_values=True)

@@ -36,21 +36,42 @@ from typing import Final
 
 # Prohibited action patterns
 PROHIBITED_MUTATION_PATTERNS: Final[list[re.Pattern[str]]] = [
-    re.compile(r"\b(complete|finalize|finish|submit)\s+(the\s+)?(receipt|order|shipment|transfer|return)\b", re.IGNORECASE),
-    re.compile(r"\b(adjust|modify|override|delete|drop)\s+(the\s+)?(inventory|balance|stock|ledger)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(complete|finalize|finish|submit)\s+(the\s+)?(receipt|order|shipment|transfer|return)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(adjust|modify|override|delete|drop)\s+(the\s+)?(inventory|balance|stock|ledger)\b",
+        re.IGNORECASE,
+    ),
     re.compile(r"\b(ship|dispatch)\s+(the\s+)?(order|shipment|transfer)\b", re.IGNORECASE),
-    re.compile(r"\b(approve|reject)\s+(the\s+)?(transfer|adjustment|return|order)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(approve|reject)\s+(the\s+)?(transfer|adjustment|return|order)\b",
+        re.IGNORECASE,
+    ),
     re.compile(r"\b(send\s+message|email|notify)\s+(the\s+)?(seller|customer)\b", re.IGNORECASE),
-    re.compile(r"\b(bypass|skip|ignore|override)\s+(the\s+)?(scan|barcode|upc|verification)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(bypass|skip|ignore|override)\s+(the\s+)?(scan|barcode|upc|verification)\b",
+        re.IGNORECASE,
+    ),
 ]
 
 PROHIBITED_SECRET_PATTERNS: Final[list[re.Pattern[str]]] = [
-    re.compile(r"\b(show|tell|reveal|give|export|print)\s+(me\s+)?(the\s+)?(api\s*key|jwt|secret|token|password|credential)\b", re.IGNORECASE),
-    re.compile(r"\b(supabase|database|postgres)\s+(url|connection|password|secret)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(show|tell|reveal|give|export|print)\s+(me\s+)?(the\s+)?(api\s*key|jwt|secret|token|password|credential)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(supabase|database|postgres)\s+(url|connection|password|secret)\b",
+        re.IGNORECASE,
+    ),
 ]
 
 PROHIBITED_CROSS_TENANT_PATTERNS: Final[list[re.Pattern[str]]] = [
-    re.compile(r"\b(switch|change|access|view)\s+(to\s+)?(other|different|all)\s+(seller|warehouse|tenant)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(switch|change|access|view)\s+(to\s+)?(other|different|all)\s+(seller|warehouse|tenant)\b",
+        re.IGNORECASE,
+    ),
 ]
 
 
@@ -103,9 +124,14 @@ def check_voice_receiving_safety(transcript: str) -> VoiceSafetyDecision:
             return VoiceSafetyDecision(
                 is_safe=False,
                 refusal_code="REFUSE_SECRET",
-                refusal_reason="System credentials, tokens, and secrets cannot be accessed via voice.",
+                refusal_reason=(
+                    "System credentials, tokens, and secrets cannot be accessed via voice."
+                ),
                 matched_pattern=match.group(0),
-                safety_flags={"category": "secret_exfiltration", "matched": match.group(0)},
+                safety_flags={
+                    "category": "secret_exfiltration",
+                    "matched": match.group(0),
+                },
             )
 
     # 3. Check cross-tenant/cross-warehouse manipulation
@@ -114,9 +140,14 @@ def check_voice_receiving_safety(transcript: str) -> VoiceSafetyDecision:
             return VoiceSafetyDecision(
                 is_safe=False,
                 refusal_code="REFUSE_CROSS_TENANT",
-                refusal_reason="Tenant and warehouse scope cannot be switched through voice commands.",
+                refusal_reason=(
+                    "Tenant and warehouse scope cannot be switched through voice commands."
+                ),
                 matched_pattern=match.group(0),
-                safety_flags={"category": "cross_tenant_attempt", "matched": match.group(0)},
+                safety_flags={
+                    "category": "cross_tenant_attempt",
+                    "matched": match.group(0),
+                },
             )
 
     return VoiceSafetyDecision(is_safe=True)

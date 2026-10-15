@@ -1,7 +1,8 @@
 """
 Seller Portal Controller.
 
-Enforces seller scope isolation across inventory, orders, receipts, shipments, returns, and transfers.
+Enforces seller scope isolation across inventory, orders, receipts, shipments,
+returns, and transfers.
 """
 
 from __future__ import annotations

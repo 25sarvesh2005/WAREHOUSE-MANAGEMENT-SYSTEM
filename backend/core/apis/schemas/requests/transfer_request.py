@@ -1,7 +1,8 @@
 """
 Transfer Request Schemas.
 
-Pydantic schemas validating API request bodies for transfer creation, approval, dispatch, and receipt.
+Pydantic schemas validating API request bodies for transfer creation,
+approval, dispatch, and receipt.
 """
 
 from decimal import Decimal
@@ -14,7 +15,9 @@ class TransferLineRequest(BaseModel):
     """Line item payload for transfer creation."""
 
     product_id: UUID = Field(..., description="Product SKU UUID")
-    requested_quantity: Decimal = Field(..., gt=Decimal("0.00"), description="Transfer quantity requested")
+    requested_quantity: Decimal = Field(
+        ..., gt=Decimal("0.00"), description="Transfer quantity requested"
+    )
     notes: str | None = Field(None, max_length=500, description="Optional line comments")
 
 
@@ -45,4 +48,6 @@ class TransferReceiveRequest(BaseModel):
 class TransferResolveDiscrepancyRequest(BaseModel):
     """Payload for manager discrepancy resolution."""
 
-    notes: str = Field(..., min_length=1, max_length=500, description="Discrepancy resolution reason")
+    notes: str = Field(
+        ..., min_length=1, max_length=500, description="Discrepancy resolution reason"
+    )

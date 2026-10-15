@@ -50,7 +50,9 @@ class ReturnDispositionRequestItem(BaseModel):
     """Inspection disposition outcome item."""
 
     return_line_id: UUID = Field(...)
-    disposition_state: str = Field(..., description="Target bucket state (AVAILABLE, DAMAGED, etc.)")
+    disposition_state: str = Field(
+        ..., description="Target bucket state (AVAILABLE, DAMAGED, etc.)"
+    )
     quantity: Decimal = Field(..., gt=Decimal("0.00"))
     destination_location_id: UUID | None = Field(None)
     notes: str | None = Field(None, max_length=500)

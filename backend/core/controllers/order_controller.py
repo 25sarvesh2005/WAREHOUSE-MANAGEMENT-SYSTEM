@@ -321,7 +321,7 @@ class OrderController:
             expires_at = now + timedelta(minutes=expiry_mins)
 
             # Sort order lines deterministically by product_id to prevent database deadlocks
-            sorted_lines = sorted(order.lines, key=lambda l: str(l.product_id))
+            sorted_lines = sorted(order.lines, key=lambda line: str(line.product_id))
 
             # Pre-check partial fulfillment policy if strict (allow_partial_fulfillment=False)
             if not allow_partial:

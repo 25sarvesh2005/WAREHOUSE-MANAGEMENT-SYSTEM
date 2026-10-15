@@ -100,7 +100,8 @@ class VoiceController:
             correlation_id: Optional request correlation ID.
 
         Returns:
-            tuple[VoiceReceivingDraft, VoiceInteraction, VoiceParsedReceivingDraft]: Persisted records.
+            tuple[VoiceReceivingDraft, VoiceInteraction, VoiceParsedReceivingDraft]:
+                Persisted records.
 
         Raises:
             HTTPException: On validation failure, safety refusal, or provider error.
@@ -135,13 +136,16 @@ class VoiceController:
                 detail=f"Audio payload exceeds maximum limit of {max_bytes // 1024 // 1024}MB.",
             )
 
-        allowed_types = [t.strip().lower() for t in self._settings.voice_allowed_mime_types.split(",")]
+        allowed_types = [
+            t.strip().lower() for t in self._settings.voice_allowed_mime_types.split(",")
+        ]
         clean_mime = mime_type.lower().split(";")[0].strip()
         if clean_mime not in allowed_types:
             logger.warning("Rejected audio MIME type: %s", clean_mime)
+            allowed_str = ", ".join(allowed_types)
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                detail=f"Audio type '{clean_mime}' is not supported. Allowed: {', '.join(allowed_types)}.",
+                detail=f"Audio type '{clean_mime}' is not supported. Allowed: {allowed_str}.",
             )
 
         cid = correlation_id or str(uuid4())
@@ -158,7 +162,10 @@ class VoiceController:
             logger.warning("Voice STT provider unavailable: %s", exc)
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Voice speech-to-text service is currently unavailable. Please enter quantities manually.",
+                detail=(
+                    "Voice speech-to-text service is currently unavailable. "
+                    "Please enter quantities manually."
+                ),
             ) from exc
         except VoiceTranscriptionError as exc:
             logger.warning("Voice STT failed: %s", exc)
@@ -279,7 +286,8 @@ class VoiceController:
             correlation_id: Request correlation ID.
 
         Returns:
-            tuple[VoiceReceivingDraft, VoiceInteraction, VoiceParsedReceivingDraft]: Created draft records.
+            tuple[VoiceReceivingDraft, VoiceInteraction, VoiceParsedReceivingDraft]:
+                Created draft records.
 
         Raises:
             HTTPException: On authorization, safety refusal, or parsing errors.

@@ -99,7 +99,10 @@ class DeepgramSTTProvider(SpeechToTextProvider):
             raise VoiceTranscriptionError("Audio payload is empty.")
 
         # Normalize language tag for Deepgram (e.g., en-IN or en)
-        lang = language_code.split("-")[0] if language_code not in {"en-IN", "en-US", "en-GB"} else language_code
+        if language_code in {"en-IN", "en-US", "en-GB"}:
+            lang = language_code
+        else:
+            lang = language_code.split("-")[0]
 
         headers = {
             "Authorization": f"Token {self._api_key}",
@@ -125,15 +128,21 @@ class DeepgramSTTProvider(SpeechToTextProvider):
             raise VoiceTranscriptionError("Voice transcription service timed out.") from exc
         except Exception as exc:
             logger.warning("Deepgram API connection error: %s", exc.__class__.__name__)
-            raise VoiceTranscriptionError("Could not connect to voice transcription service.") from exc
+            raise VoiceTranscriptionError(
+                "Could not connect to voice transcription service."
+            ) from exc
 
         if response.status_code in {401, 403}:
             logger.error("Deepgram authentication failed with status %s", response.status_code)
             raise VoiceProviderUnavailableError("Deepgram authentication failed. Verify API key.")
 
         if response.status_code != 200:
-            logger.warning("Deepgram API returned HTTP %s: %s", response.status_code, response.text[:200])
-            raise VoiceTranscriptionError(f"Deepgram transcription failed with status {response.status_code}.")
+            logger.warning(
+                "Deepgram API returned HTTP %s: %s", response.status_code, response.text[:200]
+            )
+            raise VoiceTranscriptionError(
+                f"Deepgram transcription failed with status {response.status_code}."
+            )
 
         try:
             data: dict[str, Any] = response.json()
@@ -159,4 +168,6 @@ class DeepgramSTTProvider(SpeechToTextProvider):
             )
         except Exception as exc:
             logger.error("Failed to parse Deepgram response JSON: %s", exc)
-            raise VoiceTranscriptionError("Failed to parse transcription service response.") from exc
+            raise VoiceTranscriptionError(
+                "Failed to parse transcription service response."
+            ) from exc

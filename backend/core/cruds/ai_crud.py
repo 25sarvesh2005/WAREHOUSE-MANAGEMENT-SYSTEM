@@ -433,10 +433,18 @@ async def list_ai_interactions(
     return items, total_count
 
 
+AIInteractionDetail = tuple[
+    AIInteraction | None,
+    Sequence[AIToolCall],
+    Sequence[AIDraftAction],
+    Sequence[AIFeedback],
+]
+
+
 async def get_ai_interaction_detail(
     session: AsyncSession,
     interaction_id: UUID,
-) -> tuple[AIInteraction | None, Sequence[AIToolCall], Sequence[AIDraftAction], Sequence[AIFeedback]]:
+) -> AIInteractionDetail:
     """
     Fetch comprehensive audit detail for an interaction including tools, drafts, and feedback.
 
@@ -445,8 +453,7 @@ async def get_ai_interaction_detail(
         interaction_id: AI interaction UUID.
 
     Returns:
-        tuple[AIInteraction | None, Sequence[AIToolCall], Sequence[AIDraftAction], Sequence[AIFeedback]]:
-            Parent interaction, child tool calls, draft actions, and feedbacks.
+        AIInteractionDetail: Parent interaction, child tool calls, draft actions, and feedbacks.
 
     Raises:
         sqlalchemy.exc.SQLAlchemyError: If queries fail.

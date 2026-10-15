@@ -295,7 +295,10 @@ class FulfillmentController:
                                 source_line_id=task_line.id,
                                 idempotency_prefix=f"SHORT-{task.id}-{task_line.id}",
                                 reason_code="SHORT_PICK_MISSING_STOCK",
-                                reason_text="Physical item missing from bin during picking; moved to quarantine for cycle count",
+                                reason_text=(
+                                    "Physical item missing from bin during picking; "
+                                    "moved to quarantine for cycle count"
+                                ),
                                 actor_user_id=actor_id,
                             )
 

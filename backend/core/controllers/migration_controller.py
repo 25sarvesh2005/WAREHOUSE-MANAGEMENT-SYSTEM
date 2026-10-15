@@ -851,7 +851,7 @@ class MigrationController:
                     loc_stmt = await catalog_crud.list_warehouse_locations(
                         session, warehouse_id=m.warehouse_id, limit=200, offset=0
                     )
-                    loc_match = [l for l in loc_stmt if l.id == m.location_id]
+                    loc_match = [loc for loc in loc_stmt if loc.id == m.location_id]
                     if loc_match:
                         loc_code = loc_match[0].code
 

@@ -37,7 +37,11 @@ async def check_aging_receipts(
     """
     now = datetime.now(UTC)
     cutoff = now - timedelta(hours=threshold_hours)
-    logger.info("Scanning for aging receipts created before %s (cutoff=%dh)", cutoff.isoformat(), threshold_hours)
+    logger.info(
+        "Scanning for aging receipts created before %s (cutoff=%dh)",
+        cutoff.isoformat(),
+        threshold_hours,
+    )
 
     stmt = (
         select(Receipt)

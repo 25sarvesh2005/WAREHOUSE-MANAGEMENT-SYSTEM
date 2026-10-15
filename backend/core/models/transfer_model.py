@@ -5,7 +5,7 @@ Defines multi-warehouse inventory transfer header and line models.
 
 Tables:
     - transfers: Transfer header tracking origin/destination facilities and lifecycle states.
-    - transfer_lines: Per-SKU transfer line items tracking requested, dispatched, and received quantities.
+    - transfer_lines: Per-SKU line items tracking requested, dispatched, and received quantities.
 """
 
 from datetime import datetime
@@ -36,7 +36,9 @@ class Transfer(UUIDPrimaryKeyMixin, Base):
         Index("ix_transfers_origin_dest", "origin_warehouse_id", "destination_warehouse_id"),
     )
 
-    transfer_number: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    transfer_number: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False, index=True
+    )
     seller_id: Mapped[UUID] = mapped_column(ForeignKey("sellers.id"), nullable=False, index=True)
     origin_warehouse_id: Mapped[UUID] = mapped_column(
         ForeignKey("warehouses.id"), nullable=False, index=True
@@ -71,7 +73,9 @@ class TransferLine(UUIDPrimaryKeyMixin, Base):
 
     __tablename__ = "transfer_lines"
 
-    transfer_id: Mapped[UUID] = mapped_column(ForeignKey("transfers.id"), nullable=False, index=True)
+    transfer_id: Mapped[UUID] = mapped_column(
+        ForeignKey("transfers.id"), nullable=False, index=True
+    )
     product_id: Mapped[UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     requested_quantity: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     approved_quantity: Mapped[Decimal] = mapped_column(

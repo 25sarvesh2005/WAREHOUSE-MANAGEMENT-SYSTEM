@@ -41,7 +41,9 @@ class VoiceParsedLineResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     quantity: str = Field(..., description="Decimal quantity string.")
-    inventory_state: str = Field(..., description="Target inventory state: AVAILABLE, DAMAGED, QUARANTINED.")
+    inventory_state: str = Field(
+        ..., description="Target inventory state: AVAILABLE, DAMAGED, QUARANTINED."
+    )
     condition_note: str | None = Field(default=None, description="Extracted condition note.")
 
 
@@ -61,7 +63,9 @@ class VoiceReceivingDraftResponse(BaseModel):
     product_id: UUID | None = Field(default=None, description="Selected product ID if known.")
     warehouse_id: UUID | None = Field(default=None, description="Warehouse location ID.")
     receipt_id: UUID | None = Field(default=None, description="Linked receipt ID if present.")
-    status: str = Field(..., description="Draft status: DRAFTED, APPLIED_TO_RECEIPT_DRAFT, DISCARDED.")
+    status: str = Field(
+        ..., description="Draft status: DRAFTED, APPLIED_TO_RECEIPT_DRAFT, DISCARDED."
+    )
     safety_decision: str = Field(default="ALLOW_DRAFT_ONLY", description="Safety guard outcome.")
     created_at: datetime = Field(..., description="Draft creation timestamp.")
 
@@ -92,7 +96,9 @@ class VoiceInteractionItemResponse(BaseModel):
     language_code: str = Field(..., description="Language code.")
     transcript_text: str | None = Field(default=None, description="Transcribed speech text.")
     transcript_confidence: float | None = Field(default=None, description="Confidence score.")
-    status: str = Field(..., description="Status: TRANSCRIBED, PARSED, FAILED, DISCARDED, APPLIED_TO_DRAFT.")
+    status: str = Field(
+        ..., description="Status: TRANSCRIBED, PARSED, FAILED, DISCARDED, APPLIED_TO_DRAFT."
+    )
     created_at: datetime = Field(..., description="Creation timestamp.")
 
 

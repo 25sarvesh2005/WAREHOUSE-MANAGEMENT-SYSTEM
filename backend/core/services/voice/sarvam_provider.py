@@ -153,8 +153,12 @@ class SarvamTTSProvider(TextToSpeechProvider):
             raise VoiceProviderUnavailableError("Sarvam authentication failed. Verify API key.")
 
         if response.status_code != 200:
-            logger.warning("Sarvam TTS returned HTTP %s: %s", response.status_code, response.text[:200])
-            raise VoiceSynthesisError(f"Sarvam synthesis failed with status {response.status_code}.")
+            logger.warning(
+                "Sarvam TTS returned HTTP %s: %s", response.status_code, response.text[:200]
+            )
+            raise VoiceSynthesisError(
+                f"Sarvam synthesis failed with status {response.status_code}."
+            )
 
         try:
             data: dict[str, Any] = response.json()
@@ -257,15 +261,21 @@ class SarvamSTTProvider(SpeechToTextProvider):
             raise VoiceTranscriptionError("Voice transcription service timed out.") from exc
         except Exception as exc:
             logger.warning("Sarvam STT connection error: %s", exc.__class__.__name__)
-            raise VoiceTranscriptionError("Could not connect to voice transcription service.") from exc
+            raise VoiceTranscriptionError(
+                "Could not connect to voice transcription service."
+            ) from exc
 
         if response.status_code in {401, 403}:
             logger.error("Sarvam STT authentication failed with status %s", response.status_code)
             raise VoiceProviderUnavailableError("Sarvam authentication failed. Verify API key.")
 
         if response.status_code != 200:
-            logger.warning("Sarvam STT returned HTTP %s: %s", response.status_code, response.text[:200])
-            raise VoiceTranscriptionError(f"Sarvam transcription failed with status {response.status_code}.")
+            logger.warning(
+                "Sarvam STT returned HTTP %s: %s", response.status_code, response.text[:200]
+            )
+            raise VoiceTranscriptionError(
+                f"Sarvam transcription failed with status {response.status_code}."
+            )
 
         try:
             res_data: dict[str, Any] = response.json()

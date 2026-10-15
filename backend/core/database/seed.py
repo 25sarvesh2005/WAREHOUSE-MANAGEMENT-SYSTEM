@@ -85,7 +85,9 @@ async def _secure_public_tables_for_supabase(connection: AsyncConnection) -> Non
         for table in Base.metadata.sorted_tables:
             schema_name = table.schema or "public"
             qualified_table = f"{preparer.quote_schema(schema_name)}.{preparer.quote(table.name)}"
-            await connection.execute(text(f"ALTER TABLE {qualified_table} ENABLE ROW LEVEL SECURITY"))
+            await connection.execute(
+                text(f"ALTER TABLE {qualified_table} ENABLE ROW LEVEL SECURITY")
+            )
             for role in existing_roles:
                 quoted_role = preparer.quote(role)
                 await connection.execute(
@@ -236,11 +238,25 @@ async def seed_initial_data() -> None:
             )
             wh_map["CMH"] = cmh_wh
 
-        # Seed 1 canonical user per role category
         staff_seeds = [
-            ("manager@whitfield.local", "Marcus Vance (Operations Manager)", UserRole.WAREHOUSE_MANAGER.value, "Manager123!"),
-            ("receiver@whitfield.local", "Elena Rostova (Inbound Receiver)", UserRole.RECEIVER.value, "Receiver123!"),
-            ("picker@whitfield.local", "John Doe (Lead Picker/Packer)", UserRole.PICKER_PACKER.value, "Picker123!"),
+            (
+                "manager@whitfield.local",
+                "Marcus Vance (Operations Manager)",
+                UserRole.WAREHOUSE_MANAGER.value,
+                "Manager123!",
+            ),
+            (
+                "receiver@whitfield.local",
+                "Elena Rostova (Inbound Receiver)",
+                UserRole.RECEIVER.value,
+                "Receiver123!",
+            ),
+            (
+                "picker@whitfield.local",
+                "John Doe (Lead Picker/Packer)",
+                UserRole.PICKER_PACKER.value,
+                "Picker123!",
+            ),
         ]
         for s_email, s_name, s_role, s_pwd in staff_seeds:
             existing_staff = await identity_crud.get_user_by_email(session, s_email)
@@ -264,7 +280,11 @@ async def seed_initial_data() -> None:
                 existing_staff.hashed_password = hash_password(s_pwd)
                 existing_staff.status = UserStatus.ACTIVE.value
                 for wh in wh_map.values():
-                    if not any(a.warehouse_id == wh.id for a in existing_staff.warehouse_assignments):
+                    has_assignment = any(
+                        a.warehouse_id == wh.id
+                        for a in existing_staff.warehouse_assignments
+                    )
+                    if not has_assignment:
                         await identity_crud.assign_user_to_warehouse(
                             session,
                             user_id=existing_staff.id,

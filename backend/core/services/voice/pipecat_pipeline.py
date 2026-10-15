@@ -1,11 +1,11 @@
 """
 --------------------------------------------------------------------------------
 File        : core/services/voice/pipecat_pipeline.py
-Purpose     : Define modular streaming pipeline architecture for future Pipecat / WebRTC integration.
+Purpose     : Define modular streaming pipeline architecture for future Pipecat / WebRTC.
 
 Responsibilities:
-    - Provide an extensible streaming abstraction for real-time bidirectional audio (AI Release C Slice 2).
-    - Maintain strict safety boundaries: streaming sessions may draft, but never mutate ledger directly.
+    - Provide extensible streaming abstraction for real-time audio (AI Release C Slice 2).
+    - Maintain strict safety boundaries: streaming sessions may draft, but never mutate ledger.
     - Remain completely import-safe without requiring optional streaming C-bindings during Slice 1.
 
 Flow:

@@ -223,7 +223,8 @@ async def update_balance_projection(
         }:
             raise ValueError(
                 f"Insufficient inventory balance for state '{inventory_state}': "
-                f"current {balance.quantity} + delta {quantity_delta} = {new_quantity} cannot be negative."
+                f"current {balance.quantity} + delta {quantity_delta} = "
+                f"{new_quantity} cannot be negative."
             )
         balance.quantity = new_quantity
         balance.version = balance.version + 1

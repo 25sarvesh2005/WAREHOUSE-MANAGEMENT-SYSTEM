@@ -282,7 +282,11 @@ class IdentityController:
                     action_type=AuditActionType.USER_CREATED.value,
                     source_record_type="users",
                     source_record_id=user.id,
-                    metadata_json={"email": user.email, "role": user.role, "created_by": str(actor_id)},
+                    metadata_json={
+                        "email": user.email,
+                        "role": user.role,
+                        "created_by": str(actor_id),
+                    },
                 )
                 logger.info("User created successfully %s by actor %s", user.id, actor_id)
                 return self._user_response(user)
@@ -360,7 +364,9 @@ class IdentityController:
             for assignment in user.seller_assignments:
                 seller = await identity_crud.get_seller_by_id(session, assignment.seller_id)
                 if seller and seller.status != BusinessStatus.ACTIVE.value:
-                    await identity_crud.update_seller_status(session, seller, BusinessStatus.ACTIVE.value)
+                    await identity_crud.update_seller_status(
+                        session, seller, BusinessStatus.ACTIVE.value
+                    )
 
             await audit_crud.create_audit_event(
                 session,
@@ -380,7 +386,7 @@ class IdentityController:
         scope: dict[str, Any],
     ) -> dict[str, Any]:
         """
-        Update the status of any worker or user account (ACTIVE, INACTIVE, SUSPENDED, PENDING_APPROVAL).
+        Update status of worker or user account (ACTIVE, INACTIVE, SUSPENDED, PENDING_APPROVAL).
         """
         logger.info("Executing IdentityController.update_user_status")
         require_roles(scope, {UserRole.ADMINISTRATOR, UserRole.WAREHOUSE_MANAGER})
@@ -394,18 +400,25 @@ class IdentityController:
             UserStatus.PENDING_APPROVAL.value,
         }
         if status_val not in valid_statuses:
+            allowed_str = ", ".join(sorted(valid_statuses))
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid status '{status_val}'. Allowed: {', '.join(sorted(valid_statuses))}",
+                detail=f"Invalid status '{status_val}'. Allowed: {allowed_str}",
             )
 
         async with transaction_session() as session:
             user = await identity_crud.get_user_by_id(session, user_id)
             if not user:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                )
 
             # Hierarchy protection: Managers cannot suspend/modify Administrators
-            if actor_role == UserRole.WAREHOUSE_MANAGER.value and user.role == UserRole.ADMINISTRATOR.value:
+            if (
+                actor_role == UserRole.WAREHOUSE_MANAGER.value
+                and user.role == UserRole.ADMINISTRATOR.value
+            ):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Warehouse Managers cannot modify Administrator accounts",
@@ -419,7 +432,9 @@ class IdentityController:
                 for assignment in user.seller_assignments:
                     seller = await identity_crud.get_seller_by_id(session, assignment.seller_id)
                     if seller and seller.status != BusinessStatus.ACTIVE.value:
-                        await identity_crud.update_seller_status(session, seller, BusinessStatus.ACTIVE.value)
+                        await identity_crud.update_seller_status(
+                            session, seller, BusinessStatus.ACTIVE.value
+                        )
 
             await audit_crud.create_audit_event(
                 session,
@@ -427,9 +442,18 @@ class IdentityController:
                 action_type=AuditActionType.USER_UPDATED.value,
                 source_record_type="users",
                 source_record_id=user.id,
-                metadata_json={"old_status": old_status, "new_status": status_val, "email": user.email},
+                metadata_json={
+                    "old_status": old_status,
+                    "new_status": status_val,
+                    "email": user.email,
+                },
             )
-            logger.info("User status updated successfully %s: %s -> %s", user.id, old_status, status_val)
+            logger.info(
+                "User status updated successfully %s: %s -> %s",
+                user.id,
+                old_status,
+                status_val,
+            )
             return self._user_response(user)
 
     async def update_seller_status(
@@ -451,15 +475,19 @@ class IdentityController:
             BusinessStatus.SUSPENDED.value,
         }
         if status_val not in valid_statuses:
+            allowed_str = ", ".join(sorted(valid_statuses))
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid status '{status_val}'. Allowed: {', '.join(sorted(valid_statuses))}",
+                detail=f"Invalid status '{status_val}'. Allowed: {allowed_str}",
             )
 
         async with transaction_session() as session:
             seller = await identity_crud.get_seller_by_id(session, seller_id)
             if not seller:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Seller not found",
+                )
 
             old_status = seller.status
             await identity_crud.update_seller_status(session, seller, status_val)
@@ -470,9 +498,18 @@ class IdentityController:
                 action_type=AuditActionType.SELLER_UPDATED.value,
                 source_record_type="sellers",
                 source_record_id=seller.id,
-                metadata_json={"old_status": old_status, "new_status": status_val, "code": seller.code},
+                metadata_json={
+                    "old_status": old_status,
+                    "new_status": status_val,
+                    "code": seller.code,
+                },
             )
-            logger.info("Seller status updated successfully %s: %s -> %s", seller.id, old_status, status_val)
+            logger.info(
+                "Seller status updated successfully %s: %s -> %s",
+                seller.id,
+                old_status,
+                status_val,
+            )
             return seller
 
     async def list_users(

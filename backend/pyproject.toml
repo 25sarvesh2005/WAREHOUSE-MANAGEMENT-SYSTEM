@@ -57,7 +57,10 @@ filterwarnings = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = [
+    "core/database/migrations",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-ignore = ["B008"]
+ignore = ["B008", "UP042"]
