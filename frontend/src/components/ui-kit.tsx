@@ -56,6 +56,102 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
   return <div className={`card-surface p-5 ${className}`}>{children}</div>;
 }
 
+export function StatCard({
+  title,
+  value,
+  subtext,
+  icon: Icon,
+  tone = "primary",
+  trend,
+  className = "",
+}: {
+  title: string;
+  value: ReactNode;
+  subtext?: string;
+  icon?: LucideIcon;
+  tone?: "primary" | "emerald" | "amber" | "rose" | "slate";
+  trend?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`card-surface p-4 sm:p-5 flex flex-col justify-between transition-all hover:-translate-y-0.5 hover:shadow-panel ${className}`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </span>
+        {Icon ? <IconTile icon={Icon} size="sm" tone={tone} /> : null}
+      </div>
+      <div className="mt-3">
+        <div className="font-mono text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          {value}
+        </div>
+        {subtext ? <p className="mt-1 text-xs text-muted-foreground">{subtext}</p> : null}
+      </div>
+      {trend ? <div className="mt-2 text-[11px] font-medium text-emerald-600">{trend}</div> : null}
+    </div>
+  );
+}
+
+export function FormField({
+  label,
+  htmlFor,
+  hint,
+  error,
+  children,
+  required,
+  className = "",
+}: {
+  label: string;
+  htmlFor?: string;
+  hint?: string;
+  error?: string;
+  children: ReactNode;
+  required?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`space-y-1.5 ${className}`}>
+      <div className="flex items-center justify-between">
+        <label htmlFor={htmlFor} className="block text-xs font-semibold text-foreground">
+          {label} {required ? <span className="text-destructive">*</span> : null}
+        </label>
+        {hint ? <span className="text-[11px] text-muted-foreground">{hint}</span> : null}
+      </div>
+      {children}
+      {error ? <p className="text-xs text-destructive font-medium">{error}</p> : null}
+    </div>
+  );
+}
+
+export function Input({
+  className = "",
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      className={`w-full min-h-[44px] rounded-xl border border-input bg-card px-3.5 py-2 text-sm font-medium text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      {...props}
+    />
+  );
+}
+
+export function Select({
+  className = "",
+  children,
+  ...props
+}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      className={`w-full min-h-[44px] rounded-xl border border-input bg-card px-3.5 py-2 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      {...props}
+    >
+      {children}
+    </select>
+  );
+}
+
 export function PageHeader({
   title,
   subtitle,

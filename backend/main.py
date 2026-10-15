@@ -191,10 +191,7 @@ async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
         await seed_initial_data()
     except Exception as error:
         logger.error("Startup database initialization failed: %s", error, exc_info=True)
-        if runtime_settings.app_env not in ("development", "test"):
-            logger.warning("Continuing startup in %s mode — database connection will be retried on demand.", runtime_settings.app_env)
-        else:
-            raise
+        logger.warning("Continuing startup in %s mode — database connection will be retried on demand.", runtime_settings.app_env)
     expiry_task = asyncio.create_task(_periodic_reservation_expiry_worker())
     outbox_task = asyncio.create_task(_periodic_outbox_dispatch_worker())
     sla_task = asyncio.create_task(_periodic_operational_sla_worker())
