@@ -40,8 +40,15 @@ async def ensure_db(request: pytest.FixtureRequest):
         _DB_AVAILABLE = True
     except Exception as err:
         _DB_AVAILABLE = False
-        # If this specific test is marked as needing db, skip it cleanly
-        if request.node.get_closest_marker("db") is not None:
+        db_required_modules = {
+            "test_background_jobs",
+            "test_mcp_tools",
+            "test_outbox_flows",
+            "test_system_flaw_fixes",
+            "test_voice_receiving_flows",
+        }
+        mod_name = request.module.__name__.split(".")[-1] if request.module else ""
+        if request.node.get_closest_marker("db") is not None or mod_name in db_required_modules:
             pytest.skip(f"Live database connection unavailable: {err}")
     yield
 
