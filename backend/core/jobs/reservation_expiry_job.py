@@ -15,7 +15,6 @@ from sqlalchemy.orm import selectinload
 from common.logger import get_logger
 from core.constants import InventoryMovementType, InventoryState, OrderStatus
 from core.cruds import inventory_crud
-from core.models.inventory_model import InventoryMovement
 from core.models.order_model import InventoryReservation, Order, OrderLine
 
 logger = get_logger(__name__)

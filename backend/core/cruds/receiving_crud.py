@@ -5,8 +5,8 @@ Database persistence operations for receiving receipts, lines, and receipt event
 from __future__ import annotations
 
 import secrets
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy import select

@@ -4,7 +4,7 @@ Database persistence operations for customer orders, order lines, and reservatio
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import select

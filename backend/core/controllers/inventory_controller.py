@@ -6,8 +6,9 @@ Orchestrates inventory balances, movement ledger queries, and reconciliations.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Sequence
+from typing import Any
 from uuid import UUID
 
 from fastapi import HTTPException, status

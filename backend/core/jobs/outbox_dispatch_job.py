@@ -4,9 +4,9 @@ Background job dispatching pending transactional outbox events to downstream con
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime, timedelta
-from typing import Any, Callable, Coroutine
-from uuid import UUID
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

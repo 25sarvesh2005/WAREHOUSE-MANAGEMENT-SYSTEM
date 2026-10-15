@@ -25,7 +25,6 @@ from core.constants import (
 from core.cruds import audit_crud, fulfillment_crud, inventory_crud, order_crud, outbox_crud
 from core.database.database import transaction_session
 from core.models.fulfillment_model import Package, PickTask, PickTaskLine, Shipment, ShipmentEvent
-from core.models.inventory_model import InventoryMovement
 
 logger = get_logger(__name__)
 

@@ -4,8 +4,8 @@ Database persistence operations for AI interaction audits, tool calls, and draft
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy import desc, func, select

@@ -20,8 +20,7 @@ from core.constants import TransferStatus
 from core.database.base import Base, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from core.models.catalog_model import Product, Seller, Warehouse
-    from core.models.identity_model import User
+    pass
 
 
 class Transfer(UUIDPrimaryKeyMixin, Base):

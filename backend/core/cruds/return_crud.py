@@ -8,8 +8,8 @@ Rules:
     - Never raise HTTPException.
 """
 
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy import func, or_, select

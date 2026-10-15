@@ -21,18 +21,14 @@ from core.constants import (
     OutboxEventType,
     UserRole,
 )
-from core.controllers import catalog_controller
 from core.cruds import (
     audit_crud,
     catalog_crud,
-    identity_crud,
     inventory_crud,
     order_crud,
     outbox_crud,
 )
 from core.database.database import transaction_session
-from core.models.audit_model import AuditEvent
-from core.models.inventory_model import InventoryMovement
 from core.models.order_model import InventoryReservation, Order, OrderLine
 
 logger = get_logger(__name__)

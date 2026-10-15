@@ -6,8 +6,9 @@ Orchestrates voice-assisted receiving drafts, transcription, and speech synthesi
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Sequence
+from typing import Any
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException, status
@@ -15,7 +16,12 @@ from fastapi import HTTPException, status
 from common.logger import get_logger
 from common.warehouse_scope import assert_warehouse_access, require_roles
 from core.config.settings import Settings, get_settings
-from core.constants import AuditActionType, UserRole, VoiceInteractionStatus, VoiceReceivingDraftStatus
+from core.constants import (
+    AuditActionType,
+    UserRole,
+    VoiceInteractionStatus,
+    VoiceReceivingDraftStatus,
+)
 from core.cruds import audit_crud, voice_crud
 from core.database.database import transaction_session
 from core.models.voice_model import VoiceInteraction, VoiceReceivingDraft
@@ -30,7 +36,10 @@ from core.services.voice.provider import (
     build_tts_provider,
 )
 from core.services.voice.safety import check_voice_receiving_safety
-from core.services.voice.transcript_parser import VoiceParsedReceivingDraft, parse_receiving_transcript
+from core.services.voice.transcript_parser import (
+    VoiceParsedReceivingDraft,
+    parse_receiving_transcript,
+)
 
 logger = get_logger(__name__)
 

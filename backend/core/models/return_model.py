@@ -21,8 +21,7 @@ from core.constants import ReturnStatus
 from core.database.base import Base, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from core.models.catalog_model import Product, Seller, Warehouse, WarehouseLocation
-    from core.models.order_model import Order
+    pass
 
 
 class Return(UUIDPrimaryKeyMixin, Base):

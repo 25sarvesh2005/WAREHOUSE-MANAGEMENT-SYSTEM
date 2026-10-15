@@ -7,9 +7,10 @@ Orchestrates opening inventory migration batches, staging, validation, and ledge
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
-from typing import Any, Sequence
+from typing import Any
 from uuid import UUID
 
 from fastapi import HTTPException, status

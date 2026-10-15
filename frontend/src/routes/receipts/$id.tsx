@@ -1,21 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  AlertTriangle,
   ArrowLeft,
   Barcode,
-  CalendarDays,
   CheckCircle2,
-  Database,
-  Hash,
-  Layers,
-  Mic,
   PackageCheck,
   Plus,
   ShieldAlert,
-  ShieldCheck,
-  Trash2,
-  Truck,
-  XCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";

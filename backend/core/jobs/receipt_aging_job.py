@@ -9,7 +9,6 @@ from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from common.logger import get_logger
 from core.constants import OutboxEventType, ReceiptStatus

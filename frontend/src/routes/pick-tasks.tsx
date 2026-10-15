@@ -1,13 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   AlertTriangle,
-  Barcode,
   CheckCircle2,
-  ClipboardList,
-  Layers,
-  Package,
   Plus,
-  ShieldAlert,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { AppDialog } from "@/components/AppDialog";

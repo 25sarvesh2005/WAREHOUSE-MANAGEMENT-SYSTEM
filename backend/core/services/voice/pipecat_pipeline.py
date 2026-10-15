@@ -29,7 +29,7 @@ Raises:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -42,7 +42,7 @@ class VoiceStreamFrame:
     frame_type: str = "audio_chunk"  # audio_chunk, transcript_delta, interim_draft, eos
     payload_bytes: bytes = b""
     text_content: str = ""
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 class VoiceStreamingSession:

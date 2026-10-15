@@ -27,9 +27,10 @@ from __future__ import annotations
 
 import csv
 import hashlib
+from collections.abc import Iterable
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from common.logger import get_logger
 

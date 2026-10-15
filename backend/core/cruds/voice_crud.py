@@ -4,8 +4,9 @@ Database persistence operations for voice interactions and drafts.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Sequence
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import desc, func, select

@@ -46,7 +46,7 @@ async def create_return(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -70,7 +70,8 @@ async def list_returns(
 ) -> ReturnListResponse:
     """List returns with optional query filters.
 
-    Supports text search across return number, RMA, or tracking number, alongside tenant and warehouse scoping.
+    Supports text search across return number, RMA, or tracking number,
+    alongside tenant and warehouse scoping.
 
     Args:
         scope: Security context containing accessible sellers and warehouses.
@@ -108,7 +109,7 @@ async def list_returns(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -136,7 +137,7 @@ async def get_return(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -165,7 +166,7 @@ async def receive_return(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -196,4 +197,4 @@ async def inspect_and_dispose_return(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error

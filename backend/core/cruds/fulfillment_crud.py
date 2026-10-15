@@ -4,7 +4,7 @@ Database persistence operations for pick tasks, packages, and manual shipments.
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import select
@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from common.logger import get_logger
-from core.models.fulfillment_model import Package, PickTask, PickTaskLine, Shipment, ShipmentEvent
+from core.models.fulfillment_model import Package, PickTask, Shipment, ShipmentEvent
 from core.models.order_model import Order
 
 logger = get_logger(__name__)

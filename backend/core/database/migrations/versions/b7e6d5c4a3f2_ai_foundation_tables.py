@@ -6,7 +6,7 @@ Create Date: 2026-08-14 10:30:00.000000
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
@@ -14,9 +14,9 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "b7e6d5c4a3f2"
-down_revision: Union[str, None] = "a6c2d8e4f0b1"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "a6c2d8e4f0b1"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 AI_TABLES: tuple[str, ...] = (
     "ai_interactions",
