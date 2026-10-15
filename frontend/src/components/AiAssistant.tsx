@@ -5,9 +5,6 @@ import {
   Bot,
   Box,
   CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  Clock,
   Copy,
   Database,
   Filter,
@@ -231,7 +228,7 @@ const INTENTS: IntentConfig[] = [
 function detectIntentFromText(text: string): string | null {
   const clean = text.trim().toUpperCase();
   if (clean.startsWith("ORD-")) return "order-status";
-  if (clean.startsWith("RCV-")) return "receipt-status";
+  if (clean.startsWith("REC-") || clean.startsWith("RCV-")) return "receipt-status";
   if (clean.startsWith("TRK-") || clean.startsWith("SHP-")) return "shipment-status";
   if (clean.startsWith("TRF-")) return "transfer-status";
   if (clean.startsWith("RMA-") || clean.startsWith("RET-")) return "return-status";
@@ -367,7 +364,6 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState(false);
-  const [feedbackGiven, setFeedbackGiven] = useState<"up" | "down" | null>(null);
   const [showVoiceDock, setShowVoiceDock] = useState(false);
   const [activeResult, setActiveResult] = useState<AiResult | null>(null);
   const [recentQueries, setRecentQueries] = useState<RecentQuery[]>([]);
@@ -375,6 +371,12 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
 
   const activeIntent =
     availableIntents.find((i) => i.id === selectedIntentId) ?? availableIntents[0]!;
+
+  const detectedIntentId = queryInput.trim() ? detectIntentFromText(queryInput) : null;
+  const detectedIntent = detectedIntentId
+    ? availableIntents.find((i) => i.id === detectedIntentId)
+    : null;
+  const isAutoRouting = Boolean(detectedIntent && detectedIntent.id !== activeIntent.id);
 
   // Handle Intent Selection
   function handleSelectIntent(intent: IntentConfig) {
@@ -718,6 +720,15 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
               )}
             </button>
           </div>
+
+          {isAutoRouting && detectedIntent && (
+            <div className="flex items-center gap-1.5 text-xs text-primary font-medium bg-primary-tint/60 px-3 py-1.5 rounded-xl border border-primary/20 animate-in fade-in">
+              <Sparkles className="size-3.5 text-primary shrink-0" />
+              <span>
+                Smart routing detected: inquiry will route to <strong>{detectedIntent.shortLabel}</strong>
+              </span>
+            </div>
+          )}
 
           {/* Optional Filter Drawer */}
           {showFilters && (
