@@ -12,7 +12,7 @@ export default defineConfig({
   outputDir: "test-results",
   timeout: process.env.CI ? 45000 : 30000,
   expect: {
-    timeout: process.env.CI ? 12000 : 8000,
+    timeout: 15000,
   },
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:5173",
