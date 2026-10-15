@@ -236,10 +236,11 @@ class ReturnController:
                 line_id = UUID(str(disp_item["return_line_id"]))
                 disp_state = str(disp_item["disposition_state"])
                 qty = Decimal(str(disp_item["quantity"]))
-                dest_loc_id = UUID(str(disp_item["destination_location_id"])) if disp_item.get("destination_location_id") else None
+                raw_dest_id = disp_item.get("destination_location_id")
+                dest_loc_id = UUID(str(raw_dest_id)) if raw_dest_id else None
 
                 # Find line
-                target_line = next((l for l in ret.lines if l.id == line_id), None)
+                target_line = next((line for line in ret.lines if line.id == line_id), None)
                 if target_line is None or target_line.product_id is None:
                     continue
 
@@ -254,9 +255,13 @@ class ReturnController:
                 )
 
                 # Map disposition state string to operational InventoryState
+                available_states = (
+                    ReturnDispositionState.AVAILABLE.value,
+                    ReturnDispositionState.RESTOCKED.value,
+                )
                 target_inv_state = (
                     InventoryState.AVAILABLE.value
-                    if disp_state in (ReturnDispositionState.AVAILABLE.value, ReturnDispositionState.RESTOCKED.value)
+                    if disp_state in available_states
                     else (
                         InventoryState.DAMAGED.value
                         if disp_state == ReturnDispositionState.DAMAGED.value
