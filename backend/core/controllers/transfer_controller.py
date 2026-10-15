@@ -133,7 +133,10 @@ class TransferController:
             assert_warehouse_access(scope, transfer.origin_warehouse_id)
 
             # Segregation of duties: Creator cannot approve unless Administrator
-            if transfer.created_by_user_id == actor_id and scope.get("role") != UserRole.ADMINISTRATOR.value:
+            if (
+                transfer.created_by_user_id == actor_id
+                and scope.get("role") != UserRole.ADMINISTRATOR.value
+            ):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Segregation of duties violation: Transfer creator cannot self-approve.",
@@ -195,7 +198,10 @@ class TransferController:
 
             assert_warehouse_access(scope, transfer.origin_warehouse_id)
 
-            if transfer.status not in (TransferStatus.APPROVED.value, TransferStatus.PENDING_APPROVAL.value):
+            if transfer.status not in (
+                TransferStatus.APPROVED.value,
+                TransferStatus.PENDING_APPROVAL.value,
+            ):
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=f"Cannot dispatch transfer in {transfer.status} status.",
@@ -203,7 +209,11 @@ class TransferController:
 
             now = datetime.now(UTC)
             for line in transfer.lines:
-                qty = line.approved_quantity if line.approved_quantity > Decimal("0.00") else line.requested_quantity
+                qty = (
+                    line.approved_quantity
+                    if line.approved_quantity > Decimal("0.00")
+                    else line.requested_quantity
+                )
 
                 # Lock and check AVAILABLE inventory balance at origin warehouse
                 balance = await inventory_crud.get_balance_for_update(
@@ -218,7 +228,10 @@ class TransferController:
                 if avail_qty < qty:
                     raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
-                        detail=f"Insufficient available stock at origin for product {line.product_id}. Requested={qty}, Available={avail_qty}",
+                        detail=(
+                            f"Insufficient available stock at origin for product "
+                            f"{line.product_id}. Requested={qty}, Available={avail_qty}"
+                        ),
                     )
 
                 await inventory_crud.apply_state_transfer(
@@ -296,7 +309,10 @@ class TransferController:
 
             assert_warehouse_access(scope, transfer.destination_warehouse_id)
 
-            if transfer.status not in (TransferStatus.DISPATCHED.value, TransferStatus.PARTIALLY_RECEIVED.value):
+            if transfer.status not in (
+                TransferStatus.DISPATCHED.value,
+                TransferStatus.PARTIALLY_RECEIVED.value,
+            ):
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=f"Cannot receive transfer in {transfer.status} status.",
@@ -308,7 +324,9 @@ class TransferController:
 
             for line in transfer.lines:
                 update_item = line_updates.get(str(line.id), {})
-                good_qty = Decimal(str(update_item.get("received_good_quantity", line.dispatched_quantity)))
+                good_qty = Decimal(
+                    str(update_item.get("received_good_quantity", line.dispatched_quantity))
+                )
                 damaged_qty = Decimal(str(update_item.get("received_damaged_quantity", "0.00")))
                 dispatched_qty = line.dispatched_quantity
 
@@ -386,7 +404,10 @@ class TransferController:
                         source_line_id=line.id,
                         idempotency_key=f"trf-shrinkage-{transfer.id}-{line.id}",
                         reason_code="TRANSFER_MISSING_IN_TRANSIT",
-                        reason_text=f"Transit shortage: dispatched {dispatched_qty}, received {total_received}, missing {missing_qty}",
+                        reason_text=(
+                            f"Transit shortage: dispatched {dispatched_qty}, "
+                            f"received {total_received}, missing {missing_qty}"
+                        ),
                         actor_user_id=actor_id,
                         occurred_at=now,
                     )

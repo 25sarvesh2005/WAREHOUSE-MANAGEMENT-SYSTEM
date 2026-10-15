@@ -46,7 +46,7 @@ async def create_transfer(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -113,7 +113,7 @@ async def list_transfers(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.get(
@@ -141,7 +141,7 @@ async def get_transfer(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -169,7 +169,7 @@ async def approve_transfer(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -197,7 +197,7 @@ async def dispatch_transfer(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -228,7 +228,7 @@ async def receive_transfer(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
 
 
 @router.post(
@@ -261,4 +261,4 @@ async def resolve_discrepancy(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
-        )
+        ) from error
