@@ -7,9 +7,10 @@ Orchestrates read-only AI operations assistance, intent safety guardrails, and a
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Sequence
+from typing import Any
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException, status
@@ -38,7 +39,7 @@ from core.constants import (
 )
 from core.cruds import ai_crud, audit_crud, identity_crud
 from core.database.database import transaction_session
-from core.models.ai_model import AIDraftAction, AIFeedback, AIInteraction, AIToolCall
+from core.models.ai_model import AIInteraction
 from core.services.ai.provider import (
     AIProviderExecutionError,
     AIProviderUnavailableError,
@@ -1238,7 +1239,11 @@ class AIController:
                 "category": "overdue_receipts",
                 "label": "Overdue & Pending Receipts",
                 "count": len(exceptions.overdue_receipts),
-                "severity": "HIGH" if any(r.get("is_overdue") for r in exceptions.overdue_receipts) else "MEDIUM",
+                "severity": (
+                    "HIGH"
+                    if any(r.get("is_overdue") for r in exceptions.overdue_receipts)
+                    else "MEDIUM"
+                ),
                 "items": exceptions.overdue_receipts,
             },
             {
@@ -1252,7 +1257,11 @@ class AIController:
                 "category": "expired_reservations",
                 "label": "Expired & Expiring Reservations",
                 "count": len(exceptions.expired_or_expiring_reservations),
-                "severity": "HIGH" if any(r.get("is_expired") for r in exceptions.expired_or_expiring_reservations) else "MEDIUM",
+                "severity": (
+                    "HIGH"
+                    if any(r.get("is_expired") for r in exceptions.expired_or_expiring_reservations)
+                    else "MEDIUM"
+                ),
                 "items": exceptions.expired_or_expiring_reservations,
             },
             {
@@ -1294,10 +1303,14 @@ class AIController:
             str: Deterministic narrative summary.
         """
         if exceptions.total_exceptions == 0:
-            return "No active operational exceptions found across the specified scope. Operations are in normal status."
+            return (
+                "No active operational exceptions found across the specified scope. "
+                "Operations are in normal status."
+            )
 
         parts = [
-            f"Identified {exceptions.total_exceptions} active operational exception(s) across warehouse subsystems:"
+            f"Identified {exceptions.total_exceptions} active operational exception(s) "
+            "across warehouse subsystems:"
         ]
         for cat in categories:
             count = int(cat["count"])
@@ -1861,9 +1874,13 @@ class AIController:
             f"Warehouse evidence (live records):\n{json.dumps(evidence_payload, default=str)}\n\n"
             f"Guidance/Fallback context:\n{fallback_answer}\n\n"
             "Instructions for AI:\n"
-            "- Answer the user's inquiry directly, conversationally, and accurately based on the supplied warehouse evidence.\n"
-            "- If the user asks for items with 0 quantity, low stock, or category breakdowns (e.g. headphones, hoodies, sellers), analyze the evidence and give a clear, direct answer.\n"
-            "- Keep your response professional, well-formatted (using bolding and bullet points where helpful), and strictly grounded in the live evidence."
+            "- Answer the user's inquiry directly, conversationally, and accurately based on "
+            "the supplied warehouse evidence.\n"
+            "- If the user asks for items with 0 quantity, low stock, or category breakdowns "
+            "(e.g. headphones, hoodies, sellers), analyze the evidence and give a clear, "
+            "direct answer.\n"
+            "- Keep your response professional, well-formatted (using bolding and bullet points "
+            "where helpful), and strictly grounded in the live evidence."
         )
 
     def _availability_fallback_answer(
@@ -1890,7 +1907,8 @@ class AIController:
         if len(unique_skus) > 1:
             total_units = sum(row.available_quantity for row in rows)
             return (
-                f"Found available inventory across {len(rows)} facility balance record(s) for {len(unique_skus)} product(s). "
+                f"Found available inventory across {len(rows)} facility balance record(s) "
+                f"for {len(unique_skus)} product(s). "
                 f"Total available stock is {total_units:.2f} units across warehouses."
             )
         parts = [
