@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { test, expect } from "@playwright/test";
 import {
   clearAuthSession,
@@ -264,10 +267,7 @@ test.describe("Operational Dashboard", () => {
     expect(dashboardRequestCount).toBeGreaterThan(countBeforeManualRetry);
   });
 
-  test("Static scan — Dashboard does not mutate global query configuration", async () => {
-    const fs = await import("node:fs");
-    const path = await import("node:path");
-    const { fileURLToPath } = await import("node:url");
+  test("Static scan — Dashboard does not mutate global query configuration", () => {
     const currentDir = path.dirname(fileURLToPath(import.meta.url));
     const dashboardSource = fs.readFileSync(
       path.resolve(currentDir, "../src/components/Dashboard.tsx"),
