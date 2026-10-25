@@ -43,7 +43,7 @@ from uuid import uuid4
 import httpx
 from dotenv import load_dotenv
 
-DEFAULT_API_BASE_URL = "http://127.0.0.1:8000/api/v1"
+DEFAULT_API_BASE_URL = "http://127.0.0.1:8080/api/v1"
 
 
 @dataclass(frozen=True)
@@ -423,7 +423,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--api-base-url",
         default=os.getenv("PHASE2_E2E_API_BASE_URL", DEFAULT_API_BASE_URL),
-        help="Versioned API base URL, for example http://127.0.0.1:8000/api/v1.",
+        help="Versioned API base URL, for example http://127.0.0.1:8080/api/v1.",
     )
     parser.add_argument(
         "--admin-email",

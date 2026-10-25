@@ -261,7 +261,7 @@ uvicorn main:app --reload --host 127.0.0.1 --port 8080
 * 🚀 **API Root:** [http://127.0.0.1:8080](http://127.0.0.1:8080)
 * 📚 **Interactive Swagger UI:** [http://127.0.0.1:8080/docs](http://127.0.0.1:8080/docs)
 * 📑 **ReDoc Documentation:** [http://127.0.0.1:8080/redoc](http://127.0.0.1:8080/redoc)
-* 🩺 **Health Readiness Probe:** [http://127.0.0.1:8080/readyz](http://127.0.0.1:8080/readyz)
+* 🩺 **Health Readiness Probe:** [http://127.0.0.1:8080/health/ready](http://127.0.0.1:8080/health/ready)
 
 ---
 

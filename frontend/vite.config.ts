@@ -52,7 +52,7 @@ export default defineConfig({
     nitro({
       preset:
         process.env["NITRO_PRESET"] ||
-        (process.env["VERCEL"] ? "vercel" : "vercel"),
+        (process.env["VERCEL"] ? "vercel" : "node-server"),
       hooks: {
         "rollup:before": (_nitro: unknown, config: NitroBundlerConfig) => {
           delete config.output?.inlineDynamicImports;

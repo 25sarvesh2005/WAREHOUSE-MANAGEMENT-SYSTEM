@@ -14,13 +14,13 @@ Run from repository root (`c:\Partition\major_project`):
 # 2. Verify database schema status
 python -m alembic current
 
-# 3. Start FastAPI server on port 8000
-python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+# 3. Start FastAPI server on port 8080
+python -m uvicorn main:app --host 127.0.0.1 --port 8080 --reload
 ```
 
 Backend Health Check:
 ```bash
-curl http://127.0.0.1:8000/api/v1/health/status
+curl http://127.0.0.1:8080/api/v1/health/status
 ```
 
 ### 1.2 Frontend Web App (Vite / TanStack Start)

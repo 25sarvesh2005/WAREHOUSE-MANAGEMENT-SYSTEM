@@ -1,4 +1,4 @@
-﻿# Whitfield Fulfillment WMS — Architecture Reference
+# Whitfield Fulfillment WMS — Architecture Reference
 
 **Version:** 0.1.0  
 **Stack:** Python 3.11+ · FastAPI · PostgreSQL 16 · React 19 · TanStack Router · Vite
@@ -78,8 +78,12 @@ WAREHOUSE-MANAGEMENT-SYSTEM/
 │   ├── ARCHITECTURE.md             # This document
 │   └── runbooks/                   # Operational runbooks and launch checklists
 ├── .github/workflows/ci.yml        # 4-job GitHub Actions CI pipeline
-├── Dockerfile                      # Root multi-stage container (backend)
+├── .gsd/SPEC.md                    # Repository simplification specification
+├── .dockerignore                   # Docker build exclusions for root container
+├── Dockerfile                      # Root multi-stage container (backend Render deploy)
 ├── docker-compose.yml              # Local/cloud multi-container orchestration
+├── render.yaml                     # Render Blueprint specification for backend
+├── LICENSE                         # MIT License
 └── README.md                       # Project overview, quick start, and API explorer
 ```
 

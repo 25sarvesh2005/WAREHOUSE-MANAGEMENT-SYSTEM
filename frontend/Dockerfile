@@ -11,6 +11,7 @@ RUN npm ci
 
 # Copy source code and compile production bundle
 COPY . .
+ENV NITRO_PRESET=node-server
 RUN npm run build
 
 # ──────────────────────────────────────────────────────────────────────────────

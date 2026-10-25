@@ -146,7 +146,7 @@ class Settings(BaseSettings):
     mcp_host: str = "127.0.0.1"
     mcp_port: int = 8001
     mcp_transport: Literal["streamable-http"] = "streamable-http"
-    warehouse_api_base_url: str = "http://127.0.0.1:8000"
+    warehouse_api_base_url: str = "http://127.0.0.1:8080"
     bootstrap_admin_email: str = "admin@whitfield.local"
     bootstrap_admin_password: str = "change-this-before-use"
     initialize_schema_on_startup: bool = True

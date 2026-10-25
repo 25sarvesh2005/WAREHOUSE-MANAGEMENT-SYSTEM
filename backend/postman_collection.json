@@ -15,10 +15,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://127.0.0.1:8000/health/live",
+              "raw": "http://127.0.0.1:8080/health/live",
               "protocol": "http",
               "host": ["127", "0", "0", "1"],
-              "port": "8000",
+              "port": "8080",
               "path": ["health", "live"]
             }
           },
@@ -46,10 +46,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://127.0.0.1:8000/health/ready",
+              "raw": "http://127.0.0.1:8080/health/ready",
               "protocol": "http",
               "host": ["127", "0", "0", "1"],
-              "port": "8000",
+              "port": "8080",
               "path": ["health", "ready"]
             }
           },

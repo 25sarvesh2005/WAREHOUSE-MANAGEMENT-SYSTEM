@@ -1,0 +1,40 @@
+# Whitfield WMS — Root .dockerignore for backend Docker builds (Render / CI)
+.git/
+.github/
+.gsd/
+docs/
+frontend/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+
+# Test artifacts and caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local secrets and config
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs and temporary files
+logs/
+*.log
+tmp/
+
+# IDE / OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

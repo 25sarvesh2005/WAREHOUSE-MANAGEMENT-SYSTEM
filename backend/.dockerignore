@@ -43,7 +43,6 @@ logs/
 
 # Temporary files
 tmp/
-tools/
 
 # Node (should not be in backend but guard anyway)
 node_modules/

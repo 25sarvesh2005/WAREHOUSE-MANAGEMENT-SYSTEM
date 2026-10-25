@@ -261,6 +261,23 @@ npm run dev
 ```
 *Frontend runs at **`http://127.0.0.1:5173`**.*
 
+### 4. Alternative: Run via Docker Compose
+To launch PostgreSQL, the FastAPI backend, and the Vite frontend dev server in containers:
+```bash
+docker compose up --build
+```
+- PostgreSQL available on `localhost:5432`
+- FastAPI backend available on `http://127.0.0.1:8080` (docs at `/docs`)
+- Frontend development server available on `http://localhost:5173`
+
+---
+
+## 🚀 Production Deployment
+
+- **Backend API (Render):** Automatically built and deployed using `render.yaml` and the root `Dockerfile` ([whitfield-wms-api.onrender.com](https://whitfield-wms-api.onrender.com/docs)).
+- **Frontend Web App (Vercel):** Deployed via Vercel Git integration with Nitro preset ([warehouse-management-system-jade-seven.vercel.app](https://warehouse-management-system-jade-seven.vercel.app)).
+- **Standalone Frontend Container:** Can also be built locally or for container hosting using `frontend/Dockerfile` (`ENV NITRO_PRESET=node-server`).
+
 ---
 
 ## 🛠️ CLI & Utility Tools
@@ -300,6 +317,8 @@ Comprehensive runbooks and operational checklists are maintained in the [`docs/r
 
 ```
 WAREHOUSE-MANAGEMENT-SYSTEM/
+├── .github/workflows/ci.yml        # 4-job CI pipeline (backend, e2e, frontend, a11y)
+├── .gsd/SPEC.md                    # Repository simplification specification
 ├── backend/                        # FastAPI Backend Application
 │   ├── main.py                     # ASGI entrypoint & lifespan management
 │   ├── common/                     # Auth, logger, request ID, rate limiting
@@ -315,7 +334,7 @@ WAREHOUSE-MANAGEMENT-SYSTEM/
 │   │   └── jobs/                   # Periodic background workers (outbox, SLAs)
 │   ├── tests/                      # 122+ Pytest unit and E2E test suites
 │   ├── tools/                      # Data seeders, load tests & verification scripts
-│   ├── Dockerfile                  # Production backend container build
+│   ├── Dockerfile                  # Multi-stage backend container build
 │   └── requirements.txt            # Python dependencies
 ├── frontend/                       # Vite + React 19 Frontend Web Portal
 │   ├── src/
@@ -325,13 +344,14 @@ WAREHOUSE-MANAGEMENT-SYSTEM/
 │   │   ├── lib/                    # API client, TypeScript interfaces, auth
 │   │   └── styles.css              # Modern CSS & Tailwind styling
 │   ├── e2e/                        # Playwright E2E and axe-core accessibility tests
-│   ├── Dockerfile                  # Production frontend container build
+│   ├── Dockerfile                  # Standalone Node SSR container build
 │   └── package.json                # Frontend dependencies
 ├── docs/
 │   ├── ARCHITECTURE.md             # System design, layers, invariants, config reference
 │   └── runbooks/                   # Operational runbooks and launch checklists
-├── .github/workflows/ci.yml        # 4-job CI pipeline (backend, e2e, frontend, a11y)
-├── docker-compose.yml              # Multi-container local/cloud orchestration
+├── Dockerfile                      # Root multi-stage container for Render deployment
+├── docker-compose.yml              # Multi-container local orchestration (PostgreSQL + API + Web)
+├── render.yaml                     # Render Blueprint specification for backend
 ├── LICENSE                         # MIT License
 └── README.md                       # Platform overview and quick-start guide
 ```

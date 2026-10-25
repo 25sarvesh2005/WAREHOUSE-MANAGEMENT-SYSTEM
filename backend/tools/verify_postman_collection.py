@@ -41,7 +41,7 @@ async def run_postman_verification() -> None:
     total = 0
 
     transport = ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://127.0.0.1:8000") as client:
+    async with httpx.AsyncClient(transport=transport, base_url="http://127.0.0.1:8080") as client:
         # -------------------------------------------------------------
         # 1. Health & Readiness
         # -------------------------------------------------------------
