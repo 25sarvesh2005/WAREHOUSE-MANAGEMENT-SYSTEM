@@ -1,17 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  AlertTriangle,
-  Boxes,
-  CheckCircle2,
-  FileSearch,
   Plus,
   Search,
-  ShieldAlert,
   ShieldCheck,
   Trash2,
-  Undo2,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
@@ -32,18 +26,17 @@ import {
   Td,
   Th,
 } from "@/components/ui-kit";
-import { productName, productSku, sellerLabel, warehouseLabel } from "@/lib/display";
-import { formatDate, formatQty } from "@/lib/format";
+import { sellerLabel } from "@/lib/display";
+import { formatDate } from "@/lib/format";
 import { normalizeSearchQuery } from "@/lib/global-search";
 import {
   useCreateReturnMutation,
-  useOrdersQuery,
   useProductsQuery,
   useReturnsQuery,
   useSellersQuery,
   useWarehousesQuery,
 } from "@/hooks/use-api";
-import type { Order, Product, ReturnOrder, Seller, Warehouse } from "@/lib/types";
+import type { Product, ReturnOrder, Seller, Warehouse } from "@/lib/types";
 
 const VALID_RETURN_STATUSES = [
   "EXPECTED",
@@ -136,7 +129,6 @@ const EMPTY_RETURNS: ReturnOrder[] = [];
 const EMPTY_SELLERS: Seller[] = [];
 const EMPTY_WAREHOUSES: Warehouse[] = [];
 const EMPTY_PRODUCTS: Product[] = [];
-const EMPTY_ORDERS: Order[] = [];
 
 interface ReturnLineDraft {
   product_id: string;
@@ -173,7 +165,6 @@ function ReturnsPage() {
   const sellersQuery = useSellersQuery();
   const warehousesQuery = useWarehousesQuery();
   const productsQuery = useProductsQuery();
-  const ordersQuery = useOrdersQuery();
   const createReturnMutation = useCreateReturnMutation();
 
   const returns = returnsQuery.data?.items ?? EMPTY_RETURNS;
@@ -181,7 +172,6 @@ function ReturnsPage() {
   const sellers = sellersQuery.data ?? EMPTY_SELLERS;
   const warehouses = warehousesQuery.data ?? EMPTY_WAREHOUSES;
   const products = productsQuery.data ?? EMPTY_PRODUCTS;
-  const orders = ordersQuery.data ?? EMPTY_ORDERS;
 
   const maxReturnPage = totalReturns > 0 ? Math.ceil(totalReturns / PAGE_SIZE) : 1;
   const isNormalizingReturnPage = returnsQuery.isSuccess && currentPage > maxReturnPage;
@@ -643,7 +633,7 @@ function ReturnsPage() {
         open={open}
         onOpenChange={setOpen}
         title="Log Inbound Customer Return"
-        description="Record the related order, facility, return reason, and received item quantities."
+        description="Record the related facility, return reason, and received item quantities."
         className="max-w-xl"
         pending={createReturnMutation.isPending}
         returnFocusRef={logReturnTriggerRef}

@@ -1,21 +1,14 @@
 import { useRef, useState } from "react";
 import {
   Activity,
-  AlertTriangle,
   Bot,
   CheckCircle2,
-  ChevronRight,
-  Download,
   Eye,
-  FileCode,
-  Loader2,
   RefreshCw,
-  Search,
   Shield,
   Sparkles,
   ThumbsDown,
   ThumbsUp,
-  XCircle,
 } from "lucide-react";
 import {
   useAiDraftActionsQuery,

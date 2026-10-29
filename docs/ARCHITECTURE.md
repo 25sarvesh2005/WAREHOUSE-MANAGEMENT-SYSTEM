@@ -78,7 +78,6 @@ WAREHOUSE-MANAGEMENT-SYSTEM/
 │   ├── ARCHITECTURE.md             # This document
 │   └── runbooks/                   # Operational runbooks and launch checklists
 ├── .github/workflows/ci.yml        # 4-job GitHub Actions CI pipeline
-├── .gsd/SPEC.md                    # Repository simplification specification
 ├── .dockerignore                   # Docker build exclusions for root container
 ├── Dockerfile                      # Root multi-stage container (backend Render deploy)
 ├── docker-compose.yml              # Local/cloud multi-container orchestration

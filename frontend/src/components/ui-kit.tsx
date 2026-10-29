@@ -55,45 +55,6 @@ export function IconTile({
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={`card-surface p-5 ${className}`}>{children}</div>;
 }
-
-export function StatCard({
-  title,
-  value,
-  subtext,
-  icon: Icon,
-  tone = "primary",
-  trend,
-  className = "",
-}: {
-  title: string;
-  value: ReactNode;
-  subtext?: string;
-  icon?: LucideIcon;
-  tone?: "primary" | "emerald" | "amber" | "rose" | "slate";
-  trend?: string;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`card-surface p-4 sm:p-5 flex flex-col justify-between transition-all hover:-translate-y-0.5 hover:shadow-panel ${className}`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {title}
-        </span>
-        {Icon ? <IconTile icon={Icon} size="sm" tone={tone} /> : null}
-      </div>
-      <div className="mt-3">
-        <div className="font-mono text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          {value}
-        </div>
-        {subtext ? <p className="mt-1 text-xs text-muted-foreground">{subtext}</p> : null}
-      </div>
-      {trend ? <div className="mt-2 text-[11px] font-medium text-emerald-600">{trend}</div> : null}
-    </div>
-  );
-}
-
 export function FormField({
   label,
   htmlFor,

@@ -318,7 +318,6 @@ Comprehensive runbooks and operational checklists are maintained in the [`docs/r
 ```
 WAREHOUSE-MANAGEMENT-SYSTEM/
 ├── .github/workflows/ci.yml        # 4-job CI pipeline (backend, e2e, frontend, a11y)
-├── .gsd/SPEC.md                    # Repository simplification specification
 ├── backend/                        # FastAPI Backend Application
 │   ├── main.py                     # ASGI entrypoint & lifespan management
 │   ├── common/                     # Auth, logger, request ID, rate limiting

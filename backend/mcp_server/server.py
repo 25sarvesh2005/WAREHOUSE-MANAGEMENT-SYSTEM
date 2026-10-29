@@ -7,9 +7,8 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator
 
-from fastapi import APIRouter, Header, HTTPException, Request, Response, status
+from fastapi import APIRouter, Header, HTTPException, Request, status
 
-from common.auth import decode_access_token
 from common.logger import get_logger
 from core.database.database import close_database_connection, connect_to_database
 from mcp_server.context import RequesterContext

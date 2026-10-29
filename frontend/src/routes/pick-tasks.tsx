@@ -22,8 +22,7 @@ import {
   Td,
   Th,
 } from "@/components/ui-kit";
-import { productName, productSku, warehouseLabel } from "@/lib/display";
-import { formatDate, formatQty } from "@/lib/format";
+import { productName, productSku } from "@/lib/display";
 import {
   useCompletePickTaskMutation,
   useCreatePickTaskMutation,

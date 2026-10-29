@@ -1,22 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
-  AlertTriangle,
   ArrowRight,
-  Boxes,
-  CheckCircle2,
-  PackageCheck,
   Plus,
-  Repeat,
   Search,
-  ShieldAlert,
   Trash2,
-  Truck,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
-import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
+import { StatusBadge } from "@/components/StatusBadge";
 import {
   Button,
   Card,
@@ -35,8 +28,8 @@ import {
   Th,
 } from "@/components/ui-kit";
 import { useAuth } from "@/lib/auth";
-import { productName, productSku, sellerLabel, warehouseLabel } from "@/lib/display";
-import { formatDate, formatQty } from "@/lib/format";
+import { productSku, sellerLabel } from "@/lib/display";
+import { formatDate } from "@/lib/format";
 import { normalizeSearchQuery } from "@/lib/global-search";
 import {
   useApproveTransferMutation,

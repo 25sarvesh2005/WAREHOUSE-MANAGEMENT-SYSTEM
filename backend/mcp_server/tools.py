@@ -4,7 +4,6 @@ Model Context Protocol (MCP) read-only tool definitions for warehouse operations
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import Annotated, Any
 from uuid import UUID
 

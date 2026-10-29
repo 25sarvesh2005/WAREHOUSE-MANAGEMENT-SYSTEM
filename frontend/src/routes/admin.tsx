@@ -7,7 +7,6 @@ import {
   Ban,
   RefreshCw,
   AlertTriangle,
-  ShieldCheck,
 } from "lucide-react";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
@@ -17,7 +16,6 @@ import { MigrationPanel } from "@/components/MigrationPanel";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   Button,
-  Card,
   EmptyState,
   ErrorState,
   LoadingState,

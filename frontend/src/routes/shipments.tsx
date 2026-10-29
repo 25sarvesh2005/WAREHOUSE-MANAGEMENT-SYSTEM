@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Barcode, CheckCircle2, Package, Plus, Scale, Search, Truck } from "lucide-react";
+import { Plus, Scale } from "lucide-react";
 import { useRef, useState } from "react";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
@@ -18,7 +18,6 @@ import {
   Td,
   Th,
 } from "@/components/ui-kit";
-import { warehouseLabel } from "@/lib/display";
 import { formatDate } from "@/lib/format";
 import {
   useCreateShipmentMutation,

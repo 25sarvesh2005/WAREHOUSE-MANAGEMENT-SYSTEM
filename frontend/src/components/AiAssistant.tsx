@@ -13,7 +13,6 @@ import {
   Layers,
   Loader2,
   Mic,
-  Package,
   PackageCheck,
   RefreshCw,
   Search,

@@ -1,7 +1,6 @@
 # Whitfield WMS — Root .dockerignore for backend Docker builds (Render / CI)
 .git/
 .github/
-.gsd/
 docs/
 frontend/
 

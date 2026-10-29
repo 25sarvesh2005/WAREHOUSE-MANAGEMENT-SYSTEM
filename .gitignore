@@ -2,8 +2,14 @@
 .env
 .env.*
 !.env.example
+*.local
+
+# Virtual environments
 venv/
 .venv/
+backend/.venv/
+
+# Python bytecode & caches
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -12,19 +18,47 @@ __pycache__/
 htmlcov/
 .coverage
 coverage/
+
+# Build & compilation outputs
 dist/
 build/
 *.egg-info/
 node_modules/
 .vite/
-playwright-report/
-test-results/
-logs/
-*.log
-tmp/
-*.sqlite*
-.DS_Store
-.idea/
-.vscode/
+.output/
+.vinxi/
+.tanstack/
 .vercel/
 .netlify/
+.wrangler/
+.dev.vars
+
+# Test reports & browser artifacts
+playwright-report/
+test-results/
+.playwright/
+
+# Logs & temporary files
+logs/
+backend/logs/
+**/logs/
+*.log
+tmp/
+backend/tmp/
+**/tmp/
+*.sqlite*
+
+# Unwanted tooling & external frameworks
+.gsd/
+bun.lock
+
+# IDE & OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

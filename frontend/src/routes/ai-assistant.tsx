@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Bot, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AiAssistant } from "@/components/AiAssistant";

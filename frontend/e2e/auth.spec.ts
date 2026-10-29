@@ -2,7 +2,6 @@ import { test, expect } from "@playwright/test";
 import {
   clearAuthSession,
   injectAuthSession,
-  MOCK_ADMIN_USER,
   MOCK_TOKENS,
   setupStandardApiMocks,
 } from "./helpers/auth";

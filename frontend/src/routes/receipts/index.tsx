@@ -1,15 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  Barcode,
-  Boxes,
   FileCheck2,
   Mic,
-  PackageCheck,
   PackagePlus,
-  Plus,
   RefreshCw,
-  ShieldCheck,
   Truck,
   WifiOff,
 } from "lucide-react";
@@ -34,7 +29,7 @@ import {
   Td,
   Th,
 } from "@/components/ui-kit";
-import { sellerLabel, warehouseLabel } from "@/lib/display";
+import { sellerLabel } from "@/lib/display";
 import { formatDate } from "@/lib/format";
 import {
   useCreateReceiptMutation,

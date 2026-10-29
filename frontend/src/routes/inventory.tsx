@@ -1,14 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import {
-  Boxes,
   Database,
-  Download,
-  Filter,
-  Layers,
-  PackageSearch,
-  Search,
-  ShieldCheck,
   Warehouse as WarehouseIcon,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -27,7 +20,7 @@ import {
   Td,
   Th,
 } from "@/components/ui-kit";
-import { productName, productSku, sellerLabel, warehouseLabel } from "@/lib/display";
+import { productName, productSku, sellerLabel } from "@/lib/display";
 import { formatDate, formatQty } from "@/lib/format";
 import {
   useBalancesQuery,

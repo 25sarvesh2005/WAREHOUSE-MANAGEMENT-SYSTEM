@@ -15,19 +15,15 @@ import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
 import {
   Button,
   Card,
-  DuplicateProtectionBanner,
   EmptyState,
   ErrorState,
-  LedgerNoticeBanner,
   LoadingState,
-  PageHeader,
-  ScannerInputField,
   TableShell,
   Td,
   Th,
 } from "@/components/ui-kit";
 import { useAuth } from "@/lib/auth";
-import { productName, productSku, toReceiptEvent, toReceiptLineItem } from "@/lib/display";
+import { productName, productSku } from "@/lib/display";
 import { formatDate, formatQty } from "@/lib/format";
 import {
   useCancelReceiptMutation,
@@ -91,8 +87,7 @@ function ReceiptDetail() {
     override_reason: "",
   });
   const [overrideError, setOverrideError] = useState<string | null>(null);
-  const [skuSearch, setSkuSearch] = useState("");
-  const [cancelError, setCancelError] = useState<string | null>(null);
+  const skuSearch = "";
   const [confirmComplete, setConfirmComplete] = useState(false);
   const [confirmCancelReceipt, setConfirmCancelReceipt] = useState(false);
 
@@ -266,7 +261,7 @@ function ReceiptDetail() {
       setConfirmCancelReceipt(false);
       receiptQuery.refetch();
     } catch (err: unknown) {
-      setCancelError(err instanceof Error ? err.message : "Failed to cancel receipt.");
+      toast.error(err instanceof Error ? err.message : "Failed to cancel receipt.");
     }
   }
 

@@ -1,21 +1,15 @@
 import { useState } from "react";
 import {
-  Activity,
   AlertTriangle,
-  CheckCircle2,
   Database,
   Download,
   FileCheck,
   HardDrive,
-  Key,
   Layers,
-  Lock,
   RefreshCw,
-  Shield,
-  Sparkles,
 } from "lucide-react";
 import { useMigrationBatchesQuery, useOperationalStatusReportQuery } from "@/hooks/use-api";
-import { Button, Card, EmptyState, LoadingState, TableShell, Td, Th } from "@/components/ui-kit";
+import { Button, Card, EmptyState, TableShell, Td, Th } from "@/components/ui-kit";
 import type { ImportBatch } from "@/lib/types";
 
 interface ChecklistState {
