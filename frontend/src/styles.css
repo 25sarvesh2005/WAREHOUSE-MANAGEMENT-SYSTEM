@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Whitfield Fulfillment - Tactile Neumorphic / Soft UI design system.
- * Minimalist geometric typography (Plus Jakarta Sans & JetBrains Mono),
- * convex raised cards, recessed wells, smooth physics transitions.
+ * Whitfield Fulfillment - Anti-AI Slop Human-Crafted Design System.
+ * Clean #f8fafc canvas, pure white card surfaces, hairline 1px borders,
+ * high-contrast typography, tabular numbers, and snappy physical micro-interactions.
  */
 
 @theme inline {
@@ -38,15 +38,8 @@
   --color-status-gray: var(--status-gray);
   --font-sans: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", "SF Mono", "Roboto Mono", Menlo, monospace;
-  --shadow-card: var(--neu-card-shadow);
-  --shadow-panel: var(--neu-panel-shadow);
-  --shadow-neu-flat: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
-  --shadow-neu-raised: 10px 10px 22px var(--neu-shadow-dark), -10px -10px 22px var(--neu-shadow-light);
-  --shadow-neu-raised-sm: 4px 4px 10px var(--neu-shadow-dark), -4px -4px 10px var(--neu-shadow-light);
-  --shadow-neu-inset: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
-  --shadow-neu-inset-deep: inset 4px 4px 10px var(--neu-shadow-dark), inset -4px -4px 10px var(--neu-shadow-light);
-  --shadow-neu-exception: 8px 8px 18px rgba(217, 119, 6, 0.16), -8px -8px 18px var(--neu-shadow-light);
-  --shadow-neu-exception-hover: 12px 12px 24px rgba(217, 119, 6, 0.22), -12px -12px 24px var(--neu-shadow-light);
+  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+  --shadow-panel: 0 4px 12px 0 rgba(15, 23, 42, 0.06);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -75,28 +68,28 @@
 }
 
 :root {
-  --radius: 1rem;
-  --background: #edf2f7;
+  --radius: 0.75rem;
+  --background: #f8fafc;
   --foreground: #0f172a;
-  --card: #edf2f7;
+  --card: #ffffff;
   --card-foreground: #0f172a;
-  --popover: #edf2f7;
+  --popover: #ffffff;
   --popover-foreground: #0f172a;
   --primary: #2563eb;
   --primary-dark: #1d4ed8;
-  --primary-tint: #eaf1fe;
+  --primary-tint: #eff6ff;
   --primary-foreground: #ffffff;
-  --navy: #0b1f3a;
-  --secondary: #eaf1fe;
-  --secondary-foreground: #1d4ed8;
-  --muted: #e2e8f0;
+  --navy: #0f172a;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --muted: #f1f5f9;
   --muted-foreground: #64748b;
-  --accent: #e2e8f0;
+  --accent: #f8fafc;
   --accent-foreground: #1e40af;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --border: #e2e8f0;
-  --input: #e2e8f0;
+  --input: #cbd5e1;
   --ring: #2563eb;
   --status-green: #15803d;
   --status-amber: #b45309;
@@ -105,27 +98,19 @@
   --status-red: #b91c1c;
   --status-purple: #6b21a8;
   --status-gray: #475569;
-  --neu-bg: #edf2f7;
-  --neu-surface: #edf2f7;
-  --neu-shadow-dark: rgba(166, 180, 200, 0.45);
-  --neu-shadow-light: #ffffff;
-  --neu-border: rgba(255, 255, 255, 0.85);
-  --neu-border-subtle: rgba(226, 232, 240, 0.8);
-  --neu-card-shadow: 8px 8px 18px rgba(166, 180, 200, 0.38), -8px -8px 18px #ffffff;
-  --neu-panel-shadow: 12px 12px 28px rgba(166, 180, 200, 0.42), -12px -12px 28px #ffffff;
-  --shadow-card: var(--neu-card-shadow);
-  --shadow-panel: var(--neu-panel-shadow);
-  --gradient-hero: linear-gradient(135deg, #ffffff 0%, #edf2f7 50%, #eaf1fe 100%);
+  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+  --shadow-panel: 0 4px 12px 0 rgba(15, 23, 42, 0.06);
+  --gradient-hero: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   --chart-1: #1e40af;
   --chart-2: #059669;
   --chart-3: #d97706;
   --chart-4: #dc2626;
   --chart-5: #7c3aed;
-  --sidebar: #edf2f7;
+  --sidebar: #ffffff;
   --sidebar-foreground: #0f172a;
   --sidebar-primary: #2563eb;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e2e8f0;
+  --sidebar-accent: #eff6ff;
   --sidebar-accent-foreground: #1d4ed8;
   --sidebar-border: #e2e8f0;
   --sidebar-ring: #2563eb;
@@ -138,16 +123,8 @@
   --card-foreground: #f8fafc;
   --popover: #0f172a;
   --popover-foreground: #f8fafc;
-  --neu-bg: #0f172a;
-  --neu-surface: #0f172a;
-  --neu-shadow-dark: rgba(0, 0, 0, 0.65);
-  --neu-shadow-light: rgba(30, 41, 59, 0.5);
-  --neu-border: rgba(255, 255, 255, 0.08);
-  --neu-border-subtle: rgba(51, 65, 85, 0.6);
-  --neu-card-shadow: 8px 8px 18px rgba(0, 0, 0, 0.65), -8px -8px 18px rgba(30, 41, 59, 0.4);
-  --neu-panel-shadow: 12px 12px 28px rgba(0, 0, 0, 0.75), -12px -12px 28px rgba(30, 41, 59, 0.4);
-  --shadow-card: var(--neu-card-shadow);
-  --shadow-panel: var(--neu-panel-shadow);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-panel: 0 4px 12px 0 rgba(0, 0, 0, 0.5);
   --primary: #3b82f6;
   --primary-foreground: #ffffff;
   --secondary: #1e293b;
@@ -191,7 +168,6 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.25s ease-out, color 0.25s ease-out;
   }
 
   h1,
@@ -203,17 +179,19 @@
     letter-spacing: -0.022em;
     line-height: 1.25;
     text-wrap: balance;
+    font-weight: 700;
   }
 
   p {
-    line-height: 1.55;
+    line-height: 1.5;
   }
 
-  /* Monospace for barcodes, SKUs, and quantities */
+  /* Monospace for barcodes, SKUs, and quantities with tabular lining numbers */
   code,
   pre,
   .font-mono {
     font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     letter-spacing: 0.01em;
   }
 
@@ -221,6 +199,7 @@
     border-collapse: separate;
     border-spacing: 0;
     width: 100%;
+    font-variant-numeric: tabular-nums;
   }
 
   th,
@@ -228,38 +207,34 @@
     vertical-align: middle;
   }
 
-  /* Tactile Neumorphic Custom Select Styling */
+  /* Clean, Human-Crafted Select Styling */
   select {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-color: #edf2f7;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%232563eb' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
-    background-size: 0.9rem 0.9rem;
+    background-size: 0.875rem 0.875rem;
     padding-right: 2.25rem !important;
-    border-radius: 0.875rem;
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
     color: var(--color-foreground);
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    box-shadow: inset 2px 2px 5px var(--neu-shadow-dark, rgba(166, 180, 200, 0.35)), inset -2px -2px 5px var(--neu-shadow-light, #ffffff);
-    transition:
-      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
 
   select:hover {
-    border-color: rgba(37, 99, 235, 0.35);
+    border-color: #94a3b8;
   }
 
   select:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: inset 2px 2px 5px var(--neu-shadow-dark, rgba(166, 180, 200, 0.35)), inset -2px -2px 5px var(--neu-shadow-light, #ffffff), 0 0 0 3px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
 
   select:disabled {
@@ -270,19 +245,25 @@
 }
 
 @utility card-surface {
-  background: linear-gradient(145deg, #ffffff 0%, #edf2f7 100%);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 1.25rem;
-  box-shadow: 8px 8px 18px var(--neu-shadow-dark, rgba(166, 180, 200, 0.38)), -8px -8px 18px var(--neu-shadow-light, #ffffff);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
+  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+@utility card-surface-hover {
+  &:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+  }
 }
 
 @utility control-panel {
-  background: linear-gradient(145deg, #ffffff 0%, #edf2f7 100%);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 1.25rem;
-  box-shadow: 10px 10px 24px var(--neu-shadow-dark, rgba(166, 180, 200, 0.4)), -10px -10px 24px var(--neu-shadow-light, #ffffff);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 0.875rem;
+  box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
 }
 
 @utility hero-gradient {
@@ -290,29 +271,27 @@
 }
 
 @utility facility-badge-reno {
-  background-color: rgba(6, 182, 212, 0.12);
-  color: #0891b2;
-  border: 1px solid rgba(6, 182, 212, 0.3);
-  box-shadow: 2px 2px 6px rgba(166, 180, 200, 0.25), -2px -2px 6px #ffffff;
+  background-color: #ecfeff;
+  color: #0e7490;
+  border: 1px solid #cffafe;
 }
 
 @utility facility-badge-columbus {
-  background-color: rgba(245, 158, 11, 0.12);
-  color: #d97706;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  box-shadow: 2px 2px 6px rgba(166, 180, 200, 0.25), -2px -2px 6px #ffffff;
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fef3c7;
 }
 
 @utility scanner-field {
   font-family: var(--font-mono);
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 @keyframes wf-rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -321,61 +300,61 @@
 }
 
 @utility animate-rise {
-  animation: wf-rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: wf-rise 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Compatibility aliases mapped to clean human design */
 @utility neu-flat {
-  background: var(--neu-surface, #edf2f7);
-  box-shadow: 6px 6px 14px var(--neu-shadow-dark, rgba(166, 180, 200, 0.45)), -6px -6px 14px var(--neu-shadow-light, #ffffff);
-  border: 1px solid var(--neu-border, rgba(255, 255, 255, 0.85));
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 @utility neu-raised {
-  background: var(--neu-surface, #edf2f7);
-  box-shadow: 10px 10px 22px var(--neu-shadow-dark, rgba(166, 180, 200, 0.45)), -10px -10px 22px var(--neu-shadow-light, #ffffff);
-  border: 1px solid var(--neu-border, rgba(255, 255, 255, 0.9));
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 @utility neu-raised-sm {
-  background: var(--neu-surface, #edf2f7);
-  box-shadow: 4px 4px 10px var(--neu-shadow-dark, rgba(166, 180, 200, 0.35)), -4px -4px 10px var(--neu-shadow-light, #ffffff);
-  border: 1px solid var(--neu-border, rgba(255, 255, 255, 0.85));
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 @utility neu-inset {
-  background: var(--neu-surface, #edf2f7);
-  box-shadow: inset 3px 3px 6px var(--neu-shadow-dark, rgba(166, 180, 200, 0.4)), inset -3px -3px 6px var(--neu-shadow-light, #ffffff);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 @utility neu-pill {
-  background: var(--neu-surface, #edf2f7);
-  box-shadow: 3px 3px 8px var(--neu-shadow-dark, rgba(166, 180, 200, 0.35)), -3px -3px 8px var(--neu-shadow-light, #ffffff);
-  border: 1px solid var(--neu-border, rgba(255, 255, 255, 0.85));
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 @utility neu-pill-inset {
-  background: var(--neu-surface, #edf2f7);
-  box-shadow: inset 2px 2px 4px var(--neu-shadow-dark, rgba(166, 180, 200, 0.35)), inset -2px -2px 4px var(--neu-shadow-light, #ffffff);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
 }
 
 @utility neu-card {
-  background: linear-gradient(145deg, #ffffff 0%, #edf2f7 100%);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 8px 8px 18px var(--neu-shadow-dark, rgba(166, 180, 200, 0.4)), -8px -8px 18px var(--neu-shadow-light, #ffffff);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 @utility neu-card-exception {
-  background: linear-gradient(145deg, #fffcf5 0%, #fef3c7 100%);
-  border: 1px solid rgba(251, 191, 36, 0.45);
-  box-shadow: 8px 8px 18px rgba(217, 119, 6, 0.16), -8px -8px 18px rgba(255, 255, 255, 0.95);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);
 }

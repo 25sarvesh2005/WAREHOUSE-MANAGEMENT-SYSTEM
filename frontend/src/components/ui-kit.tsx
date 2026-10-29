@@ -24,33 +24,28 @@ export function IconTile({
   tone = "primary",
 }: IconTileProps) {
   const toneClasses = {
-    primary:
-      "bg-[#edf2f7] text-primary border border-white/80 shadow-[3px_3px_8px_rgba(166,180,200,0.35),-3px_-3px_8px_#ffffff]",
-    emerald:
-      "bg-emerald-50/80 text-emerald-700 border border-emerald-200/60 shadow-[3px_3px_8px_rgba(16,185,129,0.12),-3px_-3px_8px_#ffffff]",
-    amber:
-      "bg-amber-50/80 text-amber-800 border border-amber-200/60 shadow-[3px_3px_8px_rgba(245,158,11,0.15),-3px_-3px_8px_#ffffff]",
-    rose:
-      "bg-rose-50/80 text-rose-700 border border-rose-200/60 shadow-[3px_3px_8px_rgba(244,63,94,0.15),-3px_-3px_8px_#ffffff]",
-    slate:
-      "bg-slate-100/80 text-slate-700 border border-slate-200/60 shadow-[3px_3px_8px_rgba(166,180,200,0.35),-3px_-3px_8px_#ffffff]",
+    primary: "bg-blue-50 text-blue-700 border border-blue-200/80",
+    emerald: "bg-emerald-50 text-emerald-700 border border-emerald-200/80",
+    amber: "bg-amber-50 text-amber-800 border border-amber-200/80",
+    rose: "bg-rose-50 text-rose-700 border border-rose-200/80",
+    slate: "bg-slate-100 text-slate-700 border border-slate-200/80",
   }[tone];
 
   const sizeClasses = {
-    sm: "size-10 rounded-xl",
-    md: "size-12 rounded-2xl",
-    lg: "size-14 rounded-3xl",
+    sm: "size-9 rounded-lg",
+    md: "size-10 rounded-lg",
+    lg: "size-12 rounded-xl",
   }[size];
 
   const iconSizes = {
-    sm: "size-4.5",
-    md: "size-5.5",
-    lg: "size-7",
+    sm: "size-4",
+    md: "size-5",
+    lg: "size-6",
   }[size];
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center transition-all duration-200 ${toneClasses} ${sizeClasses}`}
+      className={`inline-flex shrink-0 items-center justify-center ${toneClasses} ${sizeClasses}`}
     >
       <Icon className={iconSizes} aria-hidden="true" />
     </span>
@@ -58,7 +53,7 @@ export function IconTile({
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`card-surface p-5 rounded-2xl ${className}`}>{children}</div>;
+  return <div className={`card-surface p-5 rounded-xl ${className}`}>{children}</div>;
 }
 
 export function FormField({
@@ -81,7 +76,7 @@ export function FormField({
   return (
     <div className={`space-y-1.5 ${className}`}>
       <div className="flex items-center justify-between">
-        <label htmlFor={htmlFor} className="block text-xs font-semibold text-foreground">
+        <label htmlFor={htmlFor} className="block text-xs font-semibold text-slate-700">
           {label} {required ? <span className="text-destructive">*</span> : null}
         </label>
         {hint ? <span className="text-[11px] text-muted-foreground">{hint}</span> : null}
@@ -98,7 +93,7 @@ export function Input({
 }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full min-h-[44px] rounded-xl border border-white/70 bg-[#edf2f7] px-3.5 py-2 text-sm font-medium text-foreground outline-none shadow-[inset_2px_2px_5px_rgba(166,180,200,0.38),inset_-2px_-2px_5px_#ffffff] transition-all duration-200 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`w-full min-h-[42px] rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-foreground shadow-xs outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-60 ${className}`}
       {...props}
     />
   );
@@ -111,7 +106,7 @@ export function Select({
 }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
-      className={`w-full min-h-[44px] rounded-xl border border-white/70 bg-[#edf2f7] px-3.5 py-2 text-sm font-medium text-foreground outline-none shadow-[inset_2px_2px_5px_rgba(166,180,200,0.38),inset_-2px_-2px_5px_#ffffff] transition-all duration-200 focus:border-primary/60 focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`w-full min-h-[42px] rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-foreground shadow-xs outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-60 ${className}`}
       {...props}
     >
       {children}
@@ -134,13 +129,13 @@ export function PageHeader({
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
             {title}
           </h1>
           {facilityTag}
         </div>
         {subtitle ? (
-          <p className="mt-1 max-w-3xl text-sm font-normal text-muted-foreground">{subtitle}</p>
+          <p className="mt-1 max-w-3xl text-sm text-slate-500">{subtitle}</p>
         ) : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2.5">{actions}</div> : null}
@@ -162,11 +157,11 @@ export function EmptyState({
       role="status"
       className="flex flex-col items-center justify-center gap-2.5 px-6 py-14 text-center"
     >
-      <span className="flex size-16 items-center justify-center rounded-2xl bg-[#edf2f7] text-primary border border-white/80 shadow-[4px_4px_10px_rgba(166,180,200,0.35),-4px_-4px_10px_#ffffff]">
+      <span className="flex size-14 items-center justify-center rounded-xl bg-slate-100 text-slate-600 border border-slate-200">
         <Icon className="size-6" aria-hidden="true" />
       </span>
-      <p className="text-sm font-semibold text-foreground">{message}</p>
-      {hint ? <p className="max-w-md text-sm text-muted-foreground">{hint}</p> : null}
+      <p className="text-sm font-semibold text-slate-900">{message}</p>
+      {hint ? <p className="max-w-md text-sm text-slate-500">{hint}</p> : null}
     </div>
   );
 }
@@ -177,9 +172,9 @@ export function LoadingState({ message = "Loading operational data..." }: { mess
       role="status"
       aria-live="polite"
       aria-atomic="true"
-      className="flex items-center justify-center gap-2 px-6 py-16 text-sm text-muted-foreground"
+      className="flex items-center justify-center gap-2 px-6 py-16 text-sm text-slate-500"
     >
-      <Loader2 className="size-5 animate-spin text-primary" aria-hidden="true" />
+      <Loader2 className="size-4 animate-spin text-primary" aria-hidden="true" />
       <span>{message}</span>
     </div>
   );
@@ -190,7 +185,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
     <div
       role="alert"
       aria-live="assertive"
-      className="my-4 rounded-2xl border border-rose-300/40 bg-gradient-to-r from-rose-50/80 to-[#edf2f7] p-4 text-sm text-status-red shadow-[4px_4px_10px_rgba(244,63,94,0.12),-4px_-4px_10px_#ffffff]"
+      className="my-4 rounded-xl border border-rose-200 bg-rose-50/80 p-4 text-sm text-rose-800"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -201,7 +196,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
           <button
             type="button"
             onClick={onRetry}
-            className="min-h-[44px] inline-flex items-center justify-center rounded-full border border-primary/40 bg-[#edf2f7] px-4 py-2 text-xs font-semibold text-primary shadow-[2px_2px_6px_rgba(166,180,200,0.3),-2px_-2px_6px_#ffffff] transition-all hover:shadow-[4px_4px_10px_rgba(166,180,200,0.35),-4px_-4px_10px_#ffffff] active:shadow-[inset_2px_2px_4px_rgba(166,180,200,0.4),inset_-2px_-2px_4px_#ffffff] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
+            className="min-h-[44px] inline-flex items-center justify-center rounded-lg border border-rose-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-rose-700 shadow-xs transition-colors hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/30 cursor-pointer"
           >
             Retry
           </button>
@@ -213,9 +208,9 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 
 export function ExceptionBanner({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-300/50 bg-gradient-to-r from-amber-50/90 to-[#edf2f7] px-4 py-3 text-sm text-amber-800 shadow-[4px_4px_10px_rgba(217,119,6,0.12),-4px_-4px_10px_#ffffff]">
+    <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-900 shadow-xs">
       <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" aria-hidden="true" />
-      <div className="flex-1 text-foreground/90 font-medium">{children}</div>
+      <div className="flex-1 font-medium">{children}</div>
     </div>
   );
 }
@@ -226,10 +221,10 @@ export function LedgerNoticeBanner({
   message?: string;
 }) {
   return (
-    <div className="mb-5 flex items-center gap-2.5 rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-50/90 to-[#edf2f7] px-4 py-3 text-sm text-primary shadow-[4px_4px_10px_rgba(37,99,235,0.12),-4px_-4px_10px_#ffffff]">
-      <Database className="size-4 shrink-0" aria-hidden="true" />
+    <div className="mb-5 flex items-center gap-2.5 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-3 text-sm text-blue-900 shadow-xs">
+      <Database className="size-4 shrink-0 text-blue-600" aria-hidden="true" />
       <span>
-        <strong className="font-semibold">Ledger-backed truth:</strong> {message}
+        <strong className="font-semibold text-blue-950">Ledger-backed truth:</strong> {message}
       </span>
     </div>
   );
@@ -241,10 +236,10 @@ export function DuplicateProtectionBanner({
   message?: string;
 }) {
   return (
-    <div className="mb-4 flex items-center gap-2.5 rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-50/90 to-[#edf2f7] px-4 py-3 text-sm text-primary shadow-[4px_4px_10px_rgba(37,99,235,0.12),-4px_-4px_10px_#ffffff]">
-      <ShieldCheck className="size-4 shrink-0" aria-hidden="true" />
+    <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 shadow-xs">
+      <ShieldCheck className="size-4 shrink-0 text-slate-600" aria-hidden="true" />
       <span>
-        <strong className="font-semibold">Duplicate safe:</strong> {message}
+        <strong className="font-semibold text-slate-900">Duplicate safe:</strong> {message}
       </span>
     </div>
   );
@@ -271,7 +266,7 @@ export function ScannerInputField({
 }) {
   return (
     <div className={`relative flex items-center ${className}`}>
-      <Barcode className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" aria-hidden="true" />
+      <Barcode className="pointer-events-none absolute left-3 size-4 text-slate-400" aria-hidden="true" />
       <input
         type="text"
         value={value}
@@ -281,7 +276,7 @@ export function ScannerInputField({
         disabled={disabled}
         autoFocus={autoFocus}
         aria-label={ariaLabel}
-        className="w-full rounded-full border border-white/70 bg-[#edf2f7] py-2.5 pr-4 pl-10 font-mono text-sm font-semibold text-foreground outline-none shadow-[inset_2px_2px_5px_rgba(166,180,200,0.42),inset_-2px_-2px_5px_#ffffff] placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground transition-all duration-200 focus:border-primary/60 focus:ring-2 focus:ring-primary/20 disabled:bg-muted disabled:text-muted-foreground"
+        className="w-full rounded-lg border border-slate-300 bg-white py-2 pr-3.5 pl-9 font-mono text-sm font-semibold text-slate-900 shadow-xs outline-none placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:bg-slate-50 disabled:text-slate-400"
       />
     </div>
   );
@@ -306,21 +301,21 @@ export function Button({
 }: ButtonProps) {
   const styles = {
     primary:
-      "bg-gradient-to-r from-blue-600 to-primary text-white border border-blue-400/40 shadow-[4px_4px_10px_rgba(37,99,235,0.28),-2px_-2px_8px_rgba(255,255,255,0.8)] hover:shadow-[6px_6px_14px_rgba(37,99,235,0.35),-3px_-3px_10px_rgba(255,255,255,0.9)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[inset_2px_2px_5px_rgba(29,78,216,0.5),inset_-2px_-2px_5px_rgba(255,255,255,0.2)] focus-visible:ring-primary/40 font-semibold",
+      "bg-primary text-primary-foreground hover:bg-primary-dark border border-blue-700/30 font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_1px_2px_rgba(37,99,235,0.25)] hover:shadow-[0_2px_4px_rgba(37,99,235,0.3)] active:bg-blue-800 active:scale-[0.99] focus-visible:ring-primary/30",
     secondary:
-      "bg-[#edf2f7] text-primary border border-white/80 shadow-[3px_3px_8px_rgba(166,180,200,0.35),-3px_-3px_8px_#ffffff] hover:shadow-[5px_5px_12px_rgba(166,180,200,0.4),-5px_-5px_12px_#ffffff] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[inset_2px_2px_5px_rgba(166,180,200,0.45),inset_-2px_-2px_5px_#ffffff] focus-visible:ring-primary/40 font-semibold",
+      "bg-slate-100 text-slate-800 hover:bg-slate-200/80 active:bg-slate-200 border border-slate-200/80 font-semibold focus-visible:ring-slate-400/30",
     outline:
-      "border border-primary/40 bg-[#edf2f7] text-primary shadow-[2px_2px_6px_rgba(166,180,200,0.3),-2px_-2px_6px_#ffffff] hover:bg-primary-tint hover:shadow-[4px_4px_10px_rgba(166,180,200,0.35),-4px_-4px_10px_#ffffff] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[inset_2px_2px_4px_rgba(166,180,200,0.4),inset_-2px_-2px_4px_#ffffff] focus-visible:ring-primary/40 font-semibold",
+      "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 active:bg-slate-100 font-semibold shadow-xs focus-visible:ring-primary/30",
     danger:
-      "bg-destructive text-destructive-foreground hover:bg-red-700 active:bg-red-800 border border-red-400/30 shadow-[3px_3px_8px_rgba(220,38,38,0.25),-2px_-2px_6px_rgba(255,255,255,0.8)] active:shadow-[inset_2px_2px_4px_rgba(153,27,27,0.5)] focus-visible:ring-destructive/40 font-semibold",
+      "bg-destructive text-destructive-foreground hover:bg-red-700 active:bg-red-800 border border-red-700/30 font-semibold shadow-[0_1px_2px_rgba(220,38,38,0.2)] focus-visible:ring-destructive/30",
     ghost:
-      "text-muted-foreground hover:text-foreground hover:bg-slate-200/50 hover:shadow-[2px_2px_6px_rgba(166,180,200,0.2),-2px_-2px_6px_#ffffff] active:shadow-[inset_1px_1px_3px_rgba(166,180,200,0.3)] focus-visible:ring-primary/40 font-medium",
+      "text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 font-medium border border-transparent focus-visible:ring-slate-400/30",
   }[variant];
 
   const sizeStyles = {
-    sm: "px-3 py-1.5 text-xs rounded-full gap-1.5",
-    md: "px-4 py-2 text-sm rounded-full gap-2",
-    lg: "px-5 py-2.5 text-sm rounded-full gap-2.5",
+    sm: "px-3 py-1.5 text-xs rounded-md gap-1.5",
+    md: "px-3.5 py-2 text-sm rounded-lg gap-2",
+    lg: "px-4.5 py-2.5 text-sm rounded-lg gap-2.5",
   }[size];
 
   const isDisabled = disabled || loading;
@@ -329,7 +324,7 @@ export function Button({
     <button
       disabled={isDisabled}
       aria-busy={loading ? "true" : undefined}
-      className={`inline-flex cursor-pointer items-center justify-center transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${styles} ${sizeStyles} ${className}`}
+      className={`inline-flex cursor-pointer items-center justify-center transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${styles} ${sizeStyles} ${className}`}
       {...props}
     >
       {loading ? <Loader2 className="size-4 animate-spin shrink-0" aria-hidden="true" /> : null}
@@ -346,7 +341,7 @@ export function TableShell({
   className?: string;
 }) {
   return (
-    <div className={`card-surface overflow-hidden rounded-2xl ${className}`}>
+    <div className={`card-surface overflow-hidden rounded-xl border border-slate-200 ${className}`}>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">{children}</table>
       </div>
@@ -357,7 +352,7 @@ export function TableShell({
 export function Th({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <th
-      className={`bg-slate-100/80 border-b border-slate-200/80 px-4 py-3.5 text-left text-xs font-bold tracking-wide text-muted-foreground uppercase whitespace-nowrap align-middle shadow-[inset_0_-1px_0_rgba(226,232,240,0.8)] ${className}`}
+      className={`bg-slate-50/90 border-b border-slate-200 px-4 py-3 text-left text-[11px] font-semibold tracking-wider text-slate-500 uppercase whitespace-nowrap align-middle ${className}`}
     >
       {children}
     </th>
@@ -366,7 +361,7 @@ export function Th({ children, className = "" }: { children: ReactNode; classNam
 
 export function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <td className={`border-t border-slate-200/60 px-4 py-3 text-foreground align-middle transition-colors duration-150 ${className}`}>
+    <td className={`border-t border-slate-100 px-4 py-3 text-slate-800 align-middle transition-colors hover:bg-slate-50/50 ${className}`}>
       {children}
     </td>
   );
@@ -385,7 +380,7 @@ export function Timeline({
       <span className="absolute top-2 bottom-2 left-[3px] w-px bg-slate-200" />
       {list.map((e, idx) => (
         <li key={e.id || idx} className="relative">
-          <span className="absolute top-1.5 -left-[19px] size-2 rounded-full bg-blue-600 ring-4 ring-white shadow-xs" />
+          <span className="absolute top-1.5 -left-[19px] size-2 rounded-full bg-blue-600 ring-4 ring-white" />
           <p className="font-semibold text-slate-900">{e.label}</p>
           {e.detail ? <p className="text-slate-600 text-[11px] mt-0.5">{e.detail}</p> : null}
           <p className="text-[10px] font-mono text-slate-400 mt-0.5">{e.at}</p>
@@ -433,8 +428,8 @@ export function MobileRecordCard({
   selected = false,
 }: MobileRecordCardProps) {
   const classes = [
-    "card-surface p-4 min-w-0 transition-all duration-200",
-    selected ? "border-primary ring-2 ring-primary/25 bg-blue-50/50 shadow-[inset_2px_2px_5px_rgba(37,99,235,0.15),inset_-2px_-2px_5px_#ffffff]" : "",
+    "card-surface p-4 min-w-0 transition-colors rounded-xl",
+    selected ? "border-primary ring-2 ring-primary/20 bg-blue-50/50" : "",
     className,
   ]
     .filter(Boolean)
@@ -485,9 +480,9 @@ export function PaginationControls({
       aria-label={`${itemLabel} pagination`}
       className={`flex flex-col sm:flex-row items-center justify-between gap-4 py-3 px-2 ${className}`}
     >
-      <p role="status" aria-live="polite" className="text-sm text-muted-foreground order-2 sm:order-1">
-        Showing <span className="font-semibold text-foreground">{start}</span>–<span className="font-semibold text-foreground">{end}</span> of{" "}
-        <span className="font-semibold text-foreground">{totalCount}</span> {itemLabel}
+      <p role="status" aria-live="polite" className="text-sm text-slate-500 order-2 sm:order-1">
+        Showing <span className="font-semibold text-slate-800">{start}</span>–<span className="font-semibold text-slate-800">{end}</span> of{" "}
+        <span className="font-semibold text-slate-800">{totalCount}</span> {itemLabel}
       </p>
       <div className="flex items-center gap-2 order-1 sm:order-2 w-full sm:w-auto justify-between sm:justify-end">
         <button
@@ -495,12 +490,12 @@ export function PaginationControls({
           onClick={() => onPageChange(safePage - 1)}
           disabled={disabled || safePage <= 1}
           aria-label={`Go to previous page of ${itemLabel}`}
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-full border border-white/80 bg-[#edf2f7] px-3.5 py-2 text-sm font-semibold text-foreground shadow-[2px_2px_6px_rgba(166,180,200,0.3),-2px_-2px_6px_#ffffff] hover:shadow-[4px_4px_10px_rgba(166,180,200,0.35),-4px_-4px_10px_#ffffff] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[inset_2px_2px_4px_rgba(166,180,200,0.4),inset_-2px_-2px_4px_#ffffff] disabled:pointer-events-none disabled:opacity-50 transition-all duration-200 cursor-pointer"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-50 transition-colors cursor-pointer"
         >
           <ChevronLeft className="size-4" aria-hidden="true" />
           <span>Previous</span>
         </button>
-        <span className="text-sm font-semibold text-muted-foreground px-2" aria-current="page">
+        <span className="text-sm font-medium text-slate-600 px-2" aria-current="page">
           Page {safePage} of {totalPages}
         </span>
         <button
@@ -508,7 +503,7 @@ export function PaginationControls({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={disabled || currentPage >= totalPages}
           aria-label={`Go to next page of ${itemLabel}`}
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-full border border-white/80 bg-[#edf2f7] px-3.5 py-2 text-sm font-semibold text-foreground shadow-[2px_2px_6px_rgba(166,180,200,0.3),-2px_-2px_6px_#ffffff] hover:shadow-[4px_4px_10px_rgba(166,180,200,0.35),-4px_-4px_10px_#ffffff] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[inset_2px_2px_4px_rgba(166,180,200,0.4),inset_-2px_-2px_4px_#ffffff] disabled:pointer-events-none disabled:opacity-50 transition-all duration-200 cursor-pointer"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-50 transition-colors cursor-pointer"
         >
           <span>Next</span>
           <ChevronRight className="size-4" aria-hidden="true" />

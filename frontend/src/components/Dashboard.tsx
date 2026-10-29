@@ -55,48 +55,44 @@ function DashboardHeader({
   const formattedRole = formatRole(user.role);
 
   return (
-    <header className="neu-card rounded-3xl p-6 sm:p-8 transition-all relative overflow-hidden">
-      {/* Subtle ambient highlight line */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-white/80 to-transparent" />
-
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="neu-pill-inset inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary">
-              <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+    <header className="card-surface rounded-xl p-6 sm:p-7 transition-all">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 border border-blue-200/80 text-[11px] font-semibold text-primary">
+              <span className="size-1.5 rounded-full bg-primary" />
               Operations overview
             </span>
-            
           </div>
 
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             Welcome back, {firstName}.
           </h1>
 
           <div className="flex items-center gap-2">
-            <span className="neu-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-muted-foreground">
-              Signed in as <span className="font-bold text-foreground">{formattedRole}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 border border-slate-200">
+              Signed in as <span className="font-semibold text-slate-900">{formattedRole}</span>
             </span>
           </div>
 
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground pt-1">
+          <p className="max-w-2xl text-sm leading-relaxed text-slate-500 pt-0.5">
             {isManager
               ? "Review current inventory totals, open work, and exception queues reported by the WMS."
               : "Open the operational workflows available to your assigned role."}
           </p>
         </div>
 
-        {/* Minimalist Tactile System Status Pill */}
-        <div className="hidden lg:flex flex-col items-end gap-2 shrink-0">
-          <div className="neu-inset rounded-2xl p-3.5 flex items-center gap-3">
-            <div className="size-9 rounded-xl neu-flat flex items-center justify-center text-primary">
+        {/* Clean System Status Pill */}
+        <div className="hidden lg:flex flex-col items-end gap-1.5 shrink-0">
+          <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3 flex items-center gap-3">
+            <div className="size-8 rounded-md bg-white border border-slate-200 flex items-center justify-center text-primary shadow-2xs">
               <ShieldCheck className="size-4" />
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <p className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
                 Outbox & Invariant Engine
               </p>
-              <p className="text-xs font-semibold text-foreground flex items-center gap-1 justify-end">
+              <p className="text-xs font-semibold text-slate-800 flex items-center gap-1.5 justify-end">
                 <span className="size-1.5 rounded-full bg-emerald-500" />
                 Ledger Balanced
               </p>
@@ -126,18 +122,18 @@ function MetricCard({
   return (
     <Link
       to={to}
-      className={`group relative flex min-h-[44px] flex-col justify-between rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+      className={`group relative flex min-h-[44px] flex-col justify-between rounded-xl p-5 transition-all duration-150 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
         isException
-          ? "neu-card-exception hover:shadow-neu-exception-hover active:shadow-neu-inset"
-          : "neu-card hover:shadow-neu-raised active:shadow-neu-inset"
+          ? "bg-amber-50/60 border border-amber-200/90 hover:border-amber-300 hover:shadow-xs"
+          : "card-surface hover:border-slate-300 hover:shadow-xs"
       }`}
     >
-      {/* Top Header: Label + Tactile Icon Pill */}
+      {/* Top Header: Label + Icon */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p
-            className={`text-xs font-bold uppercase tracking-wider ${
-              isException ? "text-amber-900" : "text-muted-foreground"
+            className={`text-xs font-semibold uppercase tracking-wider ${
+              isException ? "text-amber-900" : "text-slate-500"
             }`}
           >
             {label}
@@ -147,31 +143,29 @@ function MetricCard({
         <div className="flex items-center gap-2">
           {Icon ? (
             <div
-              className={`size-8 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
+              className={`size-8 rounded-lg flex items-center justify-center border transition-colors ${
                 isException
-                  ? "neu-inset text-amber-700"
-                  : "neu-inset text-muted-foreground group-hover:text-primary"
+                  ? "bg-amber-100/70 border-amber-200 text-amber-800"
+                  : "bg-slate-50 border-slate-200 text-slate-500 group-hover:text-primary group-hover:bg-blue-50 group-hover:border-blue-200"
               }`}
             >
               <Icon className="size-4" />
             </div>
           ) : null}
-          <div className="size-7 rounded-lg neu-pill-inset flex items-center justify-center text-muted-foreground/70 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
+          <div className="size-6 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
             <ArrowRight className="size-3.5" />
           </div>
         </div>
       </div>
 
-      {/* Value Display in Tactile Recessed Well */}
+      {/* Value Display */}
       <div className="mt-4 flex items-baseline justify-between">
-        <div className="neu-inset px-3.5 py-1.5 rounded-xl flex items-center">
-          <p className="font-mono text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-            {value}
-          </p>
-        </div>
+        <p className="font-mono text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
+          {value}
+        </p>
 
         {accentColor ? (
-          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
             <span className={`size-2 rounded-full ${accentColor}`} />
             Tracked
           </span>
@@ -191,23 +185,23 @@ function WorkflowCard({
   return (
     <Link
       to={item.to}
-      className="group flex min-h-[44px] items-center justify-between gap-4 rounded-2xl neu-card p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-neu-raised active:shadow-neu-inset focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="group flex min-h-[44px] items-center justify-between gap-3.5 rounded-xl card-surface p-4 transition-all duration-150 hover:border-slate-300 hover:shadow-xs hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div className="flex items-center gap-3.5 min-w-0 flex-1">
-        <div className="size-11 rounded-2xl neu-inset flex items-center justify-center text-primary group-hover:scale-105 group-hover:text-primary-dark transition-all shrink-0">
+        <div className="size-10 rounded-lg bg-blue-50 border border-blue-200/80 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
           <Icon className="size-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">
+          <p className="text-sm font-semibold text-slate-900 group-hover:text-primary transition-colors truncate">
             {item.label}
           </p>
           {item.description ? (
-            <p className="mt-0.5 text-xs text-muted-foreground truncate">{item.description}</p>
+            <p className="mt-0.5 text-xs text-slate-500 truncate">{item.description}</p>
           ) : null}
         </div>
       </div>
 
-      <div className="size-8 rounded-xl neu-pill flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">
+      <div className="size-7 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">
         <ArrowRight className="size-4" />
       </div>
     </Link>
@@ -285,27 +279,27 @@ function ManagerDashboard({ user }: { user: User }) {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <DashboardHeader user={user} isManager />
 
       {/* 1. Needs attention (Must appear before general metrics) */}
-      <section aria-labelledby="needs-attention-heading" className="space-y-3.5">
+      <section aria-labelledby="needs-attention-heading" className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 id="needs-attention-heading" className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
-              <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+            <h2 id="needs-attention-heading" className="text-base font-bold tracking-tight text-slate-900 flex items-center gap-2">
+              <span className="size-2 rounded-full bg-amber-500" />
               Needs attention
             </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Exception queues reported by the WMS.
             </p>
           </div>
-          <span className="neu-pill-inset text-[11px] font-bold px-2.5 py-1 rounded-full text-amber-800">
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-200">
             {totalExceptions} Active
           </span>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-3.5 sm:grid-cols-3">
           <MetricCard
             label="Short-pick exceptions"
             value={shortPickCount}
@@ -330,24 +324,24 @@ function ManagerDashboard({ user }: { user: User }) {
         </div>
 
         {totalExceptions === 0 ? (
-          <div className="neu-inset rounded-2xl p-6 text-center text-sm font-medium text-muted-foreground flex items-center justify-center gap-2">
-            <CheckCircle2 className="size-4 text-emerald-500" />
+          <div className="card-surface rounded-xl p-5 text-center text-sm font-medium text-slate-500 flex items-center justify-center gap-2">
+            <CheckCircle2 className="size-4 text-emerald-600" />
             No active manager exceptions were reported.
           </div>
         ) : null}
       </section>
 
       {/* 2. Open work */}
-      <section aria-labelledby="open-work-heading" className="space-y-3.5">
+      <section aria-labelledby="open-work-heading" className="space-y-3">
         <div>
-          <h2 id="open-work-heading" className="text-lg font-bold tracking-tight text-foreground">
+          <h2 id="open-work-heading" className="text-base font-bold tracking-tight text-slate-900">
             Open work
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Active warehouse operations requiring processing.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Open receipts"
             value={openReceipts}
@@ -376,16 +370,16 @@ function ManagerDashboard({ user }: { user: User }) {
       </section>
 
       {/* 3. Inventory by state */}
-      <section aria-labelledby="inventory-state-heading" className="space-y-3.5">
+      <section aria-labelledby="inventory-state-heading" className="space-y-3">
         <div>
-          <h2 id="inventory-state-heading" className="text-lg font-bold tracking-tight text-foreground">
+          <h2 id="inventory-state-heading" className="text-base font-bold tracking-tight text-slate-900">
             Inventory by state
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Total units reported across all warehouses by inventory state.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Available"
             value={available.toLocaleString()}
@@ -418,16 +412,16 @@ function ManagerDashboard({ user }: { user: User }) {
       </section>
 
       {/* 4. Available workflows */}
-      <section aria-labelledby="available-workflows-heading" className="space-y-3.5 pt-2">
+      <section aria-labelledby="available-workflows-heading" className="space-y-3 pt-1">
         <div>
-          <h2 id="available-workflows-heading" className="text-base font-bold tracking-tight text-foreground">
+          <h2 id="available-workflows-heading" className="text-base font-bold tracking-tight text-slate-900">
             Available workflows
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Direct operational access to fulfillment areas.
           </p>
         </div>
-        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {managerWorkflows.map((item) => (
             <WorkflowCard key={item.to} item={item} />
           ))}
@@ -470,20 +464,20 @@ function RoleWorkspaceDashboard({ user }: { user: User }) {
   const allowedWorkflows = filterAllowedWorkflows(user, defaultWorkflows);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <DashboardHeader user={user} isManager={false} />
 
-      <section aria-labelledby="role-workflows-heading" className="space-y-4">
+      <section aria-labelledby="role-workflows-heading" className="space-y-3">
         <div>
-          <h2 id="role-workflows-heading" className="text-lg font-bold tracking-tight text-foreground">
+          <h2 id="role-workflows-heading" className="text-base font-bold tracking-tight text-slate-900">
             Available workflows
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Workflows authorized for your account role.
           </p>
         </div>
 
-        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {allowedWorkflows.map((item) => (
             <WorkflowCard key={item.to} item={item} />
           ))}
