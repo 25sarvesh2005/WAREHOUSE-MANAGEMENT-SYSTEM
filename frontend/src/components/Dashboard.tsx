@@ -1,5 +1,20 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Boxes,
+  CheckCircle2,
+  ClipboardList,
+  Layers,
+  PackageCheck,
+  PackagePlus,
+  Repeat,
+  ShieldCheck,
+  ShoppingCart,
+  Truck,
+  Undo2,
+} from "lucide-react";
+import type { ElementType } from "react";
 import { ErrorState, LoadingState } from "@/components/ui-kit";
 import { useManagerDashboardQuery, useManagerExceptionsQuery } from "@/hooks/use-api";
 import { ROLE_SECTIONS } from "@/lib/auth";
@@ -7,6 +22,7 @@ import type { User } from "@/lib/types";
 
 interface WorkflowItem {
   description?: string;
+  icon?: ElementType;
   label: string;
   to: string;
 }
@@ -39,21 +55,55 @@ function DashboardHeader({
   const formattedRole = formatRole(user.role);
 
   return (
-    <header className="rounded-3xl border border-border bg-white p-6 sm:p-8 shadow-card">
-      <p className="text-xs font-bold uppercase tracking-wider text-primary">
-        Operations overview
-      </p>
-      <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-        Welcome back, {firstName}.
-      </h1>
-      <p className="mt-1 text-xs font-semibold text-muted-foreground">
-        Signed in as <span className="text-foreground">{formattedRole}</span>
-      </p>
-      <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-        {isManager
-          ? "Review current inventory totals, open work, and exception queues reported by the WMS."
-          : "Open the operational workflows available to your assigned role."}
-      </p>
+    <header className="neu-card rounded-3xl p-6 sm:p-8 transition-all relative overflow-hidden">
+      {/* Subtle ambient highlight line */}
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-white/80 to-transparent" />
+
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="neu-pill-inset inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary">
+              <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+              Operations overview
+            </span>
+            
+          </div>
+
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+            Welcome back, {firstName}.
+          </h1>
+
+          <div className="flex items-center gap-2">
+            <span className="neu-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-muted-foreground">
+              Signed in as <span className="font-bold text-foreground">{formattedRole}</span>
+            </span>
+          </div>
+
+          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground pt-1">
+            {isManager
+              ? "Review current inventory totals, open work, and exception queues reported by the WMS."
+              : "Open the operational workflows available to your assigned role."}
+          </p>
+        </div>
+
+        {/* Minimalist Tactile System Status Pill */}
+        <div className="hidden lg:flex flex-col items-end gap-2 shrink-0">
+          <div className="neu-inset rounded-2xl p-3.5 flex items-center gap-3">
+            <div className="size-9 rounded-xl neu-flat flex items-center justify-center text-primary">
+              <ShieldCheck className="size-4" />
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Outbox & Invariant Engine
+              </p>
+              <p className="text-xs font-semibold text-foreground flex items-center gap-1 justify-end">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                Ledger Balanced
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </header>
   );
 }
@@ -63,7 +113,11 @@ function MetricCard({
   value,
   to,
   isException = false,
+  icon: Icon,
+  accentColor,
 }: {
+  accentColor?: string;
+  icon?: ElementType;
   isException?: boolean;
   label: string;
   to: string;
@@ -72,21 +126,57 @@ function MetricCard({
   return (
     <Link
       to={to}
-      className={`group flex min-h-[44px] flex-col justify-between rounded-2xl border p-4 sm:p-5 transition-all hover:-translate-y-0.5 hover:shadow-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+      className={`group relative flex min-h-[44px] flex-col justify-between rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
         isException
-          ? "border-amber-200/80 bg-amber-50/40 hover:border-amber-400"
-          : "border-border bg-white hover:border-primary/30"
+          ? "neu-card-exception hover:shadow-neu-exception-hover active:shadow-neu-inset"
+          : "neu-card hover:shadow-neu-raised active:shadow-neu-inset"
       }`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
-        </p>
-        <ArrowRight className="size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+      {/* Top Header: Label + Tactile Icon Pill */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p
+            className={`text-xs font-bold uppercase tracking-wider ${
+              isException ? "text-amber-900" : "text-muted-foreground"
+            }`}
+          >
+            {label}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {Icon ? (
+            <div
+              className={`size-8 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
+                isException
+                  ? "neu-inset text-amber-700"
+                  : "neu-inset text-muted-foreground group-hover:text-primary"
+              }`}
+            >
+              <Icon className="size-4" />
+            </div>
+          ) : null}
+          <div className="size-7 rounded-lg neu-pill-inset flex items-center justify-center text-muted-foreground/70 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
+            <ArrowRight className="size-3.5" />
+          </div>
+        </div>
       </div>
-      <p className="mt-3 font-mono text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-        {value}
-      </p>
+
+      {/* Value Display in Tactile Recessed Well */}
+      <div className="mt-4 flex items-baseline justify-between">
+        <div className="neu-inset px-3.5 py-1.5 rounded-xl flex items-center">
+          <p className="font-mono text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+            {value}
+          </p>
+        </div>
+
+        {accentColor ? (
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+            <span className={`size-2 rounded-full ${accentColor}`} />
+            Tracked
+          </span>
+        ) : null}
+      </div>
     </Link>
   );
 }
@@ -96,20 +186,30 @@ function WorkflowCard({
 }: {
   item: WorkflowItem;
 }) {
+  const Icon = item.icon || Layers;
+
   return (
     <Link
       to={item.to}
-      className="group flex min-h-[44px] items-center justify-between gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="group flex min-h-[44px] items-center justify-between gap-4 rounded-2xl neu-card p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-neu-raised active:shadow-neu-inset focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">
-          {item.label}
-        </p>
-        {item.description ? (
-          <p className="mt-0.5 text-xs text-muted-foreground truncate">{item.description}</p>
-        ) : null}
+      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+        <div className="size-11 rounded-2xl neu-inset flex items-center justify-center text-primary group-hover:scale-105 group-hover:text-primary-dark transition-all shrink-0">
+          <Icon className="size-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">
+            {item.label}
+          </p>
+          {item.description ? (
+            <p className="mt-0.5 text-xs text-muted-foreground truncate">{item.description}</p>
+          ) : null}
+        </div>
       </div>
-      <ArrowRight className="size-4 shrink-0 text-muted-foreground group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
+
+      <div className="size-8 rounded-xl neu-pill flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">
+        <ArrowRight className="size-4" />
+      </div>
     </Link>
   );
 }
@@ -176,12 +276,12 @@ function ManagerDashboard({ user }: { user: User }) {
   const inTransit = safeNumber(balances["IN_TRANSIT"]);
 
   const managerWorkflows: WorkflowItem[] = filterAllowedWorkflows(user, [
-    { label: "Inventory", to: "/inventory", description: "Balances and state control" },
-    { label: "Receipts", to: "/receipts", description: "Inbound dock receiving" },
-    { label: "Orders", to: "/orders", description: "Outbound customer demand" },
-    { label: "Pick tasks", to: "/pick-tasks", description: "Warehouse picking work" },
-    { label: "Transfers", to: "/transfers", description: "Inter-facility stock moves" },
-    { label: "Returns", to: "/returns", description: "Customer return inspections" },
+    { label: "Inventory", to: "/inventory", description: "Balances and state control", icon: Boxes },
+    { label: "Receipts", to: "/receipts", description: "Inbound dock receiving", icon: PackageCheck },
+    { label: "Orders", to: "/orders", description: "Outbound customer demand", icon: ShoppingCart },
+    { label: "Pick tasks", to: "/pick-tasks", description: "Warehouse picking work", icon: ClipboardList },
+    { label: "Transfers", to: "/transfers", description: "Inter-facility stock moves", icon: Repeat },
+    { label: "Returns", to: "/returns", description: "Customer return inspections", icon: Undo2 },
   ]);
 
   return (
@@ -189,14 +289,20 @@ function ManagerDashboard({ user }: { user: User }) {
       <DashboardHeader user={user} isManager />
 
       {/* 1. Needs attention (Must appear before general metrics) */}
-      <section aria-labelledby="needs-attention-heading" className="space-y-3">
-        <div>
-          <h2 id="needs-attention-heading" className="text-lg font-bold tracking-tight text-foreground">
-            Needs attention
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Exception queues reported by the WMS.
-          </p>
+      <section aria-labelledby="needs-attention-heading" className="space-y-3.5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 id="needs-attention-heading" className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+              <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+              Needs attention
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Exception queues reported by the WMS.
+            </p>
+          </div>
+          <span className="neu-pill-inset text-[11px] font-bold px-2.5 py-1 rounded-full text-amber-800">
+            {totalExceptions} Active
+          </span>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -205,35 +311,39 @@ function ManagerDashboard({ user }: { user: User }) {
             value={shortPickCount}
             to="/pick-tasks"
             isException
+            icon={AlertTriangle}
           />
           <MetricCard
             label="Transfer discrepancies"
             value={transferDiscrepancyCount}
             to="/transfers"
             isException
+            icon={Repeat}
           />
           <MetricCard
             label="Unidentified returns"
             value={unidentifiedReturnCount}
             to="/returns"
             isException
+            icon={Undo2}
           />
         </div>
 
         {totalExceptions === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-white/60 p-6 text-center text-sm text-muted-foreground">
+          <div className="neu-inset rounded-2xl p-6 text-center text-sm font-medium text-muted-foreground flex items-center justify-center gap-2">
+            <CheckCircle2 className="size-4 text-emerald-500" />
             No active manager exceptions were reported.
           </div>
         ) : null}
       </section>
 
       {/* 2. Open work */}
-      <section aria-labelledby="open-work-heading" className="space-y-3">
+      <section aria-labelledby="open-work-heading" className="space-y-3.5">
         <div>
           <h2 id="open-work-heading" className="text-lg font-bold tracking-tight text-foreground">
             Open work
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Active warehouse operations requiring processing.
           </p>
         </div>
@@ -242,32 +352,36 @@ function ManagerDashboard({ user }: { user: User }) {
             label="Open receipts"
             value={openReceipts}
             to="/receipts"
+            icon={PackagePlus}
           />
           <MetricCard
             label="Pending pick tasks"
             value={pendingPickTasks}
             to="/pick-tasks"
+            icon={ClipboardList}
           />
           <MetricCard
             label="Active transfers"
             value={activeTransfers}
             to="/transfers"
+            icon={Repeat}
           />
           <MetricCard
             label="Returns awaiting inspection"
             value={uninspectedReturns}
             to="/returns"
+            icon={Undo2}
           />
         </div>
       </section>
 
       {/* 3. Inventory by state */}
-      <section aria-labelledby="inventory-state-heading" className="space-y-3">
+      <section aria-labelledby="inventory-state-heading" className="space-y-3.5">
         <div>
           <h2 id="inventory-state-heading" className="text-lg font-bold tracking-tight text-foreground">
             Inventory by state
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Total units reported across all warehouses by inventory state.
           </p>
         </div>
@@ -276,36 +390,44 @@ function ManagerDashboard({ user }: { user: User }) {
             label="Available"
             value={available.toLocaleString()}
             to="/inventory"
+            icon={Boxes}
+            accentColor="bg-emerald-500"
           />
           <MetricCard
             label="Reserved"
             value={reserved.toLocaleString()}
             to="/inventory"
+            icon={ShoppingCart}
+            accentColor="bg-blue-500"
           />
           <MetricCard
             label="Controlled"
             value={controlled.toLocaleString()}
             to="/inventory"
+            icon={AlertTriangle}
+            accentColor="bg-amber-500"
           />
           <MetricCard
             label="In transit"
             value={inTransit.toLocaleString()}
             to="/inventory"
+            icon={Truck}
+            accentColor="bg-purple-500"
           />
         </div>
       </section>
 
       {/* 4. Available workflows */}
-      <section aria-labelledby="available-workflows-heading" className="space-y-3 pt-2">
+      <section aria-labelledby="available-workflows-heading" className="space-y-3.5 pt-2">
         <div>
           <h2 id="available-workflows-heading" className="text-base font-bold tracking-tight text-foreground">
             Available workflows
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Direct operational access to fulfillment areas.
           </p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
           {managerWorkflows.map((item) => (
             <WorkflowCard key={item.to} item={item} />
           ))}
@@ -321,24 +443,24 @@ function RoleWorkspaceDashboard({ user }: { user: User }) {
   switch (user.role) {
     case "RECEIVER":
       defaultWorkflows = [
-        { label: "Receive inventory", to: "/receipts", description: "Process inbound purchase orders and dock receipts" },
-        { label: "Review inventory", to: "/inventory", description: "View warehouse balances and location states" },
-        { label: "Process returns", to: "/returns", description: "Inspect and disposition customer returns" },
+        { label: "Receive inventory", to: "/receipts", description: "Process inbound purchase orders and dock receipts", icon: PackageCheck },
+        { label: "Review inventory", to: "/inventory", description: "View warehouse balances and location states", icon: Boxes },
+        { label: "Process returns", to: "/returns", description: "Inspect and disposition customer returns", icon: Undo2 },
       ];
       break;
     case "PICKER_PACKER":
       defaultWorkflows = [
-        { label: "Review orders", to: "/orders", description: "Monitor active order fulfillment statuses" },
-        { label: "Open pick tasks", to: "/pick-tasks", description: "Claim and execute item picking assignments" },
-        { label: "Manage shipments", to: "/shipments", description: "Stage and verify outbound package shipments" },
+        { label: "Review orders", to: "/orders", description: "Monitor active order fulfillment statuses", icon: ShoppingCart },
+        { label: "Open pick tasks", to: "/pick-tasks", description: "Claim and execute item picking assignments", icon: ClipboardList },
+        { label: "Manage shipments", to: "/shipments", description: "Stage and verify outbound package shipments", icon: Truck },
       ];
       break;
     case "SELLER":
       defaultWorkflows = [
-        { label: "Review inventory", to: "/inventory", description: "Track your catalog quantities and states" },
-        { label: "Review orders", to: "/orders", description: "View order fulfillment progression" },
-        { label: "Track shipments", to: "/shipments", description: "Monitor dispatched outbound carrier tracking" },
-        { label: "Review returns", to: "/returns", description: "Inspect customer return request statuses" },
+        { label: "Review inventory", to: "/inventory", description: "Track your catalog quantities and states", icon: Boxes },
+        { label: "Review orders", to: "/orders", description: "View order fulfillment progression", icon: ShoppingCart },
+        { label: "Track shipments", to: "/shipments", description: "Monitor dispatched outbound carrier tracking", icon: Truck },
+        { label: "Review returns", to: "/returns", description: "Inspect customer return request statuses", icon: Undo2 },
       ];
       break;
     default:
@@ -356,12 +478,12 @@ function RoleWorkspaceDashboard({ user }: { user: User }) {
           <h2 id="role-workflows-heading" className="text-lg font-bold tracking-tight text-foreground">
             Available workflows
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Workflows authorized for your account role.
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
           {allowedWorkflows.map((item) => (
             <WorkflowCard key={item.to} item={item} />
           ))}

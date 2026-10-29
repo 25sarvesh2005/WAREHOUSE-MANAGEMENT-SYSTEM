@@ -112,7 +112,7 @@ function SignupPage() {
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6">
       <div className="mx-auto max-w-6xl">
         <Link to="/login" className="inline-flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary-dark via-primary to-blue-500 text-lg font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.28)]">
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary-dark via-primary to-blue-500 text-lg font-bold text-white shadow-[4px_4px_10px_rgba(37,99,235,0.35),-3px_-3px_8px_rgba(255,255,255,0.9)]">
             W
           </span>
           <span>
@@ -130,7 +130,7 @@ function SignupPage() {
           <section className="card-surface animate-rise p-6 sm:p-10 lg:order-2">
             {submitted ? (
               <div className="py-6 text-center">
-                <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-[#edf2f7] text-emerald-600 border border-white/80 shadow-[4px_4px_10px_rgba(16,185,129,0.2),-4px_-4px_10px_#ffffff]">
                   <CheckCircle2 className="size-8" />
                 </div>
                 <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
@@ -170,7 +170,7 @@ function SignupPage() {
                     id="signup-error-message"
                     role="alert"
                     aria-live="assertive"
-                    className="mt-5 rounded-xl border border-status-red/30 bg-status-red/5 px-4 py-3 text-xs font-semibold text-status-red"
+                    className="mt-5 rounded-2xl border border-rose-300/40 bg-gradient-to-r from-rose-50/80 to-[#edf2f7] px-4 py-3 text-xs font-semibold text-status-red shadow-[3px_3px_8px_rgba(244,63,94,0.12),-3px_-3px_8px_#ffffff]"
                   >
                     {error}
                   </div>
@@ -209,7 +209,7 @@ function SignupPage() {
                           aria-describedby={invalidField === "company" ? "signup-error-message" : undefined}
                           aria-invalid={invalidField === "company"}
                           placeholder="Apex Apparel LLC"
-                          className="w-full rounded-xl border border-input bg-white px-3.5 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60"
+                          className="w-full rounded-xl border border-white/70 bg-[#edf2f7] px-3.5 py-2.5 text-sm font-medium text-foreground outline-none shadow-[inset_2px_2px_5px_rgba(166,180,200,0.38),inset_-2px_-2px_5px_#ffffff] transition-all duration-200 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
                         />
                       </div>
                     </div>
@@ -232,7 +232,7 @@ function SignupPage() {
                           onChange={(e) => setSellerCode(e.target.value.toUpperCase())}
                           aria-invalid={false}
                           placeholder="APEX"
-                          className="w-full rounded-xl border border-input bg-white px-3.5 py-2.5 font-mono text-sm font-bold uppercase outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60"
+                          className="w-full rounded-xl border border-white/70 bg-[#edf2f7] px-3.5 py-2.5 font-mono text-sm font-bold uppercase text-foreground outline-none shadow-[inset_2px_2px_5px_rgba(166,180,200,0.38),inset_-2px_-2px_5px_#ffffff] transition-all duration-200 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
                         />
                       </div>
                     </div>
@@ -265,7 +265,7 @@ function SignupPage() {
                           aria-describedby={invalidField === "name" ? "signup-error-message" : undefined}
                           aria-invalid={invalidField === "name"}
                           placeholder="Alex Whitfield"
-                          className="w-full rounded-xl border border-input bg-white py-2.5 pl-10 pr-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60"
+                          className="w-full rounded-xl border border-white/70 bg-[#edf2f7] py-2.5 pl-10 pr-3.5 text-sm font-medium text-foreground outline-none shadow-[inset_2px_2px_5px_rgba(166,180,200,0.38),inset_-2px_-2px_5px_#ffffff] transition-all duration-200 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
                         />
                       </div>
                     </div>
@@ -296,7 +296,7 @@ function SignupPage() {
                           aria-describedby={invalidField === "email" ? "signup-error-message" : undefined}
                           aria-invalid={invalidField === "email"}
                           placeholder="alex@company.com"
-                          className="w-full rounded-xl border border-input bg-white py-2.5 pl-10 pr-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60"
+                          className="w-full rounded-xl border border-white/70 bg-[#edf2f7] py-2.5 pl-10 pr-3.5 text-sm font-medium text-foreground outline-none shadow-[inset_2px_2px_5px_rgba(166,180,200,0.38),inset_-2px_-2px_5px_#ffffff] transition-all duration-200 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
                         />
                       </div>
                     </div>
@@ -331,7 +331,7 @@ function SignupPage() {
                           aria-describedby={invalidField === "password" ? "signup-error-message" : undefined}
                           aria-invalid={invalidField === "password"}
                           placeholder="••••••••"
-                          className="w-full rounded-xl border border-input bg-white py-2.5 pl-10 pr-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60"
+                          className="w-full rounded-xl border border-white/70 bg-[#edf2f7] py-2.5 pl-10 pr-3.5 text-sm font-medium text-foreground outline-none shadow-[inset_2px_2px_5px_rgba(166,180,200,0.38),inset_-2px_-2px_5px_#ffffff] transition-all duration-200 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
                         />
                       </div>
                       <p className="mt-1 text-[11px] text-muted-foreground">
@@ -367,7 +367,7 @@ function SignupPage() {
                           aria-describedby={invalidField === "confirmPassword" ? "signup-error-message" : undefined}
                           aria-invalid={invalidField === "confirmPassword"}
                           placeholder="••••••••"
-                          className="w-full rounded-xl border border-input bg-white py-2.5 pl-10 pr-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60"
+                          className="w-full rounded-xl border border-white/70 bg-[#edf2f7] py-2.5 pl-10 pr-3.5 text-sm font-medium text-foreground outline-none shadow-[inset_2px_2px_5px_rgba(166,180,200,0.38),inset_-2px_-2px_5px_#ffffff] transition-all duration-200 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
                         />
                       </div>
                     </div>
@@ -386,7 +386,7 @@ function SignupPage() {
               </>
             )}
 
-            <div className="mt-6 border-t border-border pt-5 text-center text-xs text-muted-foreground">
+            <div className="mt-6 border-t border-slate-200/80 pt-5 text-center text-xs text-muted-foreground">
               Already approved?{" "}
               <Link to="/login" className="font-bold text-primary hover:underline">
                 Sign in to the portal
@@ -396,7 +396,7 @@ function SignupPage() {
 
           {/* Context section - Second in DOM, lg:order-1 on desktop */}
           <section className="card-surface animate-rise p-8 sm:p-10 lg:order-1">
-            <span className="inline-flex items-center gap-2 rounded-full bg-primary-tint px-3.5 py-1.5 text-xs font-semibold text-primary">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#edf2f7] px-3.5 py-1.5 text-xs font-semibold text-primary border border-white/80 shadow-[2px_2px_5px_rgba(166,180,200,0.25),-2px_-2px_5px_#ffffff]">
               <ShieldCheck className="size-4" />
               Seller account request
             </span>
@@ -410,19 +410,19 @@ function SignupPage() {
             </p>
 
             <div className="mt-8 space-y-4">
-              <div className="rounded-2xl bg-muted/60 p-4 border border-border/60">
+              <div className="rounded-2xl bg-[#edf2f7] p-4 border border-white/80 shadow-[3px_3px_8px_rgba(166,180,200,0.3),-3px_-3px_8px_#ffffff]">
                 <p className="text-xs font-bold text-foreground">Review required</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Seller access remains pending until an administrator approves the account.
                 </p>
               </div>
-              <div className="rounded-2xl bg-muted/60 p-4 border border-border/60">
+              <div className="rounded-2xl bg-[#edf2f7] p-4 border border-white/80 shadow-[3px_3px_8px_rgba(166,180,200,0.3),-3px_-3px_8px_#ffffff]">
                 <p className="text-xs font-bold text-foreground">Tenant-scoped access</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   An approved seller account is limited to its assigned seller data.
                 </p>
               </div>
-              <div className="rounded-2xl bg-muted/60 p-4 border border-border/60">
+              <div className="rounded-2xl bg-[#edf2f7] p-4 border border-white/80 shadow-[3px_3px_8px_rgba(166,180,200,0.3),-3px_-3px_8px_#ffffff]">
                 <p className="text-xs font-bold text-foreground">Operational visibility</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   After activation, the account can access the workflows permitted for the seller role.

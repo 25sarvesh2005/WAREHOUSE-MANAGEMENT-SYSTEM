@@ -168,8 +168,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   const sidebarContent = (
-    <div className="flex h-full w-[240px] flex-col border-r border-border bg-card">
-      <div className="px-5 py-5 border-b border-border/60">
+    <div className="flex h-full w-[240px] flex-col border-r border-slate-200/80 bg-[#edf2f7]">
+      <div className="px-5 py-5 border-b border-slate-200/80">
         <Link
           to="/"
           aria-label="Whitfield Logistics dashboard"
@@ -177,7 +177,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           <span
             aria-hidden="true"
-            className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary-dark via-primary to-blue-500 text-sm font-bold text-white shadow-[0_8px_18px_rgba(37,99,235,0.24)]"
+            className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary-dark via-primary to-blue-500 text-sm font-bold text-white shadow-[4px_4px_10px_rgba(37,99,235,0.35),-3px_-3px_8px_rgba(255,255,255,0.9)]"
           >
             W
           </span>
@@ -192,11 +192,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
       </div>
 
-      <div className="mx-4 my-3 grid grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-2 text-center text-[11px] font-bold">
-        <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-white px-2 py-1 text-primary shadow-sm">
+      <div className="mx-4 my-3 grid grid-cols-2 gap-2 rounded-2xl bg-slate-200/60 p-1.5 text-center text-[11px] font-bold shadow-[inset_2px_2px_4px_rgba(166,180,200,0.35),inset_-2px_-2px_4px_#ffffff]">
+        <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-[#edf2f7] px-2 py-1 text-primary shadow-[2px_2px_5px_rgba(166,180,200,0.3),-2px_-2px_5px_#ffffff]">
           <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> RNO Hub
         </span>
-        <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-white px-2 py-1 text-primary shadow-sm">
+        <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-[#edf2f7] px-2 py-1 text-primary shadow-[2px_2px_5px_rgba(166,180,200,0.3),-2px_-2px_5px_#ffffff]">
           <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> CMH Hub
         </span>
       </div>
@@ -204,7 +204,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav aria-label="Primary navigation" className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
         {accessibleGroups.map((group) => (
           <div key={group.name} className="space-y-1">
-            <p className="px-3 text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase select-none">
+            <p className="px-3 text-[11px] font-bold tracking-wider text-muted-foreground/75 uppercase select-none">
               {group.name}
             </p>
             {group.items.map(({ to, label, icon: Icon }) => (
@@ -213,7 +213,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={to}
                 activeOptions={{ exact: to === "/" }}
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-3.5 py-2 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 [&.active]:bg-primary-tint [&.active]:text-primary min-h-[44px]"
+                className="flex items-center gap-3 rounded-xl px-3.5 py-2 text-sm font-semibold text-muted-foreground transition-all duration-200 hover:bg-slate-200/50 hover:text-foreground hover:shadow-[2px_2px_6px_rgba(166,180,200,0.25),-2px_-2px_6px_#ffffff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 [&.active]:shadow-[inset_2px_2px_5px_rgba(166,180,200,0.45),inset_-2px_-2px_5px_#ffffff] [&.active]:bg-[#edf2f7] [&.active]:text-primary [&.active]:font-bold min-h-[44px]"
               >
                 <Icon className="size-4.5 shrink-0" aria-hidden="true" />
                 <span>{label}</span>
@@ -223,7 +223,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         ))}
       </nav>
 
-      <div className="border-t border-border px-4 py-4">
+      <div className="border-t border-slate-200/80 px-4 py-4">
         {/* Operations Service Status Card */}
         {(() => {
           let statusLabel = "Checking";
@@ -236,7 +236,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           if (!health) {
             if (statusReportQuery.isError) {
               statusLabel = "Status unavailable";
-              statusColorClass = "text-amber-700";
+              statusColorClass = "text-amber-700 font-semibold";
               dotColorClass = "bg-amber-500";
               supportingText = (
                 <p className="text-[11px] text-muted-foreground">Live health could not be verified.</p>
@@ -244,7 +244,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               showRetry = true;
             } else {
               statusLabel = "Checking";
-              statusColorClass = "text-blue-600";
+              statusColorClass = "text-blue-600 font-semibold";
               dotColorClass = "bg-blue-500";
               supportingText = (
                 <p className="text-[11px] text-muted-foreground">Checking live system health…</p>
@@ -301,10 +301,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               role="status"
               aria-live="polite"
               aria-label={`System status: ${statusLabel}`}
-              className="mb-4 rounded-2xl border border-border/80 bg-background/80 p-3 space-y-1.5"
+              className="mb-4 rounded-2xl border border-white/80 bg-[#edf2f7] p-3 space-y-1.5 shadow-[4px_4px_10px_rgba(166,180,200,0.3),-4px_-4px_10px_#ffffff]"
             >
               <div className="flex items-center justify-between text-xs font-semibold">
-                <span className="flex items-center gap-1.5 text-foreground">
+                <span className="flex items-center gap-1.5 text-foreground font-bold">
                   <span className={`size-2 rounded-full ${dotColorClass}`} aria-hidden="true" />
                   Operations service
                 </span>
@@ -322,7 +322,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               ) : null}
 
               {formattedTime && health ? (
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground font-mono">
                   Last checked <time dateTime={health.timestamp}>{formattedTime}</time>
                 </p>
               ) : null}
@@ -335,7 +335,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   }}
                   disabled={statusReportQuery.isFetching}
                   aria-busy={statusReportQuery.isFetching ? "true" : undefined}
-                  className="mt-2 flex min-h-[44px] w-full items-center justify-center rounded-xl border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center rounded-xl border border-white/80 bg-[#edf2f7] px-3 py-2 text-xs font-semibold text-foreground shadow-[2px_2px_6px_rgba(166,180,200,0.3),-2px_-2px_6px_#ffffff] transition-all duration-200 hover:shadow-[3px_3px_8px_rgba(166,180,200,0.35),-3px_-3px_8px_#ffffff] active:shadow-[inset_2px_2px_4px_rgba(166,180,200,0.4),inset_-2px_-2px_4px_#ffffff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {statusReportQuery.isFetching ? "Checking…" : "Retry status check"}
                 </button>
@@ -345,7 +345,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         })()}
 
         <div className="flex items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-sm">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-[2px_2px_6px_rgba(37,99,235,0.35),-2px_-2px_6px_#ffffff]">
             {initials(user.name)}
           </span>
           <div className="min-w-0 flex-1">
@@ -361,7 +361,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               await signOutAsync();
               navigate({ to: "/login" });
             }}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-white/80 bg-[#edf2f7] p-2 text-muted-foreground shadow-[2px_2px_5px_rgba(166,180,200,0.3),-2px_-2px_5px_#ffffff] transition-all duration-200 hover:text-primary hover:shadow-[3px_3px_8px_rgba(166,180,200,0.35),-3px_-3px_8px_#ffffff] active:shadow-[inset_2px_2px_4px_rgba(166,180,200,0.4),inset_-2px_-2px_4px_#ffffff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
           >
             <LogOut className="size-4" aria-hidden="true" />
           </button>
@@ -385,7 +385,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SheetContent
           side="left"
           id="mobile-navigation"
-          className="w-[260px] p-0 border-r border-border bg-card flex flex-col [&>button]:size-11 [&>button]:min-h-[44px] [&>button]:min-w-[44px] [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:right-2 [&>button]:top-2 [&>button]:rounded-full [&>button]:hover:bg-muted [&>button]:transition-colors"
+          className="w-[260px] p-0 border-r border-slate-200/80 bg-[#edf2f7] flex flex-col [&>button]:size-11 [&>button]:min-h-[44px] [&>button]:min-w-[44px] [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:right-2 [&>button]:top-2 [&>button]:rounded-full [&>button]:hover:bg-slate-200/60 [&>button]:transition-all [&>button]:duration-200 [&>button]:border [&>button]:border-white/80 [&>button]:shadow-[2px_2px_5px_rgba(166,180,200,0.3),-2px_-2px_5px_#ffffff]"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation Menu</SheetTitle>
@@ -397,13 +397,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SheetContent>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-md md:px-6">
+          <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200/80 bg-[#edf2f7]/90 px-4 py-3 backdrop-blur-md md:px-6">
             <SheetTrigger asChild>
               <button
                 aria-label="Open navigation"
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-navigation"
-                className="rounded-full p-2.5 text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                className="rounded-full border border-white/80 bg-[#edf2f7] p-2.5 text-muted-foreground shadow-[2px_2px_6px_rgba(166,180,200,0.3),-2px_-2px_6px_#ffffff] hover:text-foreground hover:shadow-[3px_3px_8px_rgba(166,180,200,0.35),-3px_-3px_8px_#ffffff] active:shadow-[inset_2px_2px_4px_rgba(166,180,200,0.4),inset_-2px_-2px_4px_#ffffff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer transition-all duration-200"
               >
                 <Menu className="size-5" aria-hidden="true" />
               </button>
@@ -417,14 +417,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 value={globalSearch}
                 onChange={(event) => setGlobalSearch(event.target.value)}
                 placeholder="Search ORD-, REC-/1Z, TRF-/TRN-, RET-/RMA-, or SKU-…"
-                className="w-full rounded-full border border-border/80 bg-white py-2 pl-10 pr-4 text-sm text-foreground shadow-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+                className="w-full rounded-full border border-white/70 bg-[#edf2f7] py-2 pl-10 pr-4 text-sm text-foreground shadow-[inset_2px_2px_5px_rgba(166,180,200,0.42),inset_-2px_-2px_5px_#ffffff] outline-none placeholder:text-muted-foreground transition-all duration-200 focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
               />
             </form>
 
             <div className="flex items-center lg:hidden">
               <span
                 aria-label={`Signed in as ${user.name}`}
-                className="flex size-9 items-center justify-center rounded-full bg-primary font-bold text-xs text-white shadow-sm"
+                className="flex size-9 items-center justify-center rounded-full bg-primary font-bold text-xs text-white shadow-[2px_2px_6px_rgba(37,99,235,0.35),-2px_-2px_6px_#ffffff]"
               >
                 {initials(user.name)}
               </span>
