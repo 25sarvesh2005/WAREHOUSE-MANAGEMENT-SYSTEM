@@ -14,17 +14,26 @@ export function StatusBadge({ value, className = "" }: { value: string; classNam
   );
 }
 
-export function FacilityBadge({ code, className = "" }: { code: string; className?: string }) {
+export function FacilityBadge({
+  code,
+  compact = false,
+  className = "",
+}: {
+  code: string;
+  compact?: boolean;
+  className?: string;
+}) {
   const isReno = code.toUpperCase().includes("RNO") || code.toUpperCase().includes("RENO");
   const isColumbus = code.toUpperCase().includes("CMH") || code.toUpperCase().includes("COLUMBUS");
 
   if (isReno) {
     return (
       <span
+        title="Reno, NV"
         className={`inline-flex items-center gap-1.5 rounded-md bg-cyan-50 dark:bg-cyan-950/60 px-2 py-0.5 text-xs font-medium text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/70 whitespace-nowrap shrink-0 ${className}`}
       >
         <span className="size-1.5 rounded-full bg-cyan-600 dark:bg-cyan-400 shrink-0" />
-        {code} (Reno, NV)
+        {compact ? code : `${code} (Reno, NV)`}
       </span>
     );
   }
@@ -32,10 +41,11 @@ export function FacilityBadge({ code, className = "" }: { code: string; classNam
   if (isColumbus) {
     return (
       <span
+        title="Columbus, OH"
         className={`inline-flex items-center gap-1.5 rounded-md bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70 whitespace-nowrap shrink-0 ${className}`}
       >
         <span className="size-1.5 rounded-full bg-amber-600 dark:bg-amber-400 shrink-0" />
-        {code} (Columbus, OH)
+        {compact ? code : `${code} (Columbus, OH)`}
       </span>
     );
   }

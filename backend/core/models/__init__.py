@@ -13,3 +13,4 @@ from core.models import receiving_model as receiving_model
 from core.models import return_model as return_model
 from core.models import transfer_model as transfer_model
 from core.models import voice_model as voice_model
+from core.models import webhook_model as webhook_model

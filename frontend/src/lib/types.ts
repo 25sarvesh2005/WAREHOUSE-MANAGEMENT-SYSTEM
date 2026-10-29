@@ -712,3 +712,35 @@ export interface VoiceInteractionListResponse {
   total: number;
   items: VoiceInteractionItem[];
 }
+
+export interface WebhookSubscription {
+  id: string;
+  tenant_id: string;
+  url: string;
+  secret: string;
+  event_types: string[];
+  status: string;
+  description?: string | null;
+  created_at: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  subscription_id: string;
+  outbox_event_id?: string | null;
+  event_type: string;
+  payload: Record<string, unknown>;
+  status_code?: number | null;
+  response_body?: string | null;
+  latency_ms?: number | null;
+  attempt_number: number;
+  error?: string | null;
+  delivered_at: string;
+}
+
+export interface WebhookSubscriptionCreatePayload {
+  url: string;
+  secret?: string | undefined;
+  event_types?: string[] | undefined;
+  description?: string | undefined;
+}

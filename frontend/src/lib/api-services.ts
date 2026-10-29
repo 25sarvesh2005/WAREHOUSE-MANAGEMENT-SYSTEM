@@ -40,6 +40,9 @@ import type {
   VoiceReceivingDraft,
   VoiceSynthesisResponse,
   Warehouse,
+  WebhookDelivery,
+  WebhookSubscription,
+  WebhookSubscriptionCreatePayload,
 } from "./types";
 
 export interface LoginPayload {
@@ -908,4 +911,41 @@ export async function listVoiceInteractionsApi(
 
   const qs = query.toString();
   return apiRequest<VoiceInteractionListResponse>(`/voice/interactions${qs ? `?${qs}` : ""}`);
+}
+
+export async function listWebhookSubscriptionsApi(): Promise<WebhookSubscription[]> {
+  return apiRequest<WebhookSubscription[]>("/webhooks/subscriptions");
+}
+
+export async function createWebhookSubscriptionApi(
+  payload: WebhookSubscriptionCreatePayload,
+): Promise<WebhookSubscription> {
+  return apiRequest<WebhookSubscription>("/webhooks/subscriptions", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteWebhookSubscriptionApi(id: string): Promise<void> {
+  await apiRequest<void>(`/webhooks/subscriptions/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function testWebhookSubscriptionApi(id: string): Promise<WebhookDelivery> {
+  return apiRequest<WebhookDelivery>(`/webhooks/subscriptions/${id}/test`, {
+    method: "POST",
+  });
+}
+
+export async function listWebhookDeliveriesApi(params?: {
+  subscription_id?: string;
+  limit?: number;
+}): Promise<WebhookDelivery[]> {
+  const query = new URLSearchParams();
+  if (params?.subscription_id) query.set("subscription_id", params.subscription_id);
+  if (params?.limit) query.set("limit", String(params.limit));
+
+  const qs = query.toString();
+  return apiRequest<WebhookDelivery[]>(`/webhooks/deliveries${qs ? `?${qs}` : ""}`);
 }

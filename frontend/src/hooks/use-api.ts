@@ -66,6 +66,11 @@ import {
   synthesizeVoiceAudioApi,
   discardVoiceDraftApi,
   listVoiceInteractionsApi,
+  listWebhookSubscriptionsApi,
+  createWebhookSubscriptionApi,
+  deleteWebhookSubscriptionApi,
+  testWebhookSubscriptionApi,
+  listWebhookDeliveriesApi,
   type ListAiInteractionsParams,
   type ListAiDraftActionsParams,
 } from "@/lib/api-services";
@@ -750,5 +755,56 @@ export function useVoiceInteractionsQuery(
     queryKey: ["voice-interactions", params],
     queryFn: () => listVoiceInteractionsApi(params),
     enabled: options?.enabled ?? true,
+  });
+}
+
+export function useWebhookSubscriptionsQuery(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["webhook-subscriptions"],
+    queryFn: listWebhookSubscriptionsApi,
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useWebhookDeliveriesQuery(
+  params?: { subscription_id?: string; limit?: number },
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ["webhook-deliveries", params],
+    queryFn: () => listWebhookDeliveriesApi(params),
+    enabled: options?.enabled ?? true,
+    refetchInterval: 10000,
+  });
+}
+
+export function useCreateWebhookSubscriptionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createWebhookSubscriptionApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["webhook-subscriptions"] });
+    },
+  });
+}
+
+export function useDeleteWebhookSubscriptionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteWebhookSubscriptionApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["webhook-subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["webhook-deliveries"] });
+    },
+  });
+}
+
+export function useTestWebhookSubscriptionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: testWebhookSubscriptionApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["webhook-deliveries"] });
+    },
   });
 }

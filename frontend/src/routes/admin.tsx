@@ -13,6 +13,7 @@ import { AppShell } from "@/components/AppShell";
 import { AiAuditPanel } from "@/components/AiAuditPanel";
 import { ControlledLaunchPanel } from "@/components/ControlledLaunchPanel";
 import { MigrationPanel } from "@/components/MigrationPanel";
+import { WebhookIntegrationsPanel } from "@/components/WebhookIntegrationsPanel";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   Button,
@@ -62,6 +63,7 @@ const TABS = [
   "Sellers",
   "Warehouses",
   "Products",
+  "Webhooks & Integrations",
   "AI Audit & Provider Health",
   "Controlled Launch & Health",
   "Migration",
@@ -578,6 +580,7 @@ function AdminPage() {
         </TableShell>
       ) : null}
 
+      {activeTab === "Webhooks & Integrations" ? <WebhookIntegrationsPanel /> : null}
       {activeTab === "AI Audit & Provider Health" ? <AiAuditPanel /> : null}
       {activeTab === "Controlled Launch & Health" ? <ControlledLaunchPanel /> : null}
       {activeTab === "Migration" ? <MigrationPanel /> : null}

@@ -46,6 +46,7 @@ async def ensure_db(request: pytest.FixtureRequest):
             "test_outbox_flows",
             "test_system_flaw_fixes",
             "test_voice_receiving_flows",
+            "test_webhook_flows",
         }
         mod_name = request.module.__name__.split(".")[-1] if request.module else ""
         if request.node.get_closest_marker("db") is not None or mod_name in db_required_modules:

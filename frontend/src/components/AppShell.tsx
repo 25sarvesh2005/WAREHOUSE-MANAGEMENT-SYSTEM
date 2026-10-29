@@ -140,9 +140,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     try {
       const destination = resolveGlobalSearch(query);
       if (!destination) {
-        toast.info(
-          "Try searching with standard prefixes: ORD- (Orders), REC-/1Z (Receipts), TRF-/TRN- (Transfers), RET-/RMA- (Returns), or SKU- (Inventory).",
-        );
+        toast.error("Search format not recognized");
+        return;
+      }
+
+      const allowed = new Set(ROLE_SECTIONS[user.role] ?? []);
+      if (!allowed.has(destination.route)) {
+        toast.error(`You do not have access to search ${destination.label}.`);
         return;
       }
 

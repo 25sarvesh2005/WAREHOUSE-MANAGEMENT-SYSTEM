@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from common.logger import get_logger
 from core.cruds import outbox_crud
 from core.models.outbox_model import OutboxEvent
+from core.services.webhook_dispatcher_service import dispatch_outbox_event_to_webhooks
 
 logger = get_logger(__name__)
 
@@ -70,7 +71,10 @@ async def dispatch_pending_outbox_events(
             continue
 
         try:
-            # Execute registered handlers if any exist
+            # Dispatch to active webhook destinations
+            await dispatch_outbox_event_to_webhooks(event, session)
+
+            # Execute registered in-memory handlers if any exist
             handlers = _EVENT_HANDLERS.get(event.event_type, [])
             for handler in handlers:
                 await handler(event)
