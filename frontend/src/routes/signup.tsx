@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui-kit";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { registerSellerPublicApi } from "@/lib/api-services";
 import { useAuth } from "@/lib/auth";
 
@@ -111,32 +112,35 @@ function SignupPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6">
       <div className="mx-auto max-w-5xl">
-        <Link to="/login" className="inline-flex items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white shadow-xs">
-            W
-          </span>
-          <span>
-            <span className="block text-base font-bold tracking-tight text-slate-900">
-              Whitfield <span className="text-primary font-bold">Logistics</span>
+        <div className="flex items-center justify-between">
+          <Link to="/login" className="inline-flex items-center gap-2.5">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white shadow-xs">
+              W
             </span>
-            <span className="block text-[11px] font-medium text-slate-500">
-              Seller Access Request
+            <span>
+              <span className="block text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                Whitfield <span className="text-primary font-bold">Logistics</span>
+              </span>
+              <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Seller Access Request
+              </span>
             </span>
-          </span>
-        </Link>
+          </Link>
+          <ThemeToggle />
+        </div>
 
         <div className="mt-8 grid items-start gap-7 lg:grid-cols-[1fr_1.05fr]">
           {/* Form section - First in DOM for mobile accessibility */}
-          <section className="card-surface animate-rise p-6 sm:p-8 lg:order-2 rounded-xl">
+          <section className="card-surface animate-rise p-6 sm:p-8 lg:order-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
             {submitted ? (
               <div className="py-6 text-center">
-                <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
                   <CheckCircle2 className="size-6" />
                 </div>
-                <h1 className="mt-4 text-xl font-bold tracking-tight text-slate-900">
+                <h1 className="mt-4 text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                   Request submitted
                 </h1>
-                <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-slate-500">
+                <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                   Your seller access request for <strong>{companyName}</strong> was received and is
                   pending administrator review. You can sign in after the account is approved.
                 </p>
@@ -155,13 +159,13 @@ function SignupPage() {
               </div>
             ) : (
               <>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary dark:text-blue-400">
                   Seller Access Request
                 </p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                   Create seller access request
                 </h1>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   Complete the details below to submit your request for administrator review. Submission does not grant immediate access.
                 </p>
 
@@ -170,7 +174,7 @@ function SignupPage() {
                     id="signup-error-message"
                     role="alert"
                     aria-live="assertive"
-                    className="mt-4 rounded-lg border border-rose-200 bg-rose-50/80 px-3.5 py-2.5 text-xs font-semibold text-rose-700"
+                    className="mt-4 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50/80 dark:bg-rose-950/40 px-3.5 py-2.5 text-xs font-semibold text-rose-700 dark:text-rose-300"
                   >
                     {error}
                   </div>
@@ -187,7 +191,7 @@ function SignupPage() {
                     <div>
                       <label
                         htmlFor="signup-company-name"
-                        className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
                       >
                         Company / Brand Name
                       </label>
@@ -209,7 +213,7 @@ function SignupPage() {
                           aria-describedby={invalidField === "company" ? "signup-error-message" : undefined}
                           aria-invalid={invalidField === "company"}
                           placeholder="Apex Apparel LLC"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
+                          className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 shadow-xs outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
                         />
                       </div>
                     </div>
@@ -217,7 +221,7 @@ function SignupPage() {
                     <div>
                       <label
                         htmlFor="signup-seller-code"
-                        className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
                       >
                         Seller Code (Optional)
                       </label>
@@ -232,7 +236,7 @@ function SignupPage() {
                           onChange={(e) => setSellerCode(e.target.value.toUpperCase())}
                           aria-invalid={false}
                           placeholder="APEX"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm font-semibold uppercase text-slate-900 shadow-xs outline-none placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
+                          className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 font-mono text-sm font-semibold uppercase text-slate-900 dark:text-slate-100 shadow-xs outline-none placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
                         />
                       </div>
                     </div>
@@ -242,12 +246,12 @@ function SignupPage() {
                     <div>
                       <label
                         htmlFor="signup-contact-name"
-                        className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
                       >
                         Primary Contact Name
                       </label>
                       <div className="relative mt-1.5">
-                        <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                         <input
                           id="signup-contact-name"
                           name="name"
@@ -265,7 +269,7 @@ function SignupPage() {
                           aria-describedby={invalidField === "name" ? "signup-error-message" : undefined}
                           aria-invalid={invalidField === "name"}
                           placeholder="Alex Whitfield"
-                          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3.5 text-sm text-slate-900 shadow-xs outline-none placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
+                          className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 pl-9 pr-3.5 text-sm text-slate-900 dark:text-slate-100 shadow-xs outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
                         />
                       </div>
                     </div>
@@ -273,12 +277,12 @@ function SignupPage() {
                     <div>
                       <label
                         htmlFor="signup-email"
-                        className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
                       >
                         Work Email Address
                       </label>
                       <div className="relative mt-1.5">
-                        <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                         <input
                           id="signup-email"
                           name="email"
@@ -296,7 +300,7 @@ function SignupPage() {
                           aria-describedby={invalidField === "email" ? "signup-error-message" : undefined}
                           aria-invalid={invalidField === "email"}
                           placeholder="alex@company.com"
-                          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3.5 text-sm text-slate-900 shadow-xs outline-none placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
+                          className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 pl-9 pr-3.5 text-sm text-slate-900 dark:text-slate-100 shadow-xs outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
                         />
                       </div>
                     </div>
@@ -306,12 +310,12 @@ function SignupPage() {
                     <div>
                       <label
                         htmlFor="signup-password"
-                        className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
                       >
                         Account Password
                       </label>
                       <div className="relative mt-1.5">
-                        <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                         <input
                           id="signup-password"
                           name="password"
@@ -331,10 +335,10 @@ function SignupPage() {
                           aria-describedby={invalidField === "password" ? "signup-error-message" : undefined}
                           aria-invalid={invalidField === "password"}
                           placeholder="••••••••"
-                          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3.5 text-sm text-slate-900 shadow-xs outline-none placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
+                          className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 pl-9 pr-3.5 text-sm text-slate-900 dark:text-slate-100 shadow-xs outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
                         />
                       </div>
-                      <p className="mt-1 text-[11px] text-slate-400">
+                      <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
                         Use at least 8 characters.
                       </p>
                     </div>
@@ -342,12 +346,12 @@ function SignupPage() {
                     <div>
                       <label
                         htmlFor="signup-confirm-password"
-                        className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
                       >
                         Confirm Password
                       </label>
                       <div className="relative mt-1.5">
-                        <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                         <input
                           id="signup-confirm-password"
                           name="confirm_password"
@@ -367,7 +371,7 @@ function SignupPage() {
                           aria-describedby={invalidField === "confirmPassword" ? "signup-error-message" : undefined}
                           aria-invalid={invalidField === "confirmPassword"}
                           placeholder="••••••••"
-                          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3.5 text-sm text-slate-900 shadow-xs outline-none placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
+                          className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 pl-9 pr-3.5 text-sm text-slate-900 dark:text-slate-100 shadow-xs outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
                         />
                       </div>
                     </div>
@@ -386,45 +390,45 @@ function SignupPage() {
               </>
             )}
 
-            <div className="mt-5 border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
+            <div className="mt-5 border-t border-slate-100 dark:border-slate-800 pt-4 text-center text-xs text-slate-500 dark:text-slate-400">
               Already approved?{" "}
-              <Link to="/login" className="font-semibold text-primary hover:underline">
+              <Link to="/login" className="font-semibold text-primary dark:text-blue-400 hover:underline">
                 Sign in to the portal
               </Link>
             </div>
           </section>
 
           {/* Context section - Second in DOM, lg:order-1 on desktop */}
-          <section className="card-surface animate-rise p-7 sm:p-8 lg:order-1 rounded-xl">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-primary border border-blue-200/80">
+          <section className="card-surface animate-rise p-7 sm:p-8 lg:order-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 text-xs font-semibold text-primary dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/60">
               <ShieldCheck className="size-3.5" />
               Seller account request
             </span>
 
-            <h2 className="mt-4 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+            <h2 className="mt-4 text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-2xl">
               Request access to Whitfield fulfillment.
             </h2>
 
-            <p className="mt-3 text-xs leading-relaxed text-slate-500">
+            <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Submit your organization and primary-contact details for administrator review.
             </p>
 
             <div className="mt-6 space-y-3">
-              <div className="rounded-lg bg-slate-50 p-3.5 border border-slate-100">
-                <p className="text-xs font-bold text-slate-800">Review required</p>
-                <p className="mt-0.5 text-xs text-slate-500">
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 p-3.5 border border-slate-100 dark:border-slate-800">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Review required</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                   Seller access remains pending until an administrator approves the account.
                 </p>
               </div>
-              <div className="rounded-lg bg-slate-50 p-3.5 border border-slate-100">
-                <p className="text-xs font-bold text-slate-800">Tenant-scoped access</p>
-                <p className="mt-0.5 text-xs text-slate-500">
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 p-3.5 border border-slate-100 dark:border-slate-800">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Tenant-scoped access</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                   An approved seller account is limited to its assigned seller data.
                 </p>
               </div>
-              <div className="rounded-lg bg-slate-50 p-3.5 border border-slate-100">
-                <p className="text-xs font-bold text-slate-800">Operational visibility</p>
-                <p className="mt-0.5 text-xs text-slate-500">
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 p-3.5 border border-slate-100 dark:border-slate-800">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Operational visibility</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                   After activation, the account can access the workflows permitted for the seller role.
                 </p>
               </div>

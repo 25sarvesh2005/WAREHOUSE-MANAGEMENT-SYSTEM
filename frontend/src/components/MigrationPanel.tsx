@@ -182,7 +182,7 @@ export function MigrationPanel() {
             <input
               value={sourceNotes}
               onChange={(event) => setSourceNotes(event.target.value)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none w-64"
+              className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-slate-800 dark:text-slate-100 focus:outline-none w-64"
               placeholder="e.g. Reno cutover opening stock"
             />
             <Button
@@ -258,7 +258,7 @@ export function MigrationPanel() {
               aria-label="Active Batch"
               value={effectiveBatchId}
               onChange={(event) => setSelectedBatchId(event.target.value)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs font-bold text-slate-900 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 font-mono text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
               {batches.map((batch) => {
                 const batchNum = batch.batch_number || `BATCH-${batch.id.slice(0, 8)}`;

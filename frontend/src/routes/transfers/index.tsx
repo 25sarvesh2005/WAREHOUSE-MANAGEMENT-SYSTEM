@@ -432,29 +432,29 @@ function TransfersPage() {
       {/* Metric Cards */}
       <div className="mb-5 grid gap-3.5 sm:grid-cols-3">
         <Card className="border-l-4 border-l-amber-500 p-4">
-          <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
             Pending Manager Approval
           </span>
-          <p className="mt-1 font-mono text-2xl font-extrabold text-amber-900">
+          <p className="mt-1 font-mono text-2xl font-extrabold text-amber-900 dark:text-amber-200">
             {pendingApprovals}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500">Requires authorization on this page</p>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Requires authorization on this page</p>
         </Card>
 
         <Card className="border-l-4 border-l-blue-600 p-4">
-          <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-blue-800 dark:text-blue-400 uppercase tracking-wider">
             In-Transit (RNO ⇄ CMH)
           </span>
-          <p className="mt-1 font-mono text-2xl font-extrabold text-blue-900">{inTransitCount}</p>
-          <p className="mt-1 text-[11px] text-slate-500">Tracked on this page</p>
+          <p className="mt-1 font-mono text-2xl font-extrabold text-blue-900 dark:text-blue-200">{inTransitCount}</p>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Tracked on this page</p>
         </Card>
 
         <Card className="border-l-4 border-l-purple-600 p-4">
-          <span className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-purple-800 dark:text-purple-400 uppercase tracking-wider">
             Discrepancy Review Queue
           </span>
-          <p className="mt-1 font-mono text-2xl font-extrabold text-purple-900">{discrepancies}</p>
-          <p className="mt-1 text-[11px] text-slate-500">Variance review on this page</p>
+          <p className="mt-1 font-mono text-2xl font-extrabold text-purple-900 dark:text-purple-200">{discrepancies}</p>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Variance review on this page</p>
         </Card>
       </div>
 

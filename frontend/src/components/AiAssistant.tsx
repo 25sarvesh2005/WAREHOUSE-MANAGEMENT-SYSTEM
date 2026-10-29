@@ -496,7 +496,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
       <div
         role="region"
         aria-label="AI Safety and Overview"
-        className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-white via-slate-50/50 to-primary-tint/30 p-6 shadow-card"
+        className="relative overflow-hidden rounded-2xl border border-border dark:border-slate-800 bg-gradient-to-br from-white via-slate-50/50 to-primary-tint/30 dark:from-slate-900 dark:via-slate-900/90 dark:to-blue-950/40 p-6 shadow-card"
       >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-start gap-4">
@@ -506,8 +506,8 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-foreground">Operations AI Assistant</h2>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
-                  <ShieldCheck className="size-3 text-emerald-600" />
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <ShieldCheck className="size-3 text-emerald-600 dark:text-emerald-400" />
                   Read-Only Safe
                 </span>
               </div>
@@ -521,9 +521,9 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
           <div
             role="note"
             aria-label="AI Safety Guardrails"
-            className="flex items-center gap-2 shrink-0 text-xs text-muted-foreground bg-white/80 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-border"
+            className="flex items-center gap-2 shrink-0 text-xs text-muted-foreground bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-border dark:border-slate-800"
           >
-            <Info className="size-3.5 text-primary" />
+            <Info className="size-3.5 text-primary dark:text-blue-400" />
             <span>AI cannot mutate stock or finalize shipments</span>
           </div>
         </div>
@@ -548,7 +548,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
               activeCategory === "inventory"
                 ? "bg-primary text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100 border border-border"
+                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-border dark:border-slate-800"
             }`}
           >
             <Box className="size-3.5" />
@@ -566,7 +566,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
               activeCategory === "tracking"
                 ? "bg-primary text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100 border border-border"
+                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-border dark:border-slate-800"
             }`}
           >
             <Truck className="size-3.5" />
@@ -584,7 +584,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
               activeCategory === "exceptions"
                 ? "bg-primary text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100 border border-border"
+                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-border dark:border-slate-800"
             }`}
           >
             <AlertTriangle className="size-3.5" />
@@ -603,7 +603,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
               !showVoiceDock && activeCategory === "rebalance"
                 ? "bg-primary text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100 border border-border"
+                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-border dark:border-slate-800"
             }`}
           >
             <RefreshCw className="size-3.5" />
@@ -658,12 +658,12 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
       {/* ─────────────────────────────────────────────────────────────────
           3. Smart Search / Query Input Bar
           ───────────────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-border bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-card">
         <form onSubmit={handleFormSubmit} className="space-y-3">
           <div className="flex items-center justify-between">
             <label
               htmlFor="ai-query-input"
-              className="text-xs font-bold uppercase tracking-wider text-slate-500"
+              className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
             >
               {activeIntent.title}
             </label>
@@ -680,7 +680,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
           </div>
 
           <div className="relative flex items-center">
-            <div className="pointer-events-none absolute left-3.5 text-slate-400">
+            <div className="pointer-events-none absolute left-3.5 text-slate-400 dark:text-slate-500">
               <Search className="size-5" />
             </div>
             <input
@@ -689,7 +689,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
               value={queryInput}
               onChange={(e) => setQueryInput(e.target.value)}
               placeholder={activeIntent.placeholder}
-              className="w-full rounded-xl border border-border bg-slate-50/50 py-3.5 pl-11 pr-32 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full rounded-xl border border-border dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/60 py-3.5 pl-11 pr-32 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
             {queryInput && (
               <button
@@ -792,7 +792,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
               onClick={() =>
                 handleQuickStarter("inventory-availability", "product with 0 quantity")
               }
-              className="group flex flex-col items-start rounded-xl border border-border bg-white p-4 text-left shadow-xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-primary-tint text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                 <Box className="size-4" />
@@ -813,7 +813,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
                   "which headphones do we have in stock?",
                 )
               }
-              className="group flex flex-col items-start rounded-xl border border-border bg-white p-4 text-left shadow-xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                 <Sparkles className="size-4" />
@@ -829,7 +829,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             <button
               type="button"
               onClick={() => handleQuickStarter("order-status", "ORD-2026-1001")}
-              className="group flex flex-col items-start rounded-xl border border-border bg-white p-4 text-left shadow-xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                 <Truck className="size-4" />
@@ -845,7 +845,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             <button
               type="button"
               onClick={() => handleQuickStarter("ledger-explanation", "SKU-AURA-ANC100")}
-              className="group flex flex-col items-start rounded-xl border border-border bg-white p-4 text-left shadow-xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                 <Layers className="size-4" />
@@ -861,7 +861,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             <button
               type="button"
               onClick={() => handleQuickStarter("receipt-status", "REC-2026-001")}
-              className="group flex flex-col items-start rounded-xl border border-border bg-white p-4 text-left shadow-xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-teal-50 text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">
                 <PackageCheck className="size-4" />
@@ -879,7 +879,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
               onClick={() =>
                 handleQuickStarter("exceptions-summary", "Summarize facility hold reasons")
               }
-              className="group flex flex-col items-start rounded-xl border border-border bg-white p-4 text-left shadow-xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
                 <AlertTriangle className="size-4" />
@@ -900,7 +900,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
           ───────────────────────────────────────────────────────────────── */}
       {activeResult && (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="rounded-2xl border border-border bg-white p-6 shadow-card space-y-6">
+          <div className="rounded-2xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-card space-y-6">
             {/* Header / Meta bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
               <div className="flex items-center gap-3">
@@ -1168,7 +1168,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
           6. Session History Drawer (Recent Queries)
           ───────────────────────────────────────────────────────────────── */}
       {recentQueries.length > 0 && (
-        <div className="rounded-2xl border border-border bg-white p-4 shadow-card">
+        <div className="rounded-2xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-card">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
             <History className="size-3.5 text-slate-400" />
             <span>Recent Session Inquiries</span>

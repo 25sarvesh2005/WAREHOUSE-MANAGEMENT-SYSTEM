@@ -59,23 +59,23 @@ function DashboardHeader({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 border border-blue-200/80 text-[11px] font-semibold text-primary">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/60 text-[11px] font-semibold text-primary dark:text-blue-400">
               <span className="size-1.5 rounded-full bg-primary" />
               Operations overview
             </span>
           </div>
 
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
             Welcome back, {firstName}.
           </h1>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 border border-slate-200">
-              Signed in as <span className="font-semibold text-slate-900">{formattedRole}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+              Signed in as <span className="font-semibold text-slate-900 dark:text-slate-100">{formattedRole}</span>
             </span>
           </div>
 
-          <p className="max-w-2xl text-sm leading-relaxed text-slate-500 pt-0.5">
+          <p className="max-w-2xl text-sm leading-relaxed text-slate-500 dark:text-slate-400 pt-0.5">
             {isManager
               ? "Review current inventory totals, open work, and exception queues reported by the WMS."
               : "Open the operational workflows available to your assigned role."}
@@ -84,15 +84,15 @@ function DashboardHeader({
 
         {/* Clean System Status Pill */}
         <div className="hidden lg:flex flex-col items-end gap-1.5 shrink-0">
-          <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3 flex items-center gap-3">
-            <div className="size-8 rounded-md bg-white border border-slate-200 flex items-center justify-center text-primary shadow-2xs">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 flex items-center gap-3">
+            <div className="size-8 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-primary dark:text-blue-400 shadow-2xs">
               <ShieldCheck className="size-4" />
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+              <p className="text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
                 Outbox & Invariant Engine
               </p>
-              <p className="text-xs font-semibold text-slate-800 flex items-center gap-1.5 justify-end">
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 justify-end">
                 <span className="size-1.5 rounded-full bg-emerald-500" />
                 Ledger Balanced
               </p>
@@ -124,8 +124,8 @@ function MetricCard({
       to={to}
       className={`group relative flex min-h-[44px] flex-col justify-between rounded-xl p-5 transition-all duration-150 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
         isException
-          ? "bg-amber-50/60 border border-amber-200/90 hover:border-amber-300 hover:shadow-xs"
-          : "card-surface hover:border-slate-300 hover:shadow-xs"
+          ? "bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/90 dark:border-amber-900/50 hover:border-amber-300 dark:hover:border-amber-800 hover:shadow-xs"
+          : "card-surface hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs"
       }`}
     >
       {/* Top Header: Label + Icon */}
@@ -133,7 +133,7 @@ function MetricCard({
         <div className="min-w-0 flex-1">
           <p
             className={`text-xs font-semibold uppercase tracking-wider ${
-              isException ? "text-amber-900" : "text-slate-500"
+              isException ? "text-amber-900 dark:text-amber-300" : "text-slate-500 dark:text-slate-400"
             }`}
           >
             {label}
@@ -145,14 +145,14 @@ function MetricCard({
             <div
               className={`size-8 rounded-lg flex items-center justify-center border transition-colors ${
                 isException
-                  ? "bg-amber-100/70 border-amber-200 text-amber-800"
-                  : "bg-slate-50 border-slate-200 text-slate-500 group-hover:text-primary group-hover:bg-blue-50 group-hover:border-blue-200"
+                  ? "bg-amber-100/70 dark:bg-amber-900/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300"
+                  : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 group-hover:text-primary group-hover:bg-blue-50 dark:group-hover:bg-blue-950/50 group-hover:border-blue-200 dark:group-hover:border-blue-800"
               }`}
             >
               <Icon className="size-4" />
             </div>
           ) : null}
-          <div className="size-6 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
+          <div className="size-6 flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
             <ArrowRight className="size-3.5" />
           </div>
         </div>
@@ -160,12 +160,12 @@ function MetricCard({
 
       {/* Value Display */}
       <div className="mt-4 flex items-baseline justify-between">
-        <p className="font-mono text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
+        <p className="font-mono text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl tabular-nums">
           {value}
         </p>
 
         {accentColor ? (
-          <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+          <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
             <span className={`size-2 rounded-full ${accentColor}`} />
             Tracked
           </span>
@@ -185,23 +185,23 @@ function WorkflowCard({
   return (
     <Link
       to={item.to}
-      className="group flex min-h-[44px] items-center justify-between gap-3.5 rounded-xl card-surface p-4 transition-all duration-150 hover:border-slate-300 hover:shadow-xs hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="group flex min-h-[44px] items-center justify-between gap-3.5 rounded-xl card-surface p-4 transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div className="flex items-center gap-3.5 min-w-0 flex-1">
-        <div className="size-10 rounded-lg bg-blue-50 border border-blue-200/80 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+        <div className="size-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/60 flex items-center justify-center text-primary dark:text-blue-400 group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
           <Icon className="size-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-900 group-hover:text-primary transition-colors truncate">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors truncate">
             {item.label}
           </p>
           {item.description ? (
-            <p className="mt-0.5 text-xs text-slate-500 truncate">{item.description}</p>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 truncate">{item.description}</p>
           ) : null}
         </div>
       </div>
 
-      <div className="size-7 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">
+      <div className="size-7 flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">
         <ArrowRight className="size-4" />
       </div>
     </Link>
@@ -286,15 +286,15 @@ function ManagerDashboard({ user }: { user: User }) {
       <section aria-labelledby="needs-attention-heading" className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 id="needs-attention-heading" className="text-base font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            <h2 id="needs-attention-heading" className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <span className="size-2 rounded-full bg-amber-500" />
               Needs attention
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Exception queues reported by the WMS.
             </p>
           </div>
-          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-200">
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
             {totalExceptions} Active
           </span>
         </div>
@@ -324,7 +324,7 @@ function ManagerDashboard({ user }: { user: User }) {
         </div>
 
         {totalExceptions === 0 ? (
-          <div className="card-surface rounded-xl p-5 text-center text-sm font-medium text-slate-500 flex items-center justify-center gap-2">
+          <div className="card-surface rounded-xl p-5 text-center text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
             <CheckCircle2 className="size-4 text-emerald-600" />
             No active manager exceptions were reported.
           </div>
@@ -334,10 +334,10 @@ function ManagerDashboard({ user }: { user: User }) {
       {/* 2. Open work */}
       <section aria-labelledby="open-work-heading" className="space-y-3">
         <div>
-          <h2 id="open-work-heading" className="text-base font-bold tracking-tight text-slate-900">
+          <h2 id="open-work-heading" className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Open work
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Active warehouse operations requiring processing.
           </p>
         </div>
@@ -372,10 +372,10 @@ function ManagerDashboard({ user }: { user: User }) {
       {/* 3. Inventory by state */}
       <section aria-labelledby="inventory-state-heading" className="space-y-3">
         <div>
-          <h2 id="inventory-state-heading" className="text-base font-bold tracking-tight text-slate-900">
+          <h2 id="inventory-state-heading" className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Inventory by state
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Total units reported across all warehouses by inventory state.
           </p>
         </div>
@@ -414,10 +414,10 @@ function ManagerDashboard({ user }: { user: User }) {
       {/* 4. Available workflows */}
       <section aria-labelledby="available-workflows-heading" className="space-y-3 pt-1">
         <div>
-          <h2 id="available-workflows-heading" className="text-base font-bold tracking-tight text-slate-900">
+          <h2 id="available-workflows-heading" className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Available workflows
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Direct operational access to fulfillment areas.
           </p>
         </div>
@@ -469,10 +469,10 @@ function RoleWorkspaceDashboard({ user }: { user: User }) {
 
       <section aria-labelledby="role-workflows-heading" className="space-y-3">
         <div>
-          <h2 id="role-workflows-heading" className="text-base font-bold tracking-tight text-slate-900">
+          <h2 id="role-workflows-heading" className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Available workflows
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Workflows authorized for your account role.
           </p>
         </div>

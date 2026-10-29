@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   AlertTriangle,
   CheckCircle2,
+  Minus,
   Plus,
+  X,
+  Package,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { AppDialog } from "@/components/AppDialog";
@@ -154,7 +157,7 @@ function PickTasksPage() {
       ) : null}
 
       {/* Main Grid: Pick Tasks Table & Active Picking Drawer */}
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1.1fr] min-w-0">
+      <div className={`grid gap-6 ${active ? "xl:grid-cols-[1.5fr_1fr] 2xl:grid-cols-[1.7fr_1.1fr]" : "grid-cols-1"} min-w-0`}>
         <div className="min-w-0">
           {tasks.length === 0 ? (
             <Card className="p-8">
@@ -169,13 +172,13 @@ function PickTasksPage() {
                 <TableShell>
                   <thead>
                     <tr>
-                      <Th>Pick Task ID</Th>
+                      <Th className="w-36">Pick Task ID</Th>
                       <Th>Order Reference</Th>
-                      <Th>Lines</Th>
+                      <Th className="w-24">Lines</Th>
                       <Th>Facility</Th>
-                      <Th>Priority</Th>
+                      <Th className="w-20">Priority</Th>
                       <Th>Status</Th>
-                      <Th className="text-right">Action</Th>
+                      <Th className="text-right w-28">Action</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -191,21 +194,25 @@ function PickTasksPage() {
                           key={task.id}
                           onClick={() => selectTask(task)}
                           className={`cursor-pointer transition-colors ${
-                            isSelected ? "bg-blue-50/80 font-medium" : "hover:bg-slate-50"
+                            isSelected
+                              ? "bg-blue-50/70 dark:bg-blue-950/40 font-medium"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                           }`}
                         >
-                          <Td className="font-mono font-bold text-slate-900">
+                          <Td className="font-mono font-semibold text-slate-900 dark:text-slate-100">
                             TASK-{task.id.slice(0, 8)}
                           </Td>
-                          <Td className="font-mono text-slate-700">{orderRef}</Td>
-                          <Td className="font-mono font-semibold text-slate-800">
-                            {task.lines?.length || 0} SKUs
+                          <Td className="font-medium text-slate-800 dark:text-slate-200">
+                            {orderRef}
+                          </Td>
+                          <Td className="font-medium text-slate-700 dark:text-slate-300">
+                            {task.lines?.length || 0} {task.lines?.length === 1 ? "SKU" : "SKUs"}
                           </Td>
                           <Td>
                             <FacilityBadge code={whCode} />
                           </Td>
                           <Td>
-                            <span className="font-mono font-bold text-slate-800">
+                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
                               P{task.priority ?? 1}
                             </span>
                           </Td>
@@ -214,7 +221,7 @@ function PickTasksPage() {
                           </Td>
                           <Td className="text-right">
                             <Button
-                              variant="secondary"
+                              variant={isSelected ? "primary" : "secondary"}
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -243,7 +250,7 @@ function PickTasksPage() {
                     <MobileRecordCard key={task.id} selected={isSelected}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-mono font-bold text-slate-900 break-all text-sm">
+                          <p className="font-mono font-bold text-slate-900 dark:text-slate-100 break-all text-sm">
                             TASK-{task.id.slice(0, 8)}
                           </p>
                         </div>
@@ -253,7 +260,7 @@ function PickTasksPage() {
                       <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
                         <div>
                           <dt className="text-muted-foreground text-[11px]">Order Reference</dt>
-                          <dd className="font-mono text-slate-700 font-medium break-all">{orderRef}</dd>
+                          <dd className="text-slate-800 dark:text-slate-200 font-medium break-all">{orderRef}</dd>
                         </div>
                         <div>
                           <dt className="text-muted-foreground text-[11px]">Facility</dt>
@@ -263,11 +270,11 @@ function PickTasksPage() {
                         </div>
                         <div>
                           <dt className="text-muted-foreground text-[11px]">Lines</dt>
-                          <dd className="font-mono font-semibold text-slate-800">{task.lines?.length || 0} SKUs</dd>
+                          <dd className="font-medium text-slate-800 dark:text-slate-200">{task.lines?.length || 0} SKUs</dd>
                         </div>
                         <div>
                           <dt className="text-muted-foreground text-[11px]">Priority</dt>
-                          <dd className="font-mono font-bold text-slate-800">P{task.priority ?? 1}</dd>
+                          <dd className="font-bold text-slate-800 dark:text-slate-200">P{task.priority ?? 1}</dd>
                         </div>
                       </dl>
 
@@ -290,29 +297,49 @@ function PickTasksPage() {
         </div>
 
         {/* Right Column: Pick Station Controls */}
-        <div className="min-w-0">
-          {active ? (
-            <Card className="sticky top-20 border-t-4 border-t-blue-600 p-5 shadow-sm space-y-4">
-              <div className="flex items-start justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Active Floor Pick Station
+        {active ? (
+          <div className="min-w-0">
+            <Card className="sticky top-20 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-4">
+              <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/60 text-primary dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/60">
+                    <Package className="size-4" aria-hidden="true" />
                   </span>
-                  <h3 className="font-mono text-base font-bold text-slate-900 mt-0.5">
-                    TASK-{active.id.slice(0, 8)}
-                  </h3>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                      Active Floor Pick Station
+                    </span>
+                    <h3 className="font-mono text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                      TASK-{active.id.slice(0, 8)}
+                    </h3>
+                  </div>
                 </div>
-                <StatusBadge value={active.status} />
+                <div className="flex items-center gap-2">
+                  <StatusBadge value={active.status} />
+                  <button
+                    type="button"
+                    onClick={() => setActive(null)}
+                    aria-label="Close pick station"
+                    className="flex size-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    <X className="size-4" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
 
               {completeError ? <ErrorState message={completeError} /> : null}
 
               <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  Pick Verification Items
-                </span>
-                <p className="text-xs text-slate-500 mb-2">
-                  Verify SKU and enter physical picked count from bin:
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                    Pick Verification Items
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    {active.lines?.length || 0} line(s)
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                  Verify SKU barcode and enter physical picked quantity from bin:
                 </p>
 
                 <div className="space-y-3">
@@ -323,41 +350,81 @@ function PickTasksPage() {
                     const currentPicked = Number(picked[line.id] ?? requested);
                     const isShort = currentPicked < requested;
 
+                    const handleIncrement = () => {
+                      const next = Math.min(requested, currentPicked + 1);
+                      setPicked({ ...picked, [line.id]: String(next) });
+                    };
+
+                    const handleDecrement = () => {
+                      const next = Math.max(0, currentPicked - 1);
+                      setPicked({ ...picked, [line.id]: String(next) });
+                    };
+
                     return (
                       <div
                         key={line.id}
-                        className={`rounded-lg border p-3 text-xs ${
-                          isShort ? "border-rose-300 bg-rose-50/50" : "border-slate-200 bg-slate-50"
+                        className={`rounded-lg border p-3.5 text-xs transition-colors ${
+                          isShort
+                            ? "border-rose-300 dark:border-rose-900/70 bg-rose-50/50 dark:bg-rose-950/20"
+                            : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60"
                         }`}
                       >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-mono font-bold text-slate-900">{sku}</p>
-                            <p className="text-[11px] text-slate-600">{name}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="inline-block font-mono font-bold text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-xs">
+                              {sku}
+                            </span>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 truncate">
+                              {name}
+                            </p>
                           </div>
-                          <span className="font-mono font-bold text-slate-700 text-xs">
-                            Req: {requested}
+                          <span className="shrink-0 font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-[11px]">
+                            Req: <strong className="font-semibold text-slate-900 dark:text-slate-100 font-mono">{requested}</strong>
                           </span>
                         </div>
 
-                        <div className="mt-2 flex items-center justify-between border-t border-slate-200/60 pt-2">
-                          <label className="font-bold text-slate-700 text-[10px] uppercase">
-                            Actual Picked Quantity:
+                        <div className="mt-3 flex items-center justify-between border-t border-slate-200/70 dark:border-slate-800 pt-2.5">
+                          <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                            Actual Picked Units:
                           </label>
-                          <input
-                            type="number"
-                            min="0"
-                            max={requested}
-                            value={picked[line.id] ?? requested}
-                            onChange={(e) => setPicked({ ...picked, [line.id]: e.target.value })}
-                            className="w-20 rounded-md border border-slate-300 bg-white px-2 py-1 font-mono text-xs font-bold text-right text-slate-900 focus:outline-none"
-                          />
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={handleDecrement}
+                              disabled={currentPicked <= 0}
+                              aria-label={`Decrease picked quantity for ${sku}`}
+                              className="flex size-7 items-center justify-center rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 cursor-pointer"
+                            >
+                              <Minus className="size-3" />
+                            </button>
+
+                            <input
+                              type="number"
+                              min="0"
+                              max={requested}
+                              value={picked[line.id] ?? requested}
+                              onChange={(e) => setPicked({ ...picked, [line.id]: e.target.value })}
+                              aria-label={`Picked quantity for ${sku}`}
+                              className="w-16 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 font-mono text-xs font-bold text-center text-slate-900 dark:text-slate-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                            />
+
+                            <button
+                              type="button"
+                              onClick={handleIncrement}
+                              disabled={currentPicked >= requested}
+                              aria-label={`Increase picked quantity for ${sku}`}
+                              className="flex size-7 items-center justify-center rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 cursor-pointer"
+                            >
+                              <Plus className="size-3" />
+                            </button>
+                          </div>
                         </div>
 
                         {isShort ? (
-                          <p className="mt-1 text-[10px] font-bold text-rose-700 flex items-center gap-1">
-                            <AlertTriangle className="size-3" /> Short pick detected (
-                            {requested - currentPicked} missing)
+                          <p className="mt-2 text-[11px] font-semibold text-rose-700 dark:text-rose-400 flex items-center gap-1.5 bg-rose-100/60 dark:bg-rose-950/40 px-2 py-1 rounded">
+                            <AlertTriangle className="size-3.5 shrink-0" />
+                            Short pick: {requested - currentPicked} missing from bin
                           </p>
                         ) : null}
                       </div>
@@ -366,29 +433,25 @@ function PickTasksPage() {
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 pt-3 flex gap-2">
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
                 <Button
                   variant="primary"
                   size="md"
                   onClick={complete}
                   disabled={completePickTaskMutation.isPending}
-                  className="w-full font-bold bg-emerald-600 hover:bg-emerald-700"
+                  className="w-full font-bold gap-2"
                 >
                   <CheckCircle2 className="size-4" />
                   <span>
                     {completePickTaskMutation.isPending
-                      ? "Confirming..."
+                      ? "Confirming Pick..."
                       : "Confirm Pick & Pack Complete"}
                   </span>
                 </Button>
               </div>
             </Card>
-          ) : (
-            <Card className="p-6 text-center text-xs text-slate-500">
-              Select a pick task from the queue to enter floor picking mode.
-            </Card>
-          )}
-        </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Generate Pick Task Modal */}
@@ -403,13 +466,13 @@ function PickTasksPage() {
       >
         <div className="space-y-3.5 text-xs">
           <div>
-            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 text-xs mb-1">
               Select Reserved Order
             </label>
             <select
               value={newTask.order_id}
               onChange={(e) => setNewTask({ ...newTask, order_id: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:border-primary focus:outline-none"
             >
               <option value="">-- Choose Order to Pick --</option>
               {eligibleOrders.map((o) => (
@@ -421,7 +484,7 @@ function PickTasksPage() {
           </div>
 
           <div>
-            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 text-xs mb-1">
               Wave Priority Level (1-5)
             </label>
             <input
@@ -430,12 +493,12 @@ function PickTasksPage() {
               max="5"
               value={newTask.priority}
               onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs font-bold text-slate-900 focus:outline-none"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 font-mono text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-primary"
             />
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end border-t border-slate-100 pt-4">
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end border-t border-slate-100 dark:border-slate-800 pt-4">
           <Button
             type="button"
             variant="secondary"

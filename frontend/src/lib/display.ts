@@ -25,12 +25,16 @@ export function warehouseLabel(warehouses: Warehouse[], id?: string | null): str
 
 export function productSku(products: Product[], id?: string | null): string {
   const product = products.find((item) => item.id === id);
-  return product ? product.sku : id || "SKU";
+  if (product) return product.sku;
+  if (!id) return "SKU";
+  return id.length > 12 ? `SKU-${id.slice(0, 8).toUpperCase()}` : id;
 }
 
 export function productName(products: Product[], id?: string | null): string {
   const product = products.find((item) => item.id === id);
-  return product ? product.name : id || "Product";
+  if (product) return product.name;
+  if (!id) return "Product";
+  return id.length > 12 ? `Inventory Item #${id.slice(0, 8)}` : id;
 }
 
 export function orderDestination(order: Order): string {

@@ -287,8 +287,8 @@ function OrdersPage() {
         }
       />
 
-      <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-blue-200/80 bg-blue-50/60 px-3.5 py-2 text-xs text-blue-900">
-        <Lock className="size-4 shrink-0 text-blue-600" />
+      <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-blue-200/80 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/40 px-3.5 py-2 text-xs text-blue-900 dark:text-blue-200">
+        <Lock className="size-4 shrink-0 text-blue-600 dark:text-blue-400" />
         <span>
           <strong className="font-semibold">No-Oversell Protection:</strong> When orders are placed,
           stock is atomically reserved on the server so two workers never confirm the same last
@@ -314,29 +314,29 @@ function OrdersPage() {
       {/* Live Operational Metrics */}
       <div className="mb-5 grid gap-3.5 sm:grid-cols-3">
         <Card className="border-l-4 border-l-blue-600 p-4">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             Total Active Orders
           </span>
-          <p className="mt-1 font-mono text-2xl font-extrabold text-slate-900">{openOrdersCount}</p>
-          <p className="mt-1 text-[11px] text-slate-500">Across Reno and Columbus</p>
+          <p className="mt-1 font-mono text-2xl font-extrabold text-slate-900 dark:text-slate-100">{openOrdersCount}</p>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Across Reno and Columbus</p>
         </Card>
 
         <Card className="border-l-4 border-l-purple-600 p-4">
-          <span className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-purple-800 dark:text-purple-400 uppercase tracking-wider">
             In Pick / Pack Workflow
           </span>
-          <p className="mt-1 font-mono text-2xl font-extrabold text-purple-900">{inFlightCount}</p>
-          <p className="mt-1 text-[11px] text-slate-500">Stock reserved on server</p>
+          <p className="mt-1 font-mono text-2xl font-extrabold text-purple-900 dark:text-purple-200">{inFlightCount}</p>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Stock reserved on server</p>
         </Card>
 
         <Card className="border-l-4 border-l-amber-500 p-4">
-          <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
             Awaiting Stock / Backorder
           </span>
-          <p className="mt-1 font-mono text-2xl font-extrabold text-amber-900">
+          <p className="mt-1 font-mono text-2xl font-extrabold text-amber-900 dark:text-amber-200">
             {backorderedCount}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500">Pending inbound receipts</p>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Pending inbound receipts</p>
         </Card>
       </div>
 
@@ -359,7 +359,7 @@ function OrdersPage() {
                   aria-label="Sort orders"
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
-                  className="min-h-[44px] sm:min-h-0 w-full sm:w-auto rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+                  className="min-h-[44px] sm:min-h-0 w-full sm:w-auto rounded-full border border-border dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
                 >
                   <option value="priority">Priority</option>
                   <option value="seller_order_number">Order Number</option>
@@ -401,17 +401,19 @@ function OrdersPage() {
                           key={order.id}
                           onClick={() => setSelectedId(order.id)}
                           className={`cursor-pointer transition-colors ${
-                            isSelected ? "bg-blue-50/80 font-medium" : "hover:bg-slate-50"
+                            isSelected
+                              ? "bg-blue-50/80 dark:bg-blue-950/60 font-medium"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                           }`}
                         >
-                          <Td className="font-mono font-bold text-slate-900">
+                          <Td className="font-mono font-bold text-slate-900 dark:text-slate-100">
                             {order.seller_order_number || `ORD-${order.id.slice(0, 8)}`}
                           </Td>
-                          <Td className="text-slate-700">{sellerLabel(sellers, order.seller_id)}</Td>
+                          <Td className="text-slate-700 dark:text-slate-300">{sellerLabel(sellers, order.seller_id)}</Td>
                           <Td>
                             <FacilityBadge code={whCode} />
                           </Td>
-                          <Td className="text-slate-600 truncate max-w-[140px]">
+                          <Td className="text-slate-600 dark:text-slate-400 truncate max-w-[140px]">
                             {orderDestination(order)}
                           </Td>
                           <Td>
@@ -508,16 +510,16 @@ function OrdersPage() {
         {/* Right Column: Selected Order Detail Card */}
         <div>
           {selected ? (
-            <Card className="sticky top-20 border-t-4 border-t-blue-600 p-5 shadow-sm space-y-4">
-              <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+            <Card className="sticky top-20 p-5 shadow-sm space-y-4 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                     Selected Order
                   </span>
-                  <h3 className="font-mono text-base font-bold text-slate-900 mt-0.5">
+                  <h3 className="font-mono text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                     {selected.seller_order_number || `ORD-${selected.id.slice(0, 8)}`}
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                     Seller: {sellerLabel(sellers, selected.seller_id)}
                   </p>
                 </div>
@@ -525,17 +527,17 @@ function OrdersPage() {
               </div>
 
               {/* Destination Details */}
-              <div className="rounded-lg bg-slate-50 p-3 border border-slate-200 text-xs">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 border border-slate-200 dark:border-slate-700/80 text-xs">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
                   Shipping Destination
                 </span>
-                <p className="font-semibold text-slate-800 mt-0.5">
+                <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
                   {selected.customer_name || "Customer Direct"}
                 </p>
-                <p className="text-slate-600">
+                <p className="text-slate-600 dark:text-slate-400">
                   {selected.shipping_address_line1 || "No street address"}
                 </p>
-                <p className="text-slate-600">
+                <p className="text-slate-600 dark:text-slate-400">
                   {selected.city ? `${selected.city}, ` : ""}
                   {selected.state || ""} {selected.postal_code || ""}
                 </p>
@@ -543,28 +545,28 @@ function OrdersPage() {
 
               {/* Order Lines */}
               <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Order Line Items ({selected.lines?.length || 0})
                 </span>
                 <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
                   {selected.lines?.map((line) => (
                     <div
                       key={line.id}
-                      className="flex items-center justify-between rounded-lg border border-slate-100 p-2 text-xs bg-white"
+                      className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-800 p-2.5 text-xs bg-slate-50/60 dark:bg-slate-800/40"
                     >
                       <div>
-                        <p className="font-mono font-bold text-slate-900">
+                        <p className="font-mono font-bold text-slate-900 dark:text-slate-100">
                           {productSku(products, line.product_id)}
                         </p>
-                        <p className="text-[11px] text-slate-500 truncate max-w-[160px]">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[160px]">
                           {productName(products, line.product_id)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <span className="font-mono font-bold text-slate-900">
+                        <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                           Qty: {formatQty(line.ordered_quantity)}
                         </span>
-                        <p className="text-[10px] text-emerald-700 font-medium">
+                        <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">
                           Res: {formatQty(line.reserved_quantity)}
                         </p>
                       </div>

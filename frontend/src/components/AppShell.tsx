@@ -21,6 +21,7 @@ import { useOperationalStatusReportQuery } from "@/hooks/use-api";
 import { ROLE_SECTIONS, signOutAsync, useAuth } from "@/lib/auth";
 import { initials } from "@/lib/format";
 import { resolveGlobalSearch } from "@/lib/global-search";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Sheet,
   SheetContent,
@@ -98,52 +99,53 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
-  const statusReportQuery = useOperationalStatusReportQuery({ enabled: Boolean(ready && user) });
 
+  const statusReportQuery = useOperationalStatusReportQuery();
+  const health = statusReportQuery.data;
+
+  // Protect client routes
   useEffect(() => {
-    if (ready && !user) navigate({ to: "/login" });
-  }, [navigate, ready, user]);
+    if (ready && !user) {
+      navigate({ to: "/login" });
+    }
+  }, [ready, user, navigate]);
 
+  const accessibleGroups = useMemo(() => {
+    if (!user) return [];
+    const allowed = new Set(ROLE_SECTIONS[user.role] ?? []);
+    return NAV_GROUPS.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => allowed.has(item.to)),
+    })).filter((group) => group.items.length > 0);
+  }, [user]);
+
+  // Keep navigation in view on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
-  const accessibleGroups = useMemo(() => {
-    if (!user) return [];
-    const allowedPaths = ROLE_SECTIONS[user.role] ?? [];
-    return NAV_GROUPS.map((group) => ({
-      ...group,
-      items: group.items.filter((item) => allowedPaths.includes(item.to)),
-    })).filter((group) => group.items.length > 0);
-  }, [user]);
-
   if (!ready || !user) {
-    return <div className="min-h-screen bg-background" />;
+    return (
+      <div className="flex h-screen items-center justify-center bg-background text-foreground">
+        <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
   }
-
-  const health = statusReportQuery.data;
 
   const handleGlobalSearch = async (event: React.FormEvent) => {
     event.preventDefault();
-    const trimmed = globalSearch.trim();
-    if (!trimmed) return;
-
-    const destination = resolveGlobalSearch(trimmed);
-    if (!destination) {
-      toast.error("Search format not recognized", {
-        description:
-          "Supported prefixes: ORD-, SO-, REC-, 1Z, TRF-, TRN-, RET-, RMA-, SKU-, PROD-",
-      });
-      return;
-    }
-
-    const allowedPaths = ROLE_SECTIONS[user.role] ?? [];
-    if (!allowedPaths.includes(destination.route)) {
-      toast.error(`You do not have access to search ${destination.label}.`);
-      return;
-    }
+    const query = globalSearch.trim();
+    if (!query) return;
 
     try {
+      const destination = resolveGlobalSearch(query);
+      if (!destination) {
+        toast.info(
+          "Try searching with standard prefixes: ORD- (Orders), REC-/1Z (Receipts), TRF-/TRN- (Transfers), RET-/RMA- (Returns), or SKU- (Inventory).",
+        );
+        return;
+      }
+
       switch (destination.route) {
         case "/orders":
           await navigate({ to: "/orders", search: { q: destination.q } });
@@ -168,8 +170,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   const sidebarContent = (
-    <div className="flex h-full w-[240px] flex-col border-r border-slate-200 bg-white">
-      <div className="px-5 py-4 border-b border-slate-100">
+    <div className="flex h-full w-[240px] flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
         <Link
           to="/"
           aria-label="Whitfield Logistics dashboard"
@@ -182,21 +184,21 @@ export function AppShell({ children }: { children: ReactNode }) {
             W
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold tracking-tight text-slate-900">
+            <p className="truncate text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
               Whitfield <span className="text-primary font-bold">Logistics</span>
             </p>
-            <p className="truncate text-[11px] text-slate-500 font-medium">
+            <p className="truncate text-[11px] text-slate-500 dark:text-slate-400 font-medium">
               Client & Ops Portal
             </p>
           </div>
         </Link>
       </div>
 
-      <div className="mx-3 my-2.5 grid grid-cols-2 gap-1.5 rounded-lg bg-slate-100 p-1 text-center text-[11px] font-semibold text-slate-600">
-        <span className="inline-flex items-center justify-center gap-1 rounded-md bg-white px-2 py-1 text-slate-800 shadow-2xs">
+      <div className="mx-3 my-2.5 grid grid-cols-2 gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 p-1 text-center text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+        <span className="inline-flex items-center justify-center gap-1 rounded-md bg-white dark:bg-slate-800 px-2 py-1 text-slate-800 dark:text-slate-200 shadow-2xs">
           <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> RNO Hub
         </span>
-        <span className="inline-flex items-center justify-center gap-1 rounded-md bg-white px-2 py-1 text-slate-800 shadow-2xs">
+        <span className="inline-flex items-center justify-center gap-1 rounded-md bg-white dark:bg-slate-800 px-2 py-1 text-slate-800 dark:text-slate-200 shadow-2xs">
           <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> CMH Hub
         </span>
       </div>
@@ -204,7 +206,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav aria-label="Primary navigation" className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
         {accessibleGroups.map((group) => (
           <div key={group.name} className="space-y-0.5">
-            <p className="px-2.5 py-1 text-[11px] font-semibold tracking-wider text-slate-400 uppercase select-none">
+            <p className="px-2.5 py-1 text-[11px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase select-none">
               {group.name}
             </p>
             {group.items.map(({ to, label, icon: Icon }) => (
@@ -213,7 +215,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={to}
                 activeOptions={{ exact: to === "/" }}
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 [&.active]:bg-blue-50 [&.active]:text-primary [&.active]:font-semibold min-h-[44px]"
+                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 [&.active]:bg-blue-50 dark:[&.active]:bg-blue-950/60 [&.active]:text-primary dark:[&.active]:text-blue-400 [&.active]:font-semibold min-h-[44px]"
               >
                 <Icon className="size-4 shrink-0" aria-hidden="true" />
                 <span>{label}</span>
@@ -223,11 +225,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         ))}
       </nav>
 
-      <div className="border-t border-slate-100 px-3 py-3">
+      <div className="border-t border-slate-100 dark:border-slate-800 px-3 py-3">
         {/* Operations Service Status Card */}
         {(() => {
           let statusLabel = "Checking";
-          let statusColorClass = "text-slate-500";
+          let statusColorClass = "text-slate-500 dark:text-slate-400";
           let dotColorClass = "bg-blue-500";
           let supportingText: React.ReactNode = null;
           let warningText: string | null = null;
@@ -236,18 +238,18 @@ export function AppShell({ children }: { children: ReactNode }) {
           if (!health) {
             if (statusReportQuery.isError) {
               statusLabel = "Status unavailable";
-              statusColorClass = "text-amber-700 font-semibold";
+              statusColorClass = "text-amber-700 dark:text-amber-400 font-semibold";
               dotColorClass = "bg-amber-500";
               supportingText = (
-                <p className="text-[11px] text-slate-500">Live health could not be verified.</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Live health could not be verified.</p>
               );
               showRetry = true;
             } else {
               statusLabel = "Checking";
-              statusColorClass = "text-blue-600 font-semibold";
+              statusColorClass = "text-blue-600 dark:text-blue-400 font-semibold";
               dotColorClass = "bg-blue-500";
               supportingText = (
-                <p className="text-[11px] text-slate-500">Checking live system health…</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Checking live system health…</p>
               );
             }
           } else {
@@ -260,7 +262,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             if (health.status === "HEALTHY") {
               statusLabel = "Operational";
-              statusColorClass = "text-emerald-700 font-semibold";
+              statusColorClass = "text-emerald-700 dark:text-emerald-400 font-semibold";
               dotColorClass = "bg-emerald-500";
 
               let dbText = "Database connected";
@@ -272,13 +274,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                   dbText = `Database connected · ${health.database.latency_ms} ms`;
                 }
               }
-              supportingText = <p className="text-[11px] text-slate-500">{dbText}</p>;
+              supportingText = <p className="text-[11px] text-slate-500 dark:text-slate-400">{dbText}</p>;
             } else if (health.status === "DEGRADED") {
               statusLabel = "Degraded";
-              statusColorClass = "text-amber-700 font-semibold";
+              statusColorClass = "text-amber-700 dark:text-amber-400 font-semibold";
               dotColorClass = "bg-amber-500";
               supportingText = (
-                <p className="text-[11px] text-amber-700">Some system checks need attention.</p>
+                <p className="text-[11px] text-amber-700 dark:text-amber-400">Some system checks need attention.</p>
               );
             } else {
               statusLabel = "Unavailable";
@@ -299,10 +301,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               role="status"
               aria-live="polite"
               aria-label={`System status: ${statusLabel}`}
-              className="mb-3 rounded-lg border border-slate-200 bg-slate-50/70 p-2.5 space-y-1"
+              className="mb-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-2.5 space-y-1"
             >
               <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 font-semibold text-slate-800">
+                <span className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
                   <span className={`size-2 rounded-full ${dotColorClass}`} aria-hidden="true" />
                   Operations service
                 </span>
@@ -312,7 +314,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {supportingText}
 
               {warningText ? (
-                <p className="text-[11px] font-medium text-amber-600">{warningText}</p>
+                <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400">{warningText}</p>
               ) : null}
 
               {health && statusReportQuery.isFetching ? (
@@ -320,7 +322,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               ) : null}
 
               {formattedTime && health ? (
-                <p className="text-[10px] text-slate-400 font-mono">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
                   Last checked <time dateTime={health.timestamp}>{formattedTime}</time>
                 </p>
               ) : null}
@@ -333,7 +335,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   }}
                   disabled={statusReportQuery.isFetching}
                   aria-busy={statusReportQuery.isFetching ? "true" : undefined}
-                  className="mt-1.5 flex min-h-[44px] w-full items-center justify-center rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="mt-1.5 flex min-h-[44px] w-full items-center justify-center rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {statusReportQuery.isFetching ? "Checking…" : "Retry status check"}
                 </button>
@@ -342,16 +344,17 @@ export function AppShell({ children }: { children: ReactNode }) {
           );
         })()}
 
-        <div className="flex items-center gap-2.5 pt-1">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-            {initials(user.name)}
+        <div className="flex items-center gap-2 pt-1">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-900 dark:bg-slate-800 text-xs font-bold text-white dark:text-slate-200">
+            {initials(user?.name || "User")}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-bold text-slate-900">{user.name}</p>
-            <p className="truncate text-[11px] text-slate-500 font-medium">
+            <p className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">{user.name}</p>
+            <p className="truncate text-[11px] text-slate-500 dark:text-slate-400 font-medium">
               {user.role.replaceAll("_", " ")}
             </p>
           </div>
+          <ThemeToggle />
           <button
             type="button"
             aria-label="Sign out"
@@ -359,7 +362,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               await signOutAsync();
               navigate({ to: "/login" });
             }}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
           >
             <LogOut className="size-4" aria-hidden="true" />
           </button>
@@ -369,7 +372,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white focus:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/40"
@@ -383,7 +386,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SheetContent
           side="left"
           id="mobile-navigation"
-          className="w-[260px] p-0 border-r border-slate-200 bg-white flex flex-col [&>button]:size-11 [&>button]:min-h-[44px] [&>button]:min-w-[44px] [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:right-2 [&>button]:top-2 [&>button]:rounded-lg [&>button]:hover:bg-slate-100 [&>button]:transition-colors"
+          className="w-[260px] p-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col [&>button]:size-11 [&>button]:min-h-[44px] [&>button]:min-w-[44px] [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:right-2 [&>button]:top-2 [&>button]:rounded-lg [&>button]:hover:bg-slate-100 dark:[&>button]:hover:bg-slate-800 [&>button]:transition-colors"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation Menu</SheetTitle>
@@ -395,36 +398,38 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SheetContent>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-2.5 backdrop-blur-md md:px-6">
+          <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 px-4 py-2.5 backdrop-blur-md md:px-6">
             <SheetTrigger asChild>
               <button
                 aria-label="Open navigation"
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-navigation"
-                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
               >
                 <Menu className="size-5" aria-hidden="true" />
               </button>
             </SheetTrigger>
 
             <form onSubmit={handleGlobalSearch} className="relative max-w-xl flex-1 min-w-0">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" aria-hidden="true" />
               <input
                 aria-label="Search warehouse records"
                 maxLength={100}
                 value={globalSearch}
                 onChange={(event) => setGlobalSearch(event.target.value)}
                 placeholder="Search ORD-, REC-/1Z, TRF-/TRN-, RET-/RMA-, or SKU-…"
-                className="w-full rounded-lg border border-slate-200 bg-slate-50/80 py-1.5 pl-9 pr-3.5 text-sm text-slate-900 shadow-2xs outline-none placeholder:text-slate-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900 py-1.5 pl-9 pr-3.5 text-sm text-slate-900 dark:text-slate-100 shadow-2xs outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
               />
             </form>
+
+            <ThemeToggle className="hidden sm:inline-flex" />
 
             <div className="flex items-center lg:hidden">
               <span
                 aria-label={`Signed in as ${user.name}`}
-                className="flex size-8 items-center justify-center rounded-full bg-slate-900 font-bold text-xs text-white"
+                className="flex size-8 items-center justify-center rounded-full bg-slate-900 dark:bg-slate-800 font-bold text-xs text-white"
               >
-                {initials(user.name)}
+                {initials(user?.name || "User")}
               </span>
             </div>
           </header>

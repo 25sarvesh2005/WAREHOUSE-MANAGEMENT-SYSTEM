@@ -21,9 +21,9 @@ export function FacilityBadge({ code, className = "" }: { code: string; classNam
   if (isReno) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 rounded-md bg-cyan-50 px-2 py-0.5 text-xs font-medium text-cyan-800 border border-cyan-200 whitespace-nowrap shrink-0 ${className}`}
+        className={`inline-flex items-center gap-1.5 rounded-md bg-cyan-50 dark:bg-cyan-950/60 px-2 py-0.5 text-xs font-medium text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/70 whitespace-nowrap shrink-0 ${className}`}
       >
-        <span className="size-1.5 rounded-full bg-cyan-600 shrink-0" />
+        <span className="size-1.5 rounded-full bg-cyan-600 dark:bg-cyan-400 shrink-0" />
         {code} (Reno, NV)
       </span>
     );
@@ -32,9 +32,9 @@ export function FacilityBadge({ code, className = "" }: { code: string; classNam
   if (isColumbus) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 border border-amber-200 whitespace-nowrap shrink-0 ${className}`}
+        className={`inline-flex items-center gap-1.5 rounded-md bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70 whitespace-nowrap shrink-0 ${className}`}
       >
-        <span className="size-1.5 rounded-full bg-amber-600 shrink-0" />
+        <span className="size-1.5 rounded-full bg-amber-600 dark:bg-amber-400 shrink-0" />
         {code} (Columbus, OH)
       </span>
     );
@@ -42,9 +42,9 @@ export function FacilityBadge({ code, className = "" }: { code: string; classNam
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 border border-slate-200 whitespace-nowrap shrink-0 ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap shrink-0 ${className}`}
     >
-      <span className="size-1.5 rounded-full bg-slate-500 shrink-0" />
+      <span className="size-1.5 rounded-full bg-slate-500 dark:bg-slate-400 shrink-0" />
       {code}
     </span>
   );

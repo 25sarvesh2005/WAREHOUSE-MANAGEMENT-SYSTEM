@@ -63,13 +63,13 @@ export const STATUS_BADGE_COLORS: Record<string, string> = {
 };
 
 export const STATUS_BADGE_CLASSES: Record<string, string> = {
-  green: "bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-medium",
-  amber: "bg-amber-50 text-amber-700 border border-amber-200/80 font-medium",
-  blue: "bg-blue-50 text-blue-700 border border-blue-200/80 font-medium",
-  orange: "bg-orange-50 text-orange-700 border border-orange-200/80 font-medium",
-  red: "bg-rose-50 text-rose-700 border border-rose-200/80 font-medium",
-  purple: "bg-purple-50 text-purple-700 border border-purple-200/80 font-medium",
-  gray: "bg-slate-100 text-slate-700 border border-slate-200 font-medium",
+  green: "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/70 font-medium",
+  amber: "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70 font-medium",
+  blue: "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/70 font-medium",
+  orange: "bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200/80 dark:border-orange-800/70 font-medium",
+  red: "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/70 font-medium",
+  purple: "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/70 font-medium",
+  gray: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-medium",
 };
 
 export const SELLABLE_STATES = ["AVAILABLE"];

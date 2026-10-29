@@ -343,7 +343,7 @@ export function ReceivingVoiceDraftPanel({
     <section className={`card-surface overflow-hidden ${className}`}>
       <audio ref={audioPlayerRef} className="hidden" />
 
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border bg-white px-5 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border dark:border-slate-800 bg-white dark:bg-slate-900 px-5 py-4">
         <div>
           <div className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-xl bg-primary-tint text-primary">
@@ -364,7 +364,7 @@ export function ReceivingVoiceDraftPanel({
             value={languageCode}
             onChange={(event) => setLanguageCode(event.target.value)}
             disabled={isRecording || isBusy}
-            className="rounded-full border border-input bg-white px-3 py-1.5 text-xs font-semibold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="rounded-full border border-input dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
           >
             <option value="en-IN">English (India - en-IN)</option>
             <option value="hi-IN">Hindi (India - hi-IN)</option>
@@ -422,7 +422,7 @@ export function ReceivingVoiceDraftPanel({
                   setManualTranscript(example);
                   handleParseText(example);
                 }}
-                className="block w-full rounded-xl bg-white px-3 py-2 text-left text-[11px] font-medium text-foreground transition hover:bg-primary-tint hover:text-primary border border-border shadow-xs cursor-pointer"
+                className="block w-full rounded-xl bg-white dark:bg-slate-900 px-3 py-2 text-left text-[11px] font-medium text-foreground transition hover:bg-primary-tint hover:text-primary border border-border dark:border-slate-800 shadow-2xs cursor-pointer"
               >
                 🎙️ "{example}"
               </button>
@@ -437,7 +437,7 @@ export function ReceivingVoiceDraftPanel({
               value={manualTranscript}
               onChange={(event) => setManualTranscript(event.target.value)}
               placeholder="Type transcript fallback here if microphone or provider is unavailable..."
-              className="w-full rounded-3xl border border-input bg-white p-3 pr-28 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full rounded-3xl border border-input dark:border-slate-700 bg-white dark:bg-slate-900 p-3 pr-28 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
             <button
               type="button"
@@ -474,7 +474,7 @@ export function ReceivingVoiceDraftPanel({
                   type="button"
                   onClick={handleReadBack}
                   disabled={isBusy}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-blue-50"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 dark:border-primary/50 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-blue-50 dark:hover:bg-blue-950/60"
                 >
                   <Volume2 className="size-3.5" />
                   {isPlayingAudio ? "Reading..." : "Read back"}
@@ -484,7 +484,7 @@ export function ReceivingVoiceDraftPanel({
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-white/50">
+                    <tr className="border-b border-primary/10 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-white/50 dark:bg-slate-900/50">
                       <th className="px-4 py-2.5 whitespace-nowrap">Quantity</th>
                       <th className="px-4 py-2.5 whitespace-nowrap">State</th>
                       <th className="px-4 py-2.5 whitespace-nowrap">Condition note</th>
@@ -494,7 +494,7 @@ export function ReceivingVoiceDraftPanel({
                     {activeDraft.lines.map((line, index) => (
                       <tr
                         key={`${line.inventory_state}-${index}`}
-                        className="border-b border-primary/10 hover:bg-white/40 transition-colors"
+                        className="border-b border-primary/10 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors"
                       >
                         <td className="px-4 py-3 font-mono font-bold text-foreground">
                           {line.quantity}
@@ -520,7 +520,7 @@ export function ReceivingVoiceDraftPanel({
               </div>
 
               {activeDraft.warnings.length > 0 ? (
-                <div className="mx-4 mt-3 rounded-2xl border border-primary/20 bg-white p-3 text-xs text-primary">
+                <div className="mx-4 mt-3 rounded-2xl border border-primary/20 dark:border-primary/40 bg-white dark:bg-slate-900 p-3 text-xs text-primary">
                   {activeDraft.warnings.join(" ")}
                 </div>
               ) : null}
@@ -530,7 +530,7 @@ export function ReceivingVoiceDraftPanel({
                   type="button"
                   onClick={handleDiscard}
                   disabled={isBusy}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-blue-50 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 dark:border-primary/50 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-blue-50 dark:hover:bg-blue-950/60 disabled:opacity-60"
                 >
                   <Trash2 className="size-3.5" />
                   Discard

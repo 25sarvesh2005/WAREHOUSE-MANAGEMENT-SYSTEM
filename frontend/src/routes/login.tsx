@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui-kit";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { signInAsync, useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
@@ -70,73 +71,76 @@ function LoginPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6">
       <div className="mx-auto max-w-5xl">
-        <Link to="/login" className="inline-flex items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white shadow-xs">
-            W
-          </span>
-          <span>
-            <span className="block text-base font-bold tracking-tight text-slate-900">
-              Whitfield <span className="text-primary font-bold">Logistics</span>
+        <div className="flex items-center justify-between">
+          <Link to="/login" className="inline-flex items-center gap-2.5">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white shadow-xs">
+              W
             </span>
-            <span className="block text-[11px] font-medium text-slate-500">
-              Client & Operations Portal
+            <span>
+              <span className="block text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                Whitfield <span className="text-primary font-bold">Logistics</span>
+              </span>
+              <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Client & Operations Portal
+              </span>
             </span>
-          </span>
-        </Link>
+          </Link>
+          <ThemeToggle />
+        </div>
 
         <div className="mt-8 grid items-start gap-7 lg:grid-cols-[1fr_1.1fr]">
           {/* Form Section - First in DOM for mobile accessibility */}
-          <section className="card-surface animate-rise w-full p-6 sm:p-8 lg:order-2 rounded-xl">
+          <section className="card-surface animate-rise w-full p-6 sm:p-8 lg:order-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary dark:text-blue-400">
                   Portal Access
                 </p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                   Sign in to Whitfield WMS
                 </h1>
               </div>
-              <span className="flex size-9 items-center justify-center rounded-lg bg-blue-50 text-primary border border-blue-200/80">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/60 text-primary dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/60">
                 <Lock className="size-4" />
               </span>
             </div>
 
-            <p className="mt-1.5 text-xs text-slate-500">
-              Use your assigned work email and password.
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Enter your warehouse credentials to access your authorized operational workspace.
             </p>
-
-            {error ? (
-              <div
-                id="login-error-message"
-                role="alert"
-                aria-live="assertive"
-                className="mt-4 rounded-lg border border-rose-200 bg-rose-50/80 px-3.5 py-2.5 text-xs font-semibold text-rose-700"
-              >
-                {error}
-              </div>
-            ) : null}
 
             <form
               id="login-form"
               data-hydrated={mounted ? "true" : "false"}
               onSubmit={handleSubmit}
               noValidate
-              className="mt-5 space-y-4"
+              className="mt-6 space-y-4"
             >
+              {error ? (
+                <div
+                  id="login-error-message"
+                  role="alert"
+                  aria-live="assertive"
+                  className="rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 p-3.5 text-xs font-medium text-rose-800 dark:text-rose-200"
+                >
+                  {error}
+                </div>
+              ) : null}
+
               <div>
                 <label
                   htmlFor="login-email"
-                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
                 >
                   Work Email
                 </label>
                 <div className="relative mt-1.5">
-                  <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                   <input
                     id="login-email"
                     name="email"
                     type="email"
-                    autoComplete="username"
+                    autoComplete="email"
                     required
                     disabled={busy}
                     value={email}
@@ -149,7 +153,7 @@ function LoginPage() {
                     aria-describedby={invalidField === "email" ? "login-error-message" : undefined}
                     aria-invalid={invalidField === "email"}
                     placeholder="name@company.com"
-                    className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3.5 text-sm text-slate-900 shadow-xs outline-none placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 pl-9 pr-3.5 text-sm text-slate-900 dark:text-slate-100 shadow-xs outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
                   />
                 </div>
               </div>
@@ -157,12 +161,12 @@ function LoginPage() {
               <div>
                 <label
                   htmlFor="login-password"
-                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
                 >
                   Password
                 </label>
                 <div className="relative mt-1.5">
-                  <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                   <input
                     id="login-password"
                     name="password"
@@ -180,14 +184,14 @@ function LoginPage() {
                     aria-describedby={invalidField === "password" ? "login-error-message" : undefined}
                     aria-invalid={invalidField === "password"}
                     placeholder="••••••••"
-                    className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-11 text-sm text-slate-900 shadow-xs outline-none placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 pl-9 pr-11 text-sm text-slate-900 dark:text-slate-100 shadow-xs outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
                   />
                   <button
                     type="button"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     disabled={busy}
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 flex size-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-slate-400 transition-colors hover:text-slate-700 disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 flex size-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
@@ -206,10 +210,10 @@ function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-5 border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
+            <div className="mt-5 border-t border-slate-100 dark:border-slate-800 pt-4 text-center text-xs text-slate-500 dark:text-slate-400">
               <p>
                 New brand or seller?{" "}
-                <Link to="/signup" className="font-semibold text-primary hover:underline">
+                <Link to="/signup" className="font-semibold text-primary dark:text-blue-400 hover:underline">
                   Open a Seller Account
                 </Link>
               </p>
@@ -218,36 +222,36 @@ function LoginPage() {
 
           {/* Context Section - Second in DOM, lg:order-1 on desktop */}
           <section className="animate-rise lg:order-1">
-            <div className="rounded-xl border border-slate-200 bg-white p-7 sm:p-8 shadow-xs">
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-primary border border-blue-200/80">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-7 sm:p-8 shadow-xs">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 text-xs font-semibold text-primary dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/60">
                 <ShieldCheck className="size-3.5" />
                 Secure portal access
               </span>
 
-              <h2 className="mt-4 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+              <h2 className="mt-4 text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-2xl">
                 Warehouse work starts with the right access.
               </h2>
 
-              <p className="mt-3 text-xs leading-relaxed text-slate-500">
+              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                 Use your assigned account to open the inventory and fulfillment workflows permitted for your role.
               </p>
 
               <div className="mt-6 space-y-3">
-                <div className="rounded-lg bg-slate-50 p-3.5 border border-slate-100">
-                  <p className="text-xs font-bold text-slate-800">Role-based access</p>
-                  <p className="mt-0.5 text-xs text-slate-500">
+                <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 p-3.5 border border-slate-100 dark:border-slate-800">
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Role-based access</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                     Your navigation and actions follow your assigned role.
                   </p>
                 </div>
-                <div className="rounded-lg bg-slate-50 p-3.5 border border-slate-100">
-                  <p className="text-xs font-bold text-slate-800">Operational records</p>
-                  <p className="mt-0.5 text-xs text-slate-500">
+                <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 p-3.5 border border-slate-100 dark:border-slate-800">
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Operational records</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                     Inventory and workflow data comes from the connected WMS API.
                   </p>
                 </div>
-                <div className="rounded-lg bg-slate-50 p-3.5 border border-slate-100">
-                  <p className="text-xs font-bold text-slate-800">Session security</p>
-                  <p className="mt-0.5 text-xs text-slate-500">
+                <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 p-3.5 border border-slate-100 dark:border-slate-800">
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Session security</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                     Expired or invalid sessions return you to sign in.
                   </p>
                 </div>

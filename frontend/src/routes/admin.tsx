@@ -337,7 +337,7 @@ function AdminPage() {
             className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
               tab === t
                 ? "border-primary bg-primary text-white shadow-xs"
-                : "border-border bg-white text-muted-foreground hover:bg-slate-50 hover:text-foreground"
+                : "border-border dark:border-slate-800 bg-white dark:bg-slate-900 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-foreground shadow-2xs"
             }`}
           >
             <span>{t}</span>

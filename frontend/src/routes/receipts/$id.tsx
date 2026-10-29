@@ -382,7 +382,7 @@ function ReceiptDetail() {
                 setOverrideForm({ ...overrideForm, override_reason: e.target.value })
               }
               placeholder="e.g. Carrier re-delivered second box on same tracking number..."
-              className="flex-1 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs text-slate-800 focus:outline-none"
+              className="flex-1 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:outline-none"
             />
             <Button
               variant="secondary"
@@ -439,7 +439,7 @@ function ReceiptDetail() {
                     <select
                       value={lineForm.product_id}
                       onChange={(e) => setLineForm({ ...lineForm, product_id: e.target.value })}
-                      className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-mono font-semibold text-slate-900 focus:border-blue-600 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-semibold text-slate-900 dark:text-slate-100 focus:border-blue-600 focus:outline-none"
                       autoFocus
                     >
                       <option value="">-- Scan Barcode or Select Product SKU --</option>
@@ -453,8 +453,8 @@ function ReceiptDetail() {
 
                   {/* Quantities Breakdown: Sellable vs Damaged vs Quarantined */}
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-lg bg-emerald-50/70 p-2.5 border border-emerald-200/80">
-                      <label className="block font-bold text-emerald-800 uppercase text-[10px]">
+                    <div className="rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 p-2.5 border border-emerald-200/80 dark:border-emerald-800/60">
+                      <label className="block font-bold text-emerald-800 dark:text-emerald-400 uppercase text-[10px]">
                         Good (Sellable)
                       </label>
                       <input
@@ -464,12 +464,12 @@ function ReceiptDetail() {
                         onChange={(e) =>
                           setLineForm({ ...lineForm, sellable_quantity: e.target.value })
                         }
-                        className="mt-1 w-full rounded-md border border-emerald-300 bg-white px-2.5 py-1.5 font-mono text-sm font-bold text-emerald-950 focus:outline-none"
+                        className="mt-1 w-full rounded-md border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 font-mono text-sm font-bold text-emerald-950 dark:text-emerald-200 focus:outline-none"
                       />
                     </div>
 
-                    <div className="rounded-lg bg-rose-50/70 p-2.5 border border-rose-200/80">
-                      <label className="block font-bold text-rose-800 uppercase text-[10px]">
+                    <div className="rounded-lg bg-rose-50/70 dark:bg-rose-950/30 p-2.5 border border-rose-200/80 dark:border-rose-800/60">
+                      <label className="block font-bold text-rose-800 dark:text-rose-400 uppercase text-[10px]">
                         Damaged (Crushed)
                       </label>
                       <input
@@ -479,12 +479,12 @@ function ReceiptDetail() {
                         onChange={(e) =>
                           setLineForm({ ...lineForm, damaged_quantity: e.target.value })
                         }
-                        className="mt-1 w-full rounded-md border border-rose-300 bg-white px-2.5 py-1.5 font-mono text-sm font-bold text-rose-950 focus:outline-none"
+                        className="mt-1 w-full rounded-md border border-rose-300 dark:border-rose-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 font-mono text-sm font-bold text-rose-950 dark:text-rose-200 focus:outline-none"
                       />
                     </div>
 
-                    <div className="rounded-lg bg-purple-50/70 p-2.5 border border-purple-200/80">
-                      <label className="block font-bold text-purple-800 uppercase text-[10px]">
+                    <div className="rounded-lg bg-purple-50/70 dark:bg-purple-950/30 p-2.5 border border-purple-200/80 dark:border-purple-800/60">
+                      <label className="block font-bold text-purple-800 dark:text-purple-400 uppercase text-[10px]">
                         Quarantined
                       </label>
                       <input
@@ -494,14 +494,14 @@ function ReceiptDetail() {
                         onChange={(e) =>
                           setLineForm({ ...lineForm, quarantined_quantity: e.target.value })
                         }
-                        className="mt-1 w-full rounded-md border border-purple-300 bg-white px-2.5 py-1.5 font-mono text-sm font-bold text-purple-950 focus:outline-none"
+                        className="mt-1 w-full rounded-md border border-purple-300 dark:border-purple-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 font-mono text-sm font-bold text-purple-950 dark:text-purple-200 focus:outline-none"
                       />
                     </div>
                   </div>
 
                   {/* Condition Notes */}
                   <div>
-                    <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">
                       Condition Notes / Damage Description
                     </label>
                     <input
@@ -509,7 +509,7 @@ function ReceiptDetail() {
                       value={lineForm.notes}
                       onChange={(e) => setLineForm({ ...lineForm, notes: e.target.value })}
                       placeholder="e.g. Outer carton crushed, bottle unbroken; or missing seal"
-                      className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:border-blue-600 focus:outline-none"
                     />
                   </div>
                 </form>

@@ -508,17 +508,17 @@ function ReturnsPage() {
                   const whCode = warehouses.find((w) => w.id === r.warehouse_id)?.code || "WH";
 
                   return (
-                    <tr key={r.id} className="hover:bg-slate-50">
-                      <Td className="font-mono font-bold text-slate-900">
+                    <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                      <Td className="font-mono font-bold text-slate-900 dark:text-slate-100">
                         <Link
                           to="/returns/$id"
                           params={{ id: r.id }}
-                          className="text-blue-600 hover:underline"
+                          className="text-primary hover:underline font-semibold"
                         >
                           {r.rma_number || `RET-${r.id.slice(0, 8)}`}
                         </Link>
                       </Td>
-                      <Td className="text-slate-700 font-medium">
+                      <Td className="text-slate-700 dark:text-slate-300 font-medium">
                         {sellerLabel(sellers, r.seller_id)}
                       </Td>
                       <Td>
@@ -528,8 +528,8 @@ function ReturnsPage() {
                         <span
                           className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
                             !r.rma_number
-                              ? "bg-amber-50 text-amber-800 border-amber-200"
-                              : "bg-blue-50 text-blue-800 border-blue-200"
+                              ? "bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+                              : "bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800"
                           }`}
                         >
                           {!r.rma_number ? "Unidentified Drop" : "Expected RMA"}
@@ -538,12 +538,12 @@ function ReturnsPage() {
                       <Td>
                         <StatusBadge value={r.status} />
                       </Td>
-                      <Td className="font-mono text-xs text-slate-500">{formatDate(r.created_at)}</Td>
+                      <Td className="font-mono text-xs text-slate-500 dark:text-slate-400">{formatDate(r.created_at)}</Td>
                       <Td className="text-right">
                         <Link
                           to="/returns/$id"
                           params={{ id: r.id }}
-                          className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/60 hover:text-blue-700 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-800 transition-colors shadow-2xs"
                         >
                           Inspect & Dispose
                         </Link>

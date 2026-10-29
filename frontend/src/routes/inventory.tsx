@@ -202,43 +202,43 @@ function InventoryPage() {
       {/* Top Metrics Cards: Sellable vs Non-Sellable */}
       <section className="mb-6 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
         <Card className="border-l-4 border-l-emerald-600 p-4">
-          <span className="text-[10px] font-bold tracking-wider text-emerald-800 uppercase">
+          <span className="text-[10px] font-bold tracking-wider text-emerald-800 dark:text-emerald-400 uppercase">
             Sellable Available
           </span>
-          <p className="mt-1 font-mono text-2xl font-extrabold text-emerald-950">
+          <p className="mt-1 font-mono text-2xl font-extrabold text-emerald-950 dark:text-emerald-200">
             {totalAvailable.toLocaleString()}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500 font-medium">Ready for order allocation</p>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">Ready for order allocation</p>
         </Card>
 
         <Card className="border-l-4 border-l-amber-500 p-4">
-          <span className="text-[10px] font-bold tracking-wider text-amber-800 uppercase">
+          <span className="text-[10px] font-bold tracking-wider text-amber-800 dark:text-amber-400 uppercase">
             Reserved for Orders
           </span>
-          <p className="mt-1 font-mono text-2xl font-extrabold text-amber-950">
+          <p className="mt-1 font-mono text-2xl font-extrabold text-amber-950 dark:text-amber-200">
             {totalReserved.toLocaleString()}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500 font-medium">Locked during pick/pack</p>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">Locked during pick/pack</p>
         </Card>
 
         <Card className="border-l-4 border-l-rose-500 p-4">
-          <span className="text-[10px] font-bold tracking-wider text-rose-800 uppercase">
+          <span className="text-[10px] font-bold tracking-wider text-rose-800 dark:text-rose-400 uppercase">
             Damaged (Crushed/Broken)
           </span>
-          <p className="mt-1 font-mono text-2xl font-extrabold text-rose-950">
+          <p className="mt-1 font-mono text-2xl font-extrabold text-rose-950 dark:text-rose-200">
             {totalDamaged.toLocaleString()}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500 font-medium">Non-sellable dock damage</p>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">Non-sellable dock damage</p>
         </Card>
 
         <Card className="border-l-4 border-l-purple-500 p-4">
-          <span className="text-[10px] font-bold tracking-wider text-purple-800 uppercase">
+          <span className="text-[10px] font-bold tracking-wider text-purple-800 dark:text-purple-400 uppercase">
             Quarantined / Returns
           </span>
-          <p className="mt-1 font-mono text-2xl font-extrabold text-purple-950">
+          <p className="mt-1 font-mono text-2xl font-extrabold text-purple-950 dark:text-purple-200">
             {totalQuarantined.toLocaleString()}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500 font-medium">
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
             Awaiting physical inspection
           </p>
         </Card>
@@ -267,7 +267,7 @@ function InventoryPage() {
               <select
                 value={selectedWarehouseId}
                 onChange={(e) => setSelectedWarehouseId(e.target.value)}
-                className="min-h-[44px] sm:min-h-0 w-full sm:w-auto rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+                className="min-h-[44px] sm:min-h-0 w-full sm:w-auto rounded-full border border-border dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
                 <option value="ALL">All Facilities (RNO & CMH)</option>
                 {warehouses.map((w) => (
@@ -284,7 +284,7 @@ function InventoryPage() {
               <select
                 value={selectedSellerId}
                 onChange={(e) => setSelectedSellerId(e.target.value)}
-                className="min-h-[44px] sm:min-h-0 w-full sm:w-auto rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
+                className="min-h-[44px] sm:min-h-0 w-full sm:w-auto rounded-full border border-border dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-foreground shadow-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer"
               >
                 <option value="ALL">All Sellers</option>
                 {sellers.map((s) => (
@@ -298,8 +298,8 @@ function InventoryPage() {
         </div>
 
         {/* State Pill Filter Strip */}
-        <div className="mt-3.5 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-3">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+        <div className="mt-3.5 flex flex-wrap items-center gap-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1">
             State Filter:
           </span>
           {STATES.map((s) => (
@@ -309,7 +309,7 @@ function InventoryPage() {
               className={`min-h-[44px] sm:min-h-0 flex items-center justify-center rounded-md border px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer ${
                 selectedState === s
                   ? "border-blue-600 bg-blue-600 text-white shadow-xs"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
               }`}
             >
               {s.replaceAll("_", " ")}
@@ -321,7 +321,7 @@ function InventoryPage() {
       {/* Main Balances Table */}
       <section className="mb-8">
         <div className="mb-2.5 flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Current Stock Balances ({filteredBalances.length} records)
           </h2>
         </div>
@@ -374,14 +374,14 @@ function InventoryPage() {
                           <span
                             className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
                               isSellable
-                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                                : "bg-slate-100 text-slate-600 border-slate-200"
+                                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                             }`}
                           >
                             {isSellable ? "Sellable" : "Non-Sellable"}
                           </span>
                         </Td>
-                        <Td className="text-right font-mono text-sm font-extrabold text-slate-900">
+                        <Td className="text-right font-mono text-sm font-extrabold text-slate-900 dark:text-slate-100">
                           {formatQty(b.quantity)}
                         </Td>
                       </tr>
@@ -402,18 +402,18 @@ function InventoryPage() {
                   <MobileRecordCard key={b.id}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="font-mono font-bold text-slate-900 break-all text-sm">{sku}</p>
-                        <p className="text-xs text-slate-700 font-medium break-words mt-0.5">{name}</p>
+                        <p className="font-mono font-bold text-slate-900 dark:text-slate-100 break-all text-sm">{sku}</p>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 font-medium break-words mt-0.5">{name}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="font-mono text-base font-extrabold text-slate-900">
+                        <p className="font-mono text-base font-extrabold text-slate-900 dark:text-slate-100">
                           {formatQty(b.quantity)}
                         </p>
                         <span
                           className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold border mt-1 ${
                             isSellable
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                              : "bg-slate-100 text-slate-600 border-slate-200"
+                              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                           }`}
                         >
                           {isSellable ? "Sellable" : "Non-Sellable"}
@@ -490,11 +490,11 @@ function InventoryPage() {
                     const whCode = warehouses.find((w) => w.id === m.warehouse_id)?.code || "WH";
 
                     return (
-                      <tr key={m.id} className="hover:bg-slate-50">
-                        <Td className="font-mono text-xs text-slate-600">
+                      <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                        <Td className="font-mono text-xs text-slate-600 dark:text-slate-400">
                           {formatDate(m.occurred_at)}
                         </Td>
-                        <Td className="font-mono font-bold text-slate-900">
+                        <Td className="font-mono font-bold text-slate-900 dark:text-slate-100">
                           {productSku(products, m.product_id)}
                         </Td>
                         <Td>
@@ -503,14 +503,14 @@ function InventoryPage() {
                         <Td>
                           <StatusBadge value={m.movement_type} />
                         </Td>
-                        <Td className="font-mono text-xs text-slate-500">
+                        <Td className="font-mono text-xs text-slate-500 dark:text-slate-400">
                           {m.source_type
                             ? `${m.source_type}: ${m.source_id.slice(0, 8)}`
                             : m.source_id?.slice(0, 8) || "Ledger Entry"}
                         </Td>
                         <Td
                           className={`text-right font-mono font-extrabold text-sm ${
-                            isPositive ? "text-emerald-700" : "text-rose-700"
+                            isPositive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
                           }`}
                         >
                           {isPositive ? "+" : ""}

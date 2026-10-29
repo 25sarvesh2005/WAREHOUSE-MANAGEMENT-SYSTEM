@@ -2,12 +2,13 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 
 /*
  * Whitfield Fulfillment - Anti-AI Slop Human-Crafted Design System.
  * Clean #f8fafc canvas, pure white card surfaces, hairline 1px borders,
  * high-contrast typography, tabular numbers, and snappy physical micro-interactions.
+ * Full dark mode support with deep slate surfaces and high-contrast accessibility.
  */
 
 @theme inline {
@@ -36,8 +37,8 @@
   --color-status-red: var(--status-red);
   --color-status-purple: var(--status-purple);
   --color-status-gray: var(--status-gray);
-  --font-sans: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", "SF Mono", "Roboto Mono", Menlo, monospace;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
   --shadow-panel: 0 4px 12px 0 rgba(15, 23, 42, 0.06);
   --color-secondary: var(--secondary);
@@ -67,7 +68,8 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-:root {
+:root,
+[data-theme="light"] {
   --radius: 0.75rem;
   --background: #f8fafc;
   --foreground: #0f172a;
@@ -116,26 +118,30 @@
   --sidebar-ring: #2563eb;
 }
 
-.dark {
+.dark,
+[data-theme="dark"] {
   --background: #090d16;
-  --foreground: #f8fafc;
+  --foreground: #f1f5f9;
   --card: #0f172a;
   --card-foreground: #f8fafc;
   --popover: #0f172a;
   --popover-foreground: #f8fafc;
-  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-  --shadow-panel: 0 4px 12px 0 rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-panel: 0 4px 16px 0 rgba(0, 0, 0, 0.7);
   --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-tint: rgba(59, 130, 246, 0.15);
   --primary-foreground: #ffffff;
+  --navy: #020617;
   --secondary: #1e293b;
-  --secondary-foreground: #f8fafc;
+  --secondary-foreground: #f1f5f9;
   --muted: #1e293b;
   --muted-foreground: #94a3b8;
   --accent: #1e293b;
   --accent-foreground: #60a5fa;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #334155;
+  --border: #1e293b;
   --input: #334155;
   --ring: #3b82f6;
   --chart-1: #3b82f6;
@@ -144,11 +150,11 @@
   --chart-4: #ef4444;
   --chart-5: #8b5cf6;
   --sidebar: #090d16;
-  --sidebar-foreground: #f8fafc;
+  --sidebar-foreground: #f1f5f9;
   --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1e293b;
-  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-accent: rgba(59, 130, 246, 0.12);
+  --sidebar-accent-foreground: #60a5fa;
   --sidebar-border: #1e293b;
   --sidebar-ring: #3b82f6;
 }
@@ -176,7 +182,7 @@
   h4,
   h5,
   h6 {
-    letter-spacing: -0.022em;
+    letter-spacing: -0.025em;
     line-height: 1.25;
     text-wrap: balance;
     font-weight: 700;
@@ -192,7 +198,6 @@
   .font-mono {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
-    letter-spacing: 0.01em;
   }
 
   table {
@@ -212,19 +217,27 @@
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-color: #ffffff;
+    background-color: var(--color-card, #ffffff);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 0.875rem 0.875rem;
     padding-right: 2.25rem !important;
     border-radius: 0.5rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--color-input, #cbd5e1);
     color: var(--color-foreground);
     font-weight: 500;
     cursor: pointer;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
     transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+  }
+
+  .dark select,
+  [data-theme="dark"] select {
+    background-color: var(--color-card, #0f172a);
+    color: var(--color-foreground, #f1f5f9);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    border-color: var(--color-border, #1e293b);
   }
 
   select:hover {
@@ -234,7 +247,7 @@
   select:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   }
 
   select:disabled {
@@ -245,41 +258,70 @@
 }
 
 @utility card-surface {
-  background-color: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  background-color: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, rgba(226, 232, 240, 0.95));
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+  &:is(.dark *) {
+    background-color: #0f172a;
+    border-color: #1e293b;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
 }
 
 @utility card-surface-hover {
   &:hover {
-    border-color: #cbd5e1;
-    box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+    border-color: #94a3b8;
+    box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  &:is(.dark *) {
+    &:hover {
+      border-color: #475569;
+      box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
   }
 }
 
 @utility control-panel {
-  background-color: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  background-color: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, rgba(226, 232, 240, 0.95));
   border-radius: 0.875rem;
-  box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+  box-shadow: var(--shadow-panel);
+  &:is(.dark *) {
+    background-color: #0f172a;
+    border-color: #1e293b;
+    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
 }
 
 @utility hero-gradient {
   background-image: var(--gradient-hero);
+  &:is(.dark *) {
+    background-image: linear-gradient(135deg, #0f172a 0%, #090d16 100%);
+  }
 }
 
 @utility facility-badge-reno {
   background-color: #ecfeff;
   color: #0e7490;
   border: 1px solid #cffafe;
+  &:is(.dark *) {
+    background-color: rgba(14, 116, 144, 0.2);
+    color: #67e8f9;
+    border: 1px solid rgba(14, 116, 144, 0.4);
+  }
 }
 
 @utility facility-badge-columbus {
   background-color: #fffbeb;
   color: #b45309;
   border: 1px solid #fef3c7;
+  &:is(.dark *) {
+    background-color: rgba(180, 83, 9, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(180, 83, 9, 0.4);
+  }
 }
 
 @utility scanner-field {
@@ -303,53 +345,87 @@
   animation: wf-rise 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Compatibility aliases mapped to clean human design */
+/* Compatibility aliases mapped to clean tactile neomorphic human design */
 @utility neu-flat {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-card);
+  &:is(.dark *) {
+    background-color: #0f172a;
+    border-color: #1e293b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
 }
 
 @utility neu-raised {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 0.75rem;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-panel);
+  &:is(.dark *) {
+    background-color: #0f172a;
+    border-color: #1e293b;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
 }
 
 @utility neu-raised-sm {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 0.5rem;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  &:is(.dark *) {
+    background-color: #0f172a;
+    border-color: #1e293b;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  }
 }
 
 @utility neu-inset {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-muted, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 0.5rem;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  &:is(.dark *) {
+    background-color: #090d16;
+    border-color: #1e293b;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  }
 }
 
 @utility neu-pill {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 9999px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  &:is(.dark *) {
+    background-color: #0f172a;
+    border-color: #1e293b;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
 }
 
 @utility neu-pill-inset {
-  background-color: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-muted, #f1f5f9);
+  border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 9999px;
+  &:is(.dark *) {
+    background-color: #090d16;
+    border-color: #1e293b;
+  }
 }
 
 @utility neu-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-card);
+  &:is(.dark *) {
+    background-color: #0f172a;
+    border-color: #1e293b;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
 }
 
 @utility neu-card-exception {
@@ -357,4 +433,9 @@
   border: 1px solid #fde68a;
   border-radius: 0.75rem;
   box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);
+  &:is(.dark *) {
+    background-color: rgba(180, 83, 9, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+}
 }

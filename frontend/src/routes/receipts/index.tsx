@@ -335,7 +335,7 @@ function ReceiptsPage() {
         <div className="space-y-4 text-xs">
           {/* Source Type Selector */}
           <div>
-            <label className="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+            <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">
               Intake Delivery Type
             </label>
             <div className="mt-1.5 grid grid-cols-2 gap-2.5">
@@ -344,8 +344,8 @@ function ReceiptsPage() {
                 onClick={() => setSourceType("CARRIER_TRACKING")}
                 className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 font-semibold transition-all cursor-pointer ${
                   sourceType === "CARRIER_TRACKING"
-                    ? "border-blue-600 bg-blue-50 text-blue-800 ring-1 ring-blue-600"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    ? "border-blue-600 bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 ring-1 ring-blue-600"
+                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                 }`}
               >
                 <Truck className="size-4" />
@@ -356,8 +356,8 @@ function ReceiptsPage() {
                 onClick={() => setSourceType("SELLER_DROP_OFF")}
                 className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 font-semibold transition-all cursor-pointer ${
                   sourceType === "SELLER_DROP_OFF"
-                    ? "border-blue-600 bg-blue-50 text-blue-800 ring-1 ring-blue-600"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    ? "border-blue-600 bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 ring-1 ring-blue-600"
+                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                 }`}
               >
                 <FileCheck2 className="size-4" />
@@ -486,26 +486,26 @@ function ReceiptsPage() {
                   const whCode = warehouses.find((w) => w.id === r.warehouse_id)?.code || "WH";
 
                   return (
-                    <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
-                      <Td className="font-mono font-bold text-slate-900">
+                    <tr key={r.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      <Td className="font-mono font-bold text-slate-900 dark:text-slate-100">
                         <Link
                           to="/receipts/$id"
                           params={{ id: r.id }}
-                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                          className="text-primary hover:underline font-semibold"
                         >
                           {r.receipt_number || r.source_reference || `REC-${r.id.slice(0, 8)}`}
                         </Link>
                       </Td>
-                      <Td className="text-slate-600 font-medium">
+                      <Td className="text-slate-600 dark:text-slate-300 font-medium">
                         {r.source_type === "CARRIER_TRACKING" ? "Carrier Tracking" : "Seller Drop-Off"}
                       </Td>
-                      <Td className="text-slate-800 font-medium">
+                      <Td className="text-slate-800 dark:text-slate-200 font-medium">
                         {sellerLabel(sellers, r.seller_id)}
                       </Td>
                       <Td>
                         <FacilityBadge code={whCode} />
                       </Td>
-                      <Td className="font-mono text-xs text-slate-500">{formatDate(r.created_at)}</Td>
+                      <Td className="font-mono text-xs text-slate-500 dark:text-slate-400">{formatDate(r.created_at)}</Td>
                       <Td>
                         <StatusBadge value={r.status} />
                       </Td>
@@ -513,7 +513,7 @@ function ReceiptsPage() {
                         <Link
                           to="/receipts/$id"
                           params={{ id: r.id }}
-                          className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/60 hover:text-blue-700 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-800 transition-colors shadow-2xs"
                         >
                           {r.status === "DRAFT" ? "Scan Line Items" : "View Details"}
                         </Link>
