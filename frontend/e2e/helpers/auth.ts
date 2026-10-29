@@ -726,6 +726,93 @@ export async function setupStandardApiMocks(page: Page) {
     });
   });
 
+  // Webhooks & Integrations
+  await page.route(/\/api\/v1\/webhooks\/subscriptions(?!\/)/, async (route) => {
+    if (route.request().method() === "POST") {
+      const data = route.request().postDataJSON() || {};
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "00000000-0000-0000-0000-000000000099",
+          tenant_id: "GLOBAL",
+          url: data.url || "https://api.example.com/webhook",
+          secret: data.secret || "mock_secret_1234567890abcdef",
+          event_types: data.event_types || ["*"],
+          status: "ACTIVE",
+          description: data.description || "Mock Webhook Destination",
+          created_at: new Date().toISOString(),
+        }),
+      });
+    } else {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([
+          {
+            id: "00000000-0000-0000-0000-000000000099",
+            tenant_id: "GLOBAL",
+            url: "https://api.merchant.com/webhook",
+            secret: "whsec_mock1234567890abcdef123456",
+            event_types: ["order.allocated", "shipment.shipped"],
+            status: "ACTIVE",
+            description: "Production ERP Integration",
+            created_at: new Date().toISOString(),
+          },
+        ]),
+      });
+    }
+  });
+
+  await page.route(/\/api\/v1\/webhooks\/subscriptions\/[0-9a-fA-F-]+\/test/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "00000000-0000-0000-0000-000000000098",
+        subscription_id: "00000000-0000-0000-0000-000000000099",
+        outbox_event_id: null,
+        event_type: "webhook.test_ping",
+        payload: { test: true, message: "Whitfield WMS Test Webhook Ping" },
+        status_code: 200,
+        response_body: '{"status": "ok"}',
+        latency_ms: 14.2,
+        attempt_number: 1,
+        error: null,
+        delivered_at: new Date().toISOString(),
+      }),
+    });
+  });
+
+  await page.route(/\/api\/v1\/webhooks\/subscriptions\/[0-9a-fA-F-]+(?!\/test)/, async (route) => {
+    await route.fulfill({
+      status: 204,
+      body: "",
+    });
+  });
+
+  await page.route(/\/api\/v1\/webhooks\/deliveries/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "00000000-0000-0000-0000-000000000098",
+          subscription_id: "00000000-0000-0000-0000-000000000099",
+          outbox_event_id: null,
+          event_type: "order.allocated",
+          payload: { order_number: "ORD-2026-0001", lines: 2 },
+          status_code: 200,
+          response_body: '{"received": true}',
+          latency_ms: 18.5,
+          attempt_number: 1,
+          error: null,
+          delivered_at: new Date().toISOString(),
+        },
+      ]),
+    });
+  });
+
   // Operational status report
   await page.route(/(\/api\/v1)?\/health\/status/, async (route) => {
     await route.fulfill({

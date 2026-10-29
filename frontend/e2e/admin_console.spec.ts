@@ -18,9 +18,34 @@ test.describe("Admin Console, AI Audit & Controlled Launch", () => {
     await expect(page.locator("text=Sellers").first()).toBeVisible();
     await expect(page.locator("text=Warehouses").first()).toBeVisible();
     await expect(page.locator("text=Products").first()).toBeVisible();
+    await expect(page.locator("text=Webhooks & Integrations").first()).toBeVisible();
     await expect(page.locator("text=AI Audit & Provider Health").first()).toBeVisible();
     await expect(page.locator("text=Controlled Launch & Health").first()).toBeVisible();
     await expect(page.locator("text=Migration").first()).toBeVisible();
+  });
+
+  test("loads Webhooks & Outbox Integrations panel with registered destinations and live audit log", async ({
+    page,
+  }) => {
+    await page.goto("/admin");
+
+    // Click Webhooks & Integrations tab
+    await page.locator("text=Webhooks & Integrations").first().click();
+
+    // Verify Engine Header
+    await expect(page.locator("text=Transactional Outbox & Webhooks Engine").first()).toBeVisible();
+
+    // Verify destination and deliveries tables
+    await expect(page.locator("text=Registered Webhook Destinations").first()).toBeVisible();
+    await expect(page.locator("text=https://api.merchant.com/webhook").first()).toBeVisible();
+    await expect(page.locator("text=Live Outbound Delivery Audit Log").first()).toBeVisible();
+    await expect(page.locator("text=order.allocated").first()).toBeVisible();
+
+    // Verify Test Ping button works
+    const pingBtn = page.locator("button:has-text('Test Ping')").first();
+    await expect(pingBtn).toBeVisible();
+    await pingBtn.click();
+    await expect(page.locator("text=Test ping delivered!").first()).toBeVisible();
   });
 
   test("loads AI Audit & Provider Health panel with engine status and audit log", async ({

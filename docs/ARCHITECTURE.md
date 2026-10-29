@@ -126,6 +126,7 @@ PostgreSQL                     (movement ledger + balance tables + outbox_events
 | Migration | `/api/v1/migration` | MigrationBatch, StagedInventoryRow |
 | AI Copilot | `/api/v1/ai` | AIInteraction, AIDraftAction, AIFeedback |
 | Voice | `/api/v1/voice` | VoiceInteraction, VoiceReceivingDraft |
+| Webhooks | `/api/v1/webhooks` | WebhookSubscription, WebhookDelivery |
 | MCP Server | `/mcp` | Tool catalog + tool call dispatcher |
 | Reporting | `/api/v1/reports` | Cross-domain aggregated queries |
 
@@ -148,13 +149,16 @@ Supported inventory states: `AVAILABLE`, `RESERVED`, `DAMAGED`, `QUARANTINED`, `
 
 ---
 
-## 6. Transactional Outbox
+## 6. Transactional Outbox & Webhooks Subsystem
 
 Every controller that modifies inventory state also writes a row to `outbox_events` **inside the same database transaction**. This enforces at-least-once event delivery without distributed transactions.
 
-The `_periodic_outbox_dispatch_worker` polls every 10 seconds and dispatches pending events with exponential backoff (`min(3600, 2^(attempt+1) × 10)`). Events failing after 5 attempts transition to `DEAD_LETTER`.
+The `_periodic_outbox_dispatch_worker` polls every 10 seconds and dispatches pending events to registered HTTP/HTTPS webhook destinations with exponential backoff (`min(3600, 2^(attempt+1) × 10)`). Events failing after 5 attempts transition to `DEAD_LETTER`.
 
-**22 supported event types** across receipts, orders, fulfillment, transfers, returns, and inventory.
+- **Cryptographic Signing:** Payloads are signed with `X-Whitfield-Signature: sha256=<hmac_hex>` and timestamped with `X-Whitfield-Timestamp` to prevent replay attacks (300-second skew tolerance).
+- **Delivery Audit Log:** Every dispatch attempt is recorded in `webhook_deliveries` with target subscription, latency in milliseconds, HTTP status code, and response body for full observability.
+- **Inbound Integrations:** Carrier tracking (`POST /api/v1/webhooks/inbound/carrier`) and marketplace orders (`POST /api/v1/webhooks/inbound/order`) allow external systems (Shopify, FedEx, UPS) to trigger automatic warehouse workflows.
+- **22 supported event types** across receipts, orders, fulfillment, transfers, returns, and inventory.
 
 ---
 
@@ -180,6 +184,7 @@ All workers are `asyncio.Task` objects started in the ASGI lifespan and cancelle
 | Authorization | 5 RBAC roles via `UserRole` enum; `get_warehouse_scope` restricts facility access |
 | Tenant isolation | All queries filtered by `seller_id` extracted from JWT claims |
 | Rate limiting | Token-bucket limiter in `common/rate_limit.py`; configurable via env |
+| Webhook verification | HMAC-SHA256 signature and timestamp replay protection in `common/webhook_signer.py` |
 | Trusted hosts | `TrustedHostMiddleware` when `TRUSTED_HOSTS != "*"` |
 | AI guardrails | `core/services/ai/safety.py` enforces read-only constraint; mutations refused and audited |
 | Secret scanning | `tools/audit_frontend_secrets.py` CI step verifies no credentials in client bundles |

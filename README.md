@@ -83,8 +83,10 @@ The Whitfield Fulfillment WMS has successfully completed all development phases 
   8. `exception_listing`: Operational exception aggregation across all subsystems.
 - **Tenant Isolation:** Enforces caller seller/warehouse boundary restrictions via JWT authentication.
 
-### 3. 📬 Autonomous Transactional Outbox & Background Workers
-- **Transactional Outbox Pattern:** All ledger-affecting controller operations atomically persist lifecycle events (`outbox_events`) in the same database transaction.
+### 3. 📬 Autonomous Transactional Outbox, Webhooks & Background Workers
+- **Transactional Outbox & Webhooks Subsystem:** All ledger-affecting controller operations atomically persist lifecycle events (`outbox_events`) in the same database transaction, dispatched via an asynchronous HTTP webhook engine to registered subscriber endpoints.
+- **HMAC-SHA256 Cryptographic Signer:** Payloads include `X-Whitfield-Signature: sha256=<hmac_hex>` and `X-Whitfield-Timestamp` with 300s clock skew replay defense.
+- **Inbound Carrier & Order Ingestion:** Receives tracking updates (`/api/v1/webhooks/inbound/carrier`) and marketplace orders (`/api/v1/webhooks/inbound/order`) from external platforms (Shopify, FedEx, UPS).
 - **Periodic Background Workers (FastAPI ASGI Lifespan):**
   - **Outbox Dispatcher** (every 10s): Dispatches pending events to registered downstream listeners with exponential backoff (`min(3600, 2^(attempts+1) * 10)`), transitioning to `DEAD_LETTER` after 5 failed attempts.
   - **Reservation Expiry Worker** (every 60s): Automatically releases expired order reservations (`RESERVED` -> `AVAILABLE`) back to sellable inventory.
