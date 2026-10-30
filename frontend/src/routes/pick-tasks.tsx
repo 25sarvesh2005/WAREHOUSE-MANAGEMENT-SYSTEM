@@ -158,7 +158,7 @@ function PickTasksPage() {
       ) : null}
 
       {/* Main Grid: Pick Tasks Table & Active Picking Drawer */}
-      <div className={`grid gap-6 ${active ? "xl:grid-cols-[1fr_390px] 2xl:grid-cols-[1fr_420px]" : "grid-cols-1"} min-w-0`}>
+      <div className={`grid gap-6 ${active ? "xl:grid-cols-[1fr_360px] 2xl:grid-cols-[1fr_390px]" : "grid-cols-1"} min-w-0`}>
         <div className="min-w-0">
           {tasks.length === 0 ? (
             <Card className="p-8">
@@ -173,13 +173,13 @@ function PickTasksPage() {
                 <TableShell>
                   <thead>
                     <tr>
-                      <Th className="whitespace-nowrap px-2.5 py-2.5 text-xs">Pick Task ID</Th>
-                      <Th className="whitespace-nowrap px-2.5 py-2.5 text-xs">Order Reference</Th>
-                      <Th className="whitespace-nowrap px-2.5 py-2.5 text-xs">Lines</Th>
-                      <Th className="whitespace-nowrap px-2.5 py-2.5 text-xs">Facility</Th>
-                      <Th className="whitespace-nowrap px-2.5 py-2.5 text-xs">Priority</Th>
-                      <Th className="whitespace-nowrap px-2.5 py-2.5 text-xs">Status</Th>
-                      <Th className="whitespace-nowrap px-2.5 py-2.5 text-xs text-right">Action</Th>
+                      <Th className="whitespace-nowrap px-2.5 py-2 text-xs">Pick Task ID</Th>
+                      <Th className="whitespace-nowrap px-2 py-2 text-xs">Order Reference</Th>
+                      <Th className="whitespace-nowrap px-2 py-2 text-xs">Lines</Th>
+                      <Th className="whitespace-nowrap px-2 py-2 text-xs">Facility</Th>
+                      <Th className="whitespace-nowrap px-2 py-2 text-xs">Priority</Th>
+                      <Th className="whitespace-nowrap px-2 py-2 text-xs">Status</Th>
+                      <Th className="whitespace-nowrap px-2 py-2 text-xs text-right">Action</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -203,34 +203,34 @@ function PickTasksPage() {
                           <Td className="whitespace-nowrap px-2.5 py-2 font-mono font-semibold text-xs text-slate-900 dark:text-slate-100">
                             TASK-{task.id.slice(0, 8)}
                           </Td>
-                          <Td className="whitespace-nowrap px-2.5 py-2 text-xs font-medium text-slate-800 dark:text-slate-200">
+                          <Td className="whitespace-nowrap px-2 py-2 text-xs font-medium text-slate-800 dark:text-slate-200">
                             {orderRef}
                           </Td>
-                          <Td className="whitespace-nowrap px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-300">
+                          <Td className="whitespace-nowrap px-2 py-2 text-xs font-medium text-slate-700 dark:text-slate-300">
                             {task.lines?.length || 0} {task.lines?.length === 1 ? "SKU" : "SKUs"}
                           </Td>
-                          <Td className="whitespace-nowrap px-2.5 py-2 text-xs">
+                          <Td className="whitespace-nowrap px-2 py-2 text-xs">
                             <FacilityBadge code={whCode} compact />
                           </Td>
-                          <Td className="whitespace-nowrap px-2.5 py-2 text-xs">
+                          <Td className="whitespace-nowrap px-2 py-2 text-xs">
                             <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                               P{task.priority ?? 1}
                             </span>
                           </Td>
-                          <Td className="whitespace-nowrap px-2.5 py-2 text-xs">
+                          <Td className="whitespace-nowrap px-2 py-2 text-xs">
                             <StatusBadge value={task.status} />
                           </Td>
-                          <Td className="whitespace-nowrap px-2.5 py-2 text-xs text-right">
+                          <Td className="whitespace-nowrap px-2 py-2 text-xs text-right">
                             <Button
                               variant={isSelected ? "primary" : "secondary"}
                               size="sm"
-                              className="px-2.5 py-1 text-xs"
+                              className="h-7 px-2.5 py-0.5 text-xs"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 selectTask(task);
                               }}
                             >
-                              Pick Lines
+                              {isSelected ? "Selected" : "Pick Lines"}
                             </Button>
                           </Td>
                         </tr>
@@ -302,22 +302,16 @@ function PickTasksPage() {
         {active ? (
           <div className="min-w-0">
             <Card className="sticky top-20 border border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-slate-900 p-5 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.8)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.05)] rounded-2xl space-y-4">
-              <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex size-9 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/60 text-primary dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/60 shadow-xs">
-                    <Package className="size-4" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-7 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/60 text-primary dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/60 shadow-xs">
+                      <Package className="size-3.5" aria-hidden="true" />
+                    </span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Active Floor Pick Station
                     </span>
-                    <h3 className="font-mono text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                      TASK-{active.id.slice(0, 8)}
-                    </h3>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <StatusBadge value={active.status} />
                   <button
                     type="button"
                     onClick={() => setActive(null)}
@@ -326,6 +320,12 @@ function PickTasksPage() {
                   >
                     <X className="size-4" aria-hidden="true" />
                   </button>
+                </div>
+                <div className="mt-2.5 flex items-center justify-between gap-2">
+                  <h3 className="font-mono text-sm font-bold text-slate-900 dark:text-slate-100">
+                    TASK-{active.id.slice(0, 8)}
+                  </h3>
+                  <StatusBadge value={active.status} />
                 </div>
               </div>
 

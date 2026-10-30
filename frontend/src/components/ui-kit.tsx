@@ -11,6 +11,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export interface IconTileProps {
   icon: LucideIcon;
@@ -352,7 +353,7 @@ export function TableShell({
   className?: string;
 }) {
   return (
-    <div className={`card-surface overflow-hidden ${className}`}>
+    <div className={cn("card-surface overflow-hidden", className)}>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">{children}</table>
       </div>
@@ -363,7 +364,10 @@ export function TableShell({
 export function Th({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <th
-      className={`bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap align-middle ${className}`}
+      className={cn(
+        "bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap align-middle",
+        className,
+      )}
     >
       {children}
     </th>
@@ -372,7 +376,12 @@ export function Th({ children, className = "" }: { children: ReactNode; classNam
 
 export function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <td className={`border-t border-slate-100 dark:border-slate-800/80 px-4 py-3 text-slate-800 dark:text-slate-200 align-middle ${className}`}>
+    <td
+      className={cn(
+        "border-t border-slate-100 dark:border-slate-800/80 px-4 py-3 text-slate-800 dark:text-slate-200 align-middle",
+        className,
+      )}
+    >
       {children}
     </td>
   );
