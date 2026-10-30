@@ -79,8 +79,8 @@ class VoiceE2ERunner:
         assert "stt_provider" in voice_info
         assert "tts_provider" in voice_info
         print(
-            '  ✓ /health/status contains valid voice provider metadata and alembic head '
-            'd2e3f4a5b6c7'
+            '  [PASS] /health/status contains valid voice provider metadata and alembic head '
+            f'{data.get("alembic_head")}'
         )
 
     async def test_parse_valid_transcript(self) -> str:
@@ -108,7 +108,7 @@ class VoiceE2ERunner:
         assert data["lines"][1]["condition_note"] == "box crushed"
 
         print(
-            f"  ✓ /voice/receiving/parse-transcript created draft {data['draft_id']} "
+            f"  [PASS] /voice/receiving/parse-transcript created draft {data['draft_id']} "
             "with 2 lines"
         )
         return str(data["draft_id"])
@@ -128,7 +128,7 @@ class VoiceE2ERunner:
         err = response.json()
         assert "strictly draft-only" in err.get("detail", "")
         print(
-            '  ✓ /voice/receiving/parse-transcript correctly refused mutation command with '
+            '  [PASS] /voice/receiving/parse-transcript correctly refused mutation command with '
             'safety explanation'
         )
 
@@ -144,7 +144,7 @@ class VoiceE2ERunner:
 
         assert data["status"] == "DISCARDED"
         assert data["safety_decision"] == "DISCARDED"
-        print(f"  ✓ /voice/drafts/{draft_id}/discard marked draft as DISCARDED")
+        print(f"  [PASS] /voice/drafts/{draft_id}/discard marked draft as DISCARDED")
 
     async def test_list_interactions(self) -> None:
         """Verify audit listing returns voice interactions."""
@@ -158,7 +158,7 @@ class VoiceE2ERunner:
         assert "total" in data
         assert "items" in data
         assert data["total"] >= 1
-        print(f"  ✓ /voice/interactions returned {data['total']} recorded interactions")
+        print(f"  [PASS] /voice/interactions returned {data['total']} recorded interactions")
 
     async def test_voice_synthesis_fallback(self) -> None:
         """Verify the TTS endpoint reports provider configuration status gracefully."""
@@ -176,10 +176,10 @@ class VoiceE2ERunner:
         if response.status_code == 200:
             data = response.json()
             assert "audio_base64" in data
-            print("  ✓ /voice/speak successfully synthesized audio")
+            print("  [PASS] /voice/speak successfully synthesized audio")
         else:
             print(
-                '  ✓ /voice/speak gracefully returned 503 Service Unavailable when TTS '
+                '  [PASS] /voice/speak gracefully returned 503 Service Unavailable when TTS '
                 'unconfigured'
             )
 
@@ -222,6 +222,12 @@ async def async_main() -> None:
     args = parser.parse_args()
 
     api_base_url = str(args.api_base_url).rstrip("/")
+    if not api_base_url.endswith("/api/v1"):
+        api_base_url = (
+            f"{api_base_url}/api/v1"
+            if not api_base_url.endswith("/api")
+            else f"{api_base_url}/v1"
+        )
     admin_email = os.getenv("BOOTSTRAP_ADMIN_EMAIL", "admin@whitfield.local")
     admin_password = os.getenv("BOOTSTRAP_ADMIN_PASSWORD", "change-this-before-use")
 

@@ -100,15 +100,20 @@ async def test_order_re_reservation_succeeds_without_idempotency_collision():
         session.add(product)
         await session.flush()
 
-        # Seed initial AVAILABLE inventory of 5 units
-        await inventory_crud.update_balance_projection(
-            session,
+        # Seed initial AVAILABLE inventory of 5 units via movement ledger
+        m_init = InventoryMovement(
             seller_id=seller.id,
             product_id=product.id,
             warehouse_id=warehouse.id,
             inventory_state=InventoryState.AVAILABLE.value,
             quantity_delta=Decimal("5.00"),
+            movement_type="RECEIPT",
+            source_type="INITIAL_SEED",
+            source_id=uuid4(),
+            idempotency_key=f"SEED-RERES-{uuid4()}",
+            actor_user_id=admin_id,
         )
+        await inventory_crud.apply_movement(session, m_init)
         seller_id = seller.id
         warehouse_id = warehouse.id
         product_id = product.id
@@ -313,15 +318,20 @@ async def test_transfer_shrinkage_discrepancy_recorded_on_short_receipt():
         session.add(product)
         await session.flush()
 
-        # Seed 20 available units at origin warehouse
-        await inventory_crud.update_balance_projection(
-            session,
+        # Seed 20 available units at origin warehouse via movement ledger
+        m_init = InventoryMovement(
             seller_id=seller.id,
             product_id=product.id,
             warehouse_id=wh_origin.id,
             inventory_state=InventoryState.AVAILABLE.value,
             quantity_delta=Decimal("20.00"),
+            movement_type="RECEIPT",
+            source_type="INITIAL_SEED",
+            source_id=uuid4(),
+            idempotency_key=f"SEED-TRF-{uuid4()}",
+            actor_user_id=admin_id,
         )
+        await inventory_crud.apply_movement(session, m_init)
         seller_id = seller.id
         wh_orig_id = wh_origin.id
         wh_dest_id = wh_dest.id
