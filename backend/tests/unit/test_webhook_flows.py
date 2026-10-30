@@ -23,6 +23,7 @@ from common.webhook_signer import (
     verify_webhook_timestamp,
 )
 from common.webhook_url import PublicHttpsDestination, ensure_public_https_url
+from core.config.settings import get_settings
 from core.cruds import outbox_crud, webhook_crud
 from core.database.database import transaction_session
 from core.services.webhook_dispatcher_service import dispatch_outbox_event_to_webhooks
@@ -282,17 +283,33 @@ async def test_outbox_webhook_dispatch_and_audit_logging(monkeypatch):
 @pytest.mark.asyncio
 async def test_inbound_carrier_webhook_endpoint():
     """Verify POST /api/v1/webhooks/inbound/carrier accepts tracking events."""
+    settings = get_settings()
+    secret = settings.inbound_webhook_secret or "fallback-secret"
+    body_dict = {
+        "carrier": "FEDEX",
+        "tracking_number": "1Z9999999999999999",
+        "event_status": "OUT_FOR_DELIVERY",
+        "location": "Reno, NV",
+        "notes": "On delivery vehicle",
+    }
+    raw_body = json.dumps(body_dict, separators=(",", ":")).encode("utf-8")
+    timestamp = str(int(time.time()))
+    delivery_id = f"carrier-{uuid4()}"
+    headers = {
+        "Content-Type": "application/json",
+        "X-Whitfield-Timestamp": timestamp,
+        "X-Whitfield-Delivery": delivery_id,
+        "X-Whitfield-Signature": compute_inbound_webhook_signature(
+            raw_body, timestamp, delivery_id, secret
+        ),
+    }
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://127.0.0.1") as client:
         res = await client.post(
             "/api/v1/webhooks/inbound/carrier",
-            json={
-                "carrier": "FEDEX",
-                "tracking_number": "1Z9999999999999999",
-                "event_status": "OUT_FOR_DELIVERY",
-                "location": "Reno, NV",
-                "notes": "On delivery vehicle",
-            },
+            content=raw_body,
+            headers=headers,
         )
         assert res.status_code == 200
         data = res.json()
@@ -303,18 +320,34 @@ async def test_inbound_carrier_webhook_endpoint():
 @pytest.mark.asyncio
 async def test_inbound_marketplace_order_webhook_endpoint():
     """Verify POST /api/v1/webhooks/inbound/order enqueues marketplace orders."""
+    settings = get_settings()
+    secret = settings.inbound_webhook_secret or "fallback-secret"
+    body_dict = {
+        "external_order_id": "SHOPIFY-ORD-8812",
+        "source": "SHOPIFY",
+        "seller_tenant_id": "SL-AURA",
+        "customer_name": "Jane Smith",
+        "shipping_address": {"city": "Columbus", "state": "OH"},
+        "lines": [{"sku": "SKU-AURA-100", "qty": 2}],
+    }
+    raw_body = json.dumps(body_dict, separators=(",", ":")).encode("utf-8")
+    timestamp = str(int(time.time()))
+    delivery_id = f"order-{uuid4()}"
+    headers = {
+        "Content-Type": "application/json",
+        "X-Whitfield-Timestamp": timestamp,
+        "X-Whitfield-Delivery": delivery_id,
+        "X-Whitfield-Signature": compute_inbound_webhook_signature(
+            raw_body, timestamp, delivery_id, secret
+        ),
+    }
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://127.0.0.1") as client:
         res = await client.post(
             "/api/v1/webhooks/inbound/order",
-            json={
-                "external_order_id": "SHOPIFY-ORD-8812",
-                "source": "SHOPIFY",
-                "seller_tenant_id": "SL-AURA",
-                "customer_name": "Jane Smith",
-                "shipping_address": {"city": "Columbus", "state": "OH"},
-                "lines": [{"sku": "SKU-AURA-100", "qty": 2}],
-            },
+            content=raw_body,
+            headers=headers,
         )
         assert res.status_code == 202
         data = res.json()
