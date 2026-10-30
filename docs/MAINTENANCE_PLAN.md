@@ -86,3 +86,9 @@ Reduce code and runtime work that the application does not need, make the fronte
 - [x] Add leased outbox claims so HTTP delivery does not hold database row locks.
 - [x] Update architecture documentation to reflect the verified frontend feature folders.
 - [x] Run final static checks after this cleanup pass (frontend typecheck, lint and production build; backend Ruff hygiene and compileall; `git diff --check`).
+- [x] Complete Phase 1-5 enterprise remediation:
+  - Synchronized PostgreSQL database schema with Alembic revision head (`i9j0k1l2m3n4`).
+  - Added leased outbox dispatcher columns (`claim_token`, `lease_expires_at`).
+  - Implemented end-to-end webhook subscription models, outbound HMAC-SHA256 delivery engine, and inbound webhook reception with anti-replay guarantees.
+  - Eliminated UI clipping, decimal precision defects, and raw UUID database slop from Floor Pick Station.
+  - Verified 100% test pass rate across backend pytest unit tests (140/140) and frontend Playwright E2E tests (128/128).
