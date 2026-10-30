@@ -16,26 +16,33 @@ This checklist is the formal launch gate for the Whitfield Fulfillment Warehouse
 
 ## 2. Technical Validation Gates
 
-Run these commands from `C:\Partition\major_project`:
+Run these commands from the repository root:
 
 ```powershell
 # 1. Backend imports, compileall, and unit test suite
 .\.venv\Scripts\python -c "import main; print('main import ok')"
-.\.venv\Scripts\python -m compileall main.py common core cli tools tests
-.\.venv\Scripts\python -m pytest
+.\.venv\Scripts\python -m compileall backend/
+.\.venv\Scripts\python -m pytest backend/tests/unit -v
 
-# 2. Frontend secret audit
-.\.venv\Scripts\python tools/audit_frontend_secrets.py
+# 2. Frontend secret audit & environment verification
+.\.venv\Scripts\python -m tools.audit_frontend_secrets
+.\.venv\Scripts\python -m tools.verify_production_env
 
-# 3. Database migrations (Head: c1f2e3d4a5b6)
-.\.venv\Scripts\alembic upgrade head
+# 3. Database migrations (Head: i9j0k1l2m3n4)
+cd backend
+..\.venv\Scripts\alembic upgrade head
+cd ..
 ```
 
-Then validate the frontend from `C:\Partition\major_project\frontend`:
+Then validate the frontend from `frontend`:
 
 ```powershell
+cd frontend
 npm run typecheck
+npm run lint
 npm run build
+npm run test:e2e
+cd ..
 ```
 
 ---
@@ -54,25 +61,29 @@ GET /health/ready -> 200 {"status": "ready"}
 GET /health/status -> 200 {
   "status": "HEALTHY",
   "database": {"status": "connected"},
-  "alembic_head": "c1f2e3d4a5b6",
+  "alembic_head": "i9j0k1l2m3n4",
   "ai": {"status": "HEALTHY" / "DISABLED"}
 }
 
 # 4. AI Provider Health
 GET /api/v1/ai/admin/provider-health -> 200 {"status": "HEALTHY", "configured": true}
+
+# 5. Outbox & Webhooks Subsystem
+GET /api/v1/webhooks/subscriptions -> 200 []
+GET /api/v1/webhooks/deliveries -> 200 []
 ```
 
 ---
 
 ## 4. Controlled Launch Execution Sequence
 
-1. **Apply Alembic Migrations**: Ensure database is at revision `c1f2e3d4a5b6`.
+1. **Apply Alembic Migrations**: Ensure database is at revision `i9j0k1l2m3n4`.
 2. **Start Backend API Service**: Ensure environment validation passes with zero critical warnings.
-3. **Verify Master Data**: Confirm Warehouses, Sellers, Products, and Locations are registered.
-4. **Stage Opening Inventory**: Upload source workbook via UI (**Admin -> Migration**) or CLI.
+3. **Verify Master Data**: Confirm Warehouses (RNO, CMH), Sellers (Aura, Nordic, Vitality, Apex), Products, and Locations are registered.
+4. **Stage Opening Inventory**: Upload source workbook via UI (**Admin -> Migration**) or CLI (`python -m tools.rehearse_migration`).
 5. **Validate Staged Rows**: Confirm `valid_rows == total_rows` and `invalid_rows == 0`.
 6. **Approve & Apply**: As Warehouse Manager or Administrator, approve and apply the batch once.
-7. **Reconcile Rehearsal**: Confirm 100% matched SKUs and zero discrepancies in the reconciliation report.
+7. **Reconcile Ledger**: Run `python -m tools.reconcile_inventory` to confirm 100% mathematical match between balances and movement journals.
 8. **Export Evidence**: From **Admin -> Controlled Launch & Health**, export and archive the signed launch evidence JSON bundle.
 
 ---
