@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import {
   CheckCircle2,
   PackagePlus,
@@ -10,10 +10,6 @@ import {
 } from "lucide-react";
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
-import { AiAuditPanel } from "@/components/AiAuditPanel";
-import { ControlledLaunchPanel } from "@/components/ControlledLaunchPanel";
-import { MigrationPanel } from "@/components/MigrationPanel";
-import { WebhookIntegrationsPanel } from "@/components/WebhookIntegrationsPanel";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   Button,
@@ -71,6 +67,27 @@ const TABS = [
 
 type AdminTab = (typeof TABS)[number];
 
+const WebhookIntegrationsPanel = lazy(() =>
+  import("@/features/admin/components/WebhookIntegrationsPanel").then((module) => ({
+    default: module.WebhookIntegrationsPanel,
+  })),
+);
+const AiAuditPanel = lazy(() =>
+  import("@/features/ai/components/AiAuditPanel").then((module) => ({
+    default: module.AiAuditPanel,
+  })),
+);
+const ControlledLaunchPanel = lazy(() =>
+  import("@/features/admin/components/ControlledLaunchPanel").then((module) => ({
+    default: module.ControlledLaunchPanel,
+  })),
+);
+const MigrationPanel = lazy(() =>
+  import("@/features/migration/components/MigrationPanel").then((module) => ({
+    default: module.MigrationPanel,
+  })),
+);
+
 function AdminPage() {
   const { user, ready } = useAuth();
   const [tab, setTab] = useState<AdminTab>("Users & Staff Hierarchy");
@@ -79,10 +96,32 @@ function AdminPage() {
   const visibleTabs: readonly AdminTab[] = TABS;
   const activeTab = visibleTabs.includes(tab) ? tab : "Users & Staff Hierarchy";
 
-  const usersQuery = useUsersQuery({ enabled: isManager });
-  const sellersQuery = useSellersQuery({ enabled: isManager });
-  const warehousesQuery = useWarehousesQuery({ enabled: isManager });
-  const productsQuery = useProductsQuery(undefined, { enabled: isManager });
+  const usersQuery = useUsersQuery({
+    enabled:
+      isManager &&
+      (activeTab === "Users & Staff Hierarchy" || activeTab === "Pending Sellers"),
+  });
+  const sellersQuery = useSellersQuery({
+    enabled: isManager && (activeTab === "Sellers" || activeTab === "Products"),
+  });
+  const warehousesQuery = useWarehousesQuery({
+    enabled: isManager && (activeTab === "Users & Staff Hierarchy" || activeTab === "Warehouses"),
+  });
+  const productsQuery = useProductsQuery(undefined, {
+    enabled: isManager && activeTab === "Products",
+  });
+  const visibleQueries =
+    activeTab === "Users & Staff Hierarchy"
+      ? [usersQuery, warehousesQuery]
+      : activeTab === "Pending Sellers"
+        ? [usersQuery]
+        : activeTab === "Sellers"
+          ? [sellersQuery]
+          : activeTab === "Warehouses"
+            ? [warehousesQuery]
+            : activeTab === "Products"
+              ? [sellersQuery, productsQuery]
+              : [];
   const usersData = usersQuery.data ?? [];
   const sellers = sellersQuery.data ?? [];
   const warehouses = warehousesQuery.data ?? [];
@@ -352,17 +391,14 @@ function AdminPage() {
         ))}
       </div>
 
-      {[usersQuery, sellersQuery, warehousesQuery, productsQuery].some((q) => q.isLoading) ? (
+      {visibleQueries.some((query) => query.isLoading) ? (
         <LoadingState />
       ) : null}
-      {[usersQuery, sellersQuery, warehousesQuery, productsQuery].find((q) => q.isError) ? (
+      {visibleQueries.some((query) => query.isError) ? (
         <ErrorState
           message="Could not load admin data from the backend."
           onRetry={() => {
-            usersQuery.refetch();
-            sellersQuery.refetch();
-            warehousesQuery.refetch();
-            productsQuery.refetch();
+            void Promise.all(visibleQueries.map((query) => query.refetch()));
           }}
         />
       ) : null}
@@ -580,10 +616,26 @@ function AdminPage() {
         </TableShell>
       ) : null}
 
-      {activeTab === "Webhooks & Integrations" ? <WebhookIntegrationsPanel /> : null}
-      {activeTab === "AI Audit & Provider Health" ? <AiAuditPanel /> : null}
-      {activeTab === "Controlled Launch & Health" ? <ControlledLaunchPanel /> : null}
-      {activeTab === "Migration" ? <MigrationPanel /> : null}
+      {activeTab === "Webhooks & Integrations" ? (
+        <Suspense fallback={<LoadingState message="Loading webhook integrations..." />}>
+          <WebhookIntegrationsPanel />
+        </Suspense>
+      ) : null}
+      {activeTab === "AI Audit & Provider Health" ? (
+        <Suspense fallback={<LoadingState message="Loading AI audit records..." />}>
+          <AiAuditPanel />
+        </Suspense>
+      ) : null}
+      {activeTab === "Controlled Launch & Health" ? (
+        <Suspense fallback={<LoadingState message="Loading launch status..." />}>
+          <ControlledLaunchPanel />
+        </Suspense>
+      ) : null}
+      {activeTab === "Migration" ? (
+        <Suspense fallback={<LoadingState message="Loading migration tools..." />}>
+          <MigrationPanel />
+        </Suspense>
+      ) : null}
 
       {/* Modal to Register Staff according to RBAC */}
       <AppDialog

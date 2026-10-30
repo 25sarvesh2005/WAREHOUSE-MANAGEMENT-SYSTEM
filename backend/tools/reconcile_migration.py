@@ -20,6 +20,8 @@ import asyncio
 import sys
 from uuid import UUID
 
+from sqlalchemy import select
+
 from common.logger import get_logger
 from core.constants import UserRole
 from core.controllers.migration_controller import migration_controller
@@ -29,7 +31,6 @@ from core.database.database import (
     transaction_session,
 )
 from core.models.identity_model import User
-from sqlalchemy import select
 
 logger = get_logger(__name__)
 

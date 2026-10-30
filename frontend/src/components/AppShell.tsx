@@ -198,13 +198,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
       </div>
 
-      <div className="mx-3 my-2.5 grid grid-cols-2 gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 p-1 text-center text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-        <span className="inline-flex items-center justify-center gap-1 rounded-md bg-white dark:bg-slate-800 px-2 py-1 text-slate-800 dark:text-slate-200 shadow-2xs">
-          <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> RNO Hub
-        </span>
-        <span className="inline-flex items-center justify-center gap-1 rounded-md bg-white dark:bg-slate-800 px-2 py-1 text-slate-800 dark:text-slate-200 shadow-2xs">
-          <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> CMH Hub
-        </span>
+      <div role="group" aria-label="Warehouse locations" className="mx-3 my-2.5 flex items-center gap-2 px-2 text-xs text-slate-500 dark:text-slate-400">
+        <span className="font-medium text-slate-700 dark:text-slate-300">Locations</span>
+        <span>RNO · Reno</span>
+        <span className="text-slate-300 dark:text-slate-700" aria-hidden="true">/</span>
+        <span>CMH · Columbus</span>
       </div>
 
       <nav aria-label="Primary navigation" className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
@@ -414,15 +412,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </SheetTrigger>
 
-            <form onSubmit={handleGlobalSearch} className="relative max-w-xl flex-1 min-w-0">
+            <form onSubmit={handleGlobalSearch} className="relative max-w-2xl flex-1 min-w-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" aria-hidden="true" />
               <input
                 aria-label="Search warehouse records"
                 maxLength={100}
                 value={globalSearch}
                 onChange={(event) => setGlobalSearch(event.target.value)}
-                placeholder="Search ORD-, REC-/1Z, TRF-/TRN-, RET-/RMA-, or SKU-…"
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900 py-1.5 pl-9 pr-3.5 text-sm text-slate-900 dark:text-slate-100 shadow-2xs outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+                placeholder="Search by order, receipt, transfer, return, or SKU"
+                className="w-full min-h-10 rounded-md border border-input bg-slate-50 dark:bg-slate-900 py-2 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/15 transition-[background-color,border-color,box-shadow] duration-150"
               />
             </form>
 
@@ -438,8 +436,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6 outline-none">
-            {children}
+          <main id="main-content" tabIndex={-1} className="flex-1 p-4 outline-none sm:p-5 lg:p-7">
+            <div className="mx-auto w-full max-w-[1600px]">
+              {children}
+            </div>
           </main>
         </div>
       </Sheet>

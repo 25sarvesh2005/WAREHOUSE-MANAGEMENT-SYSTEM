@@ -19,9 +19,6 @@ from __future__ import annotations
 from decimal import Decimal
 from uuid import uuid4
 
-import pytest
-from pydantic import ValidationError
-
 from core.apis.schemas.requests.fulfillment_request import (
     PickTaskCompleteRequest,
     PickTaskCreateRequest,

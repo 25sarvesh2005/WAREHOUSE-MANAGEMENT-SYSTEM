@@ -1,19 +1,18 @@
 """
-Unit tests verifying background jobs: outbox dispatch, receipt aging, transfer delay, and return aging.
+Unit tests verifying background jobs: outbox dispatch, receipt aging, transfer delay,
+and return aging.
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from core.constants import (
     BusinessStatus,
-    InventoryState,
     OutboxEventStatus,
     OutboxEventType,
     ReceiptStatus,
@@ -23,6 +22,7 @@ from core.constants import (
 )
 from core.cruds import outbox_crud
 from core.database.database import transaction_session
+from core.jobs.inbound_webhook_cleanup_job import prune_inbound_webhook_receipts
 from core.jobs.outbox_dispatch_job import (
     dispatch_pending_outbox_events,
     register_outbox_handler,
@@ -35,6 +35,46 @@ from core.models.outbox_model import OutboxEvent
 from core.models.receiving_model import Receipt
 from core.models.return_model import Return
 from core.models.transfer_model import Transfer
+from core.models.webhook_model import InboundWebhookReceipt
+
+
+@pytest.mark.asyncio
+async def test_inbound_webhook_receipt_cleanup_retains_recent_ids():
+    old_receipt_id = f"old-{uuid4()}"
+    recent_receipt_id = f"recent-{uuid4()}"
+    async with transaction_session() as session:
+        session.add_all(
+            [
+                InboundWebhookReceipt(
+                    provider="cleanup-test",
+                    delivery_id=old_receipt_id,
+                    received_at=datetime.now(UTC) - timedelta(days=8),
+                ),
+                InboundWebhookReceipt(
+                    provider="cleanup-test",
+                    delivery_id=recent_receipt_id,
+                    received_at=datetime.now(UTC),
+                ),
+            ]
+        )
+        await session.flush()
+        deleted_count = await prune_inbound_webhook_receipts(session, retention_days=7)
+        assert deleted_count >= 1
+
+        rows = (
+            await session.execute(
+                select(InboundWebhookReceipt.delivery_id).where(
+                    InboundWebhookReceipt.provider == "cleanup-test"
+                )
+            )
+        ).scalars().all()
+        assert old_receipt_id not in rows
+        assert recent_receipt_id in rows
+        await session.execute(
+            delete(InboundWebhookReceipt).where(
+                InboundWebhookReceipt.delivery_id == recent_receipt_id
+            )
+        )
 
 
 @pytest.mark.asyncio
@@ -56,9 +96,8 @@ async def test_outbox_dispatcher_success_and_handler():
         )
         event_id = event.id
 
-    async with transaction_session() as session:
-        result = await dispatch_pending_outbox_events(session, batch_size=500)
-        assert result["dispatched"] >= 1
+    result = await dispatch_pending_outbox_events(batch_size=500)
+    assert result["dispatched"] >= 1
 
     # Verify handler was called
     matching = [p for p in received_payloads if p.get("job_test_id") == test_payload["job_test_id"]]
@@ -85,9 +124,8 @@ async def test_outbox_dispatcher_dead_letter():
         await session.flush()
         event_id = event.id
 
-    async with transaction_session() as session:
-        result = await dispatch_pending_outbox_events(session, batch_size=500, max_attempts=5)
-        assert result["dead_letter"] >= 1
+    result = await dispatch_pending_outbox_events(batch_size=500, max_attempts=5)
+    assert result["dead_letter"] >= 1
 
     async with transaction_session() as session:
         refreshed = await session.get(OutboxEvent, event_id)

@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,6 +45,7 @@ async def release_expired_reservations(session: AsyncSession) -> dict[str, Any]:
 
     released_count = 0
     released_quantity_total = Decimal("0.00")
+    orders_to_recompute: dict[UUID, Order] = {}
 
     for res in reservations:
         order_line = res.order_line
@@ -106,16 +108,20 @@ async def release_expired_reservations(session: AsyncSession) -> dict[str, Any]:
         order_line.reserved_quantity = max(Decimal("0.00"), order_line.reserved_quantity - rel_qty)
         order_line.backordered_quantity += rel_qty
 
-        # Re-evaluate order status
-        has_any_reserved = any(line.reserved_quantity > Decimal("0.00") for line in order.lines)
+        orders_to_recompute[order.id] = order
+        released_count += 1
+        released_quantity_total += rel_qty
+
+    # Recompute once per affected order after all its expired reservations are processed.
+    for order in orders_to_recompute.values():
+        has_any_reserved = any(
+            line.reserved_quantity > Decimal("0.00") for line in order.lines
+        )
         if not has_any_reserved:
             order.status = OrderStatus.BACKORDERED.value
         else:
             order.status = OrderStatus.PARTIALLY_RESERVED.value
-
         order.updated_at = now
-        released_count += 1
-        released_quantity_total += rel_qty
 
     logger.info(
         "Finished release_expired_reservations: released %d reservations (%s units)",

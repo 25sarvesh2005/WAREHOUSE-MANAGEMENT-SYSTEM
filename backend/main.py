@@ -41,14 +41,16 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 load_dotenv()
 
-from datetime import UTC, datetime
+import asyncio
 import time
+from datetime import UTC, datetime
+
+from sqlalchemy import text
 
 from common.logger import get_logger
 from common.request_id import RequestIDMiddleware
 from core.apis.api import api_router
 from core.config.settings import get_settings, validate_production_configuration
-import asyncio
 from core.database.database import (
     check_database_ready,
     close_database_connection,
@@ -56,12 +58,12 @@ from core.database.database import (
     transaction_session,
 )
 from core.database.seed import initialize_schema_for_development, seed_initial_data
+from core.jobs.inbound_webhook_cleanup_job import prune_inbound_webhook_receipts
 from core.jobs.outbox_dispatch_job import dispatch_pending_outbox_events
 from core.jobs.receipt_aging_job import check_aging_receipts
 from core.jobs.reservation_expiry_job import release_expired_reservations
 from core.jobs.return_aging_job import check_aging_returns
 from core.jobs.transfer_delay_job import check_delayed_transfers
-from sqlalchemy import text
 
 logger = get_logger(__name__)
 
@@ -112,10 +114,13 @@ async def _periodic_outbox_dispatch_worker(interval_seconds: int = 10) -> None:
     while True:
         try:
             await asyncio.sleep(interval_seconds)
-            async with transaction_session() as session:
-                result = await dispatch_pending_outbox_events(session)
-                if result.get("dispatched", 0) > 0 or result.get("failed", 0) > 0:
-                    logger.info("Outbox dispatch cycle complete: %s", result)
+            result = await dispatch_pending_outbox_events()
+            if (
+                result.get("dispatched", 0) > 0
+                or result.get("failed", 0) > 0
+                or result.get("dead_letter", 0) > 0
+            ):
+                logger.info("Outbox dispatch cycle complete: %s", result)
         except asyncio.CancelledError:
             logger.info("Outbox dispatch background worker cancelled")
             break
@@ -130,6 +135,9 @@ async def _periodic_operational_sla_worker(interval_seconds: int = 300) -> None:
         try:
             await asyncio.sleep(interval_seconds)
             async with transaction_session() as session:
+                pruned_receipts = await prune_inbound_webhook_receipts(session)
+                if pruned_receipts:
+                    logger.info("Pruned %d expired inbound webhook receipt IDs", pruned_receipts)
                 rcv_result = await check_aging_receipts(session)
                 trf_result = await check_delayed_transfers(session)
                 ret_result = await check_aging_returns(session)
@@ -191,7 +199,10 @@ async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
         await seed_initial_data()
     except Exception as error:
         logger.error("Startup database initialization failed: %s", error, exc_info=True)
-        logger.warning("Continuing startup in %s mode — database connection will be retried on demand.", runtime_settings.app_env)
+        logger.warning(
+            "Continuing startup in %s mode — database connection will be retried on demand.",
+            runtime_settings.app_env,
+        )
     expiry_task = asyncio.create_task(_periodic_reservation_expiry_worker())
     outbox_task = asyncio.create_task(_periodic_outbox_dispatch_worker())
     sla_task = asyncio.create_task(_periodic_operational_sla_worker())
@@ -371,8 +382,14 @@ async def operational_status() -> dict[str, object]:
         ai_status = "HEALTHY" if ai_configured else "KEY_MISSING"
 
     voice_stt_configured = bool(
-        (current_settings.voice_stt_provider == "deepgram" and current_settings.deepgram_api_key.strip())
-        or (current_settings.voice_stt_provider == "sarvam" and current_settings.sarvam_api_key.strip())
+        (
+            current_settings.voice_stt_provider == "deepgram"
+            and current_settings.deepgram_api_key.strip()
+        )
+        or (
+            current_settings.voice_stt_provider == "sarvam"
+            and current_settings.sarvam_api_key.strip()
+        )
     )
     voice_tts_configured = bool(
         current_settings.voice_tts_provider == "sarvam" and current_settings.sarvam_api_key.strip()

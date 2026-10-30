@@ -46,17 +46,11 @@ from core.apis.schemas.requests.ai_request import (
     AIFeedbackRequest,
 )
 from core.apis.schemas.responses.ai_response import (
-    AIDraftActionDetailResponse,
-    AIDraftActionListResponse,
-    AIDraftRecommendationResponse,
-    AIExceptionCategorySummary,
     AIExceptionSummaryResponse,
     AIFeedbackResponse,
-    AIInteractionDetailResponse,
-    AIInteractionListResponse,
     AIProviderHealthResponse,
 )
-from core.constants import AIDraftActionStatus, UserRole
+from core.constants import UserRole
 from core.controllers.ai_controller import AIController
 from core.services.ai.read_tools import OperationalExceptionEvidence
 
@@ -219,7 +213,9 @@ def test_exception_fallback_narrative_builder() -> None:
         total_exceptions=1,
     )
     populated_cats = controller._build_exception_categories(populated_evidence)
-    narrative_pop = controller._build_exception_fallback_narrative(populated_evidence, populated_cats)
+    narrative_pop = controller._build_exception_fallback_narrative(
+        populated_evidence, populated_cats
+    )
     assert "Identified 1 active operational exception(s)" in narrative_pop
     assert "Overdue & Pending Receipts: 1 item(s)" in narrative_pop
 

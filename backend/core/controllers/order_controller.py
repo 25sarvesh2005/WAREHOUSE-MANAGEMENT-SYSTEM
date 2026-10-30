@@ -124,10 +124,20 @@ class OrderController:
                 updated_at=now,
             )
 
+            # Load product records together rather than querying once per order line.
+            lines_with_product_ids = [
+                (line_data, UUID(str(line_data["product_id"])))
+                for line_data in order_data["lines"]
+            ]
+            products = await catalog_crud.get_products_by_ids(
+                session,
+                {product_id for _, product_id in lines_with_product_ids},
+            )
+            products_by_id = {product.id: product for product in products}
+
             # Validate products and build order lines
-            for line_data in order_data["lines"]:
-                product_id = UUID(str(line_data["product_id"]))
-                product = await catalog_crud.get_product_by_id(session, product_id)
+            for line_data, product_id in lines_with_product_ids:
+                product = products_by_id.get(product_id)
                 if product is None or product.seller_id != seller_id:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,

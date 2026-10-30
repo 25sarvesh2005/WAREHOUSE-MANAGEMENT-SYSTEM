@@ -5,17 +5,26 @@ outbox event dispatch, delivery audit logs, and inbound carrier/order ingestion.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import json
 import time
+from datetime import UTC, datetime
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from common.webhook_signer import compute_webhook_signature, verify_webhook_signature, verify_webhook_timestamp
+from common.pinned_webhook_transport import _PinnedNetworkBackend
+from common.webhook_signer import (
+    compute_inbound_webhook_signature,
+    compute_webhook_signature,
+    verify_inbound_webhook_signature,
+    verify_webhook_signature,
+    verify_webhook_timestamp,
+)
+from common.webhook_url import PublicHttpsDestination, ensure_public_https_url
 from core.cruds import outbox_crud, webhook_crud
 from core.database.database import transaction_session
-from core.models.outbox_model import OutboxEvent
 from core.services.webhook_dispatcher_service import dispatch_outbox_event_to_webhooks
 from main import app
 
@@ -64,6 +73,111 @@ def test_webhook_timestamp_replay_protection():
     assert verify_webhook_timestamp(None) is False
 
 
+def test_inbound_signature_binds_timestamp_and_delivery_id():
+    body = b'{"event":"order.created"}'
+    timestamp = str(int(time.time()))
+    delivery_id = "delivery-001"
+    secret = "a-long-random-shared-secret-for-tests"
+    signature = compute_inbound_webhook_signature(body, timestamp, delivery_id, secret)
+
+    assert verify_inbound_webhook_signature(body, signature, timestamp, delivery_id, secret)
+    assert not verify_inbound_webhook_signature(body, signature, timestamp, "delivery-002", secret)
+    assert not verify_inbound_webhook_signature(
+        body, signature, str(int(timestamp) - 1), delivery_id, secret
+    )
+
+
+@pytest.mark.asyncio
+async def test_pinned_network_backend_uses_validated_ip():
+    destination = PublicHttpsDestination("hooks.example", 443, ("8.8.8.8",))
+    backend = _PinnedNetworkBackend(destination)
+    connected_to = []
+
+    class StubBackend:
+        async def connect_tcp(self, host, port, **kwargs):
+            connected_to.append((host, port))
+            return object()
+
+    backend._backend = StubBackend()
+    await backend.connect_tcp("hooks.example", 443)
+    assert connected_to == [("8.8.8.8", 443)]
+
+    with pytest.raises(OSError):
+        await backend.connect_tcp("127.0.0.1", 443)
+
+
+@pytest.mark.asyncio
+async def test_webhook_destination_requires_public_https():
+    with pytest.raises(ValueError):
+        await ensure_public_https_url("http://8.8.8.8/hook")
+    with pytest.raises(ValueError):
+        await ensure_public_https_url("https://127.0.0.1/hook")
+    with pytest.raises(ValueError):
+        await ensure_public_https_url("https://user:pass@example.com/hook")
+
+    await ensure_public_https_url("https://8.8.8.8/hook")
+
+
+@pytest.mark.asyncio
+async def test_inbound_webhook_requires_hmac_when_secret_is_configured(monkeypatch):
+    monkeypatch.setattr(
+        "core.apis.routes.webhook_routes.get_settings",
+        lambda: SimpleNamespace(
+            inbound_webhook_secret="configured-test-secret", app_env="production"
+        ),
+    )
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://127.0.0.1") as client:
+        response = await client.post(
+            "/api/v1/webhooks/inbound/carrier",
+            json={
+                "carrier": "FEDEX",
+                "tracking_number": "1Z9999999999999999",
+                "event_status": "DELIVERED",
+            },
+        )
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_inbound_webhook_rejects_replayed_delivery_id(monkeypatch):
+    secret = "a-long-random-shared-secret-for-replay-test"
+    monkeypatch.setattr(
+        "core.apis.routes.webhook_routes.get_settings",
+        lambda: SimpleNamespace(inbound_webhook_secret=secret, app_env="production"),
+    )
+    body = json.dumps(
+        {
+            "carrier": "FEDEX",
+            "tracking_number": "1Z9999999999999999",
+            "event_status": "DELIVERED",
+        },
+        separators=(",", ":"),
+    ).encode()
+    timestamp = str(int(time.time()))
+    delivery_id = f"delivery-{uuid4()}"
+    headers = {
+        "X-Whitfield-Timestamp": timestamp,
+        "X-Whitfield-Delivery": delivery_id,
+        "X-Whitfield-Signature": compute_inbound_webhook_signature(
+            body,
+            timestamp,
+            delivery_id,
+            secret,
+        ),
+    }
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://127.0.0.1") as client:
+        first = await client.post("/api/v1/webhooks/inbound/carrier", content=body, headers=headers)
+        replay = await client.post(
+            "/api/v1/webhooks/inbound/carrier", content=body, headers=headers
+        )
+
+    assert first.status_code == 200
+    assert replay.status_code == 409
+
+
 @pytest.mark.asyncio
 async def test_webhook_subscription_crud():
     """Verify subscription creation, listing, matching, and deletion."""
@@ -87,7 +201,9 @@ async def test_webhook_subscription_crud():
         matched = await webhook_crud.get_active_subscriptions_for_event(session, "order.reserved")
         assert any(s.id == sub.id for s in matched)
 
-        unmatched = await webhook_crud.get_active_subscriptions_for_event(session, "inventory.damaged")
+        unmatched = await webhook_crud.get_active_subscriptions_for_event(
+            session, "inventory.damaged"
+        )
         assert not any(s.id == sub.id for s in unmatched)
 
         # Delete
@@ -124,6 +240,13 @@ async def test_outbox_webhook_dispatch_and_audit_logging(monkeypatch):
 
         import httpx
         monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+        async def allow_test_webhook_url(_url):
+            return PublicHttpsDestination("mock-endpoint.whitfield.test", 443, ("8.8.8.8",))
+
+        monkeypatch.setattr(
+            "core.services.webhook_dispatcher_service.ensure_public_https_url",
+            allow_test_webhook_url,
+        )
 
         # 3. Create an outbox event
         event = await outbox_crud.create_outbox_event(

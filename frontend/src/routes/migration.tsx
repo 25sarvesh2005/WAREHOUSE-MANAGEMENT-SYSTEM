@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { MigrationPanel } from "@/components/MigrationPanel";
+import { MigrationPanel } from "@/features/migration/components/MigrationPanel";
 import { PageHeader } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/migration")({

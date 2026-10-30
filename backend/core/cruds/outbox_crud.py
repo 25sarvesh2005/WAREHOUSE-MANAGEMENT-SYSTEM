@@ -4,10 +4,10 @@ Database persistence operations for transactional outbox records.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from uuid import UUID
+from datetime import UTC, datetime, timedelta
+from uuid import UUID, uuid4
 
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.logger import get_logger
@@ -94,6 +94,84 @@ async def fetch_pending_events(
     )
     result = await session.execute(stmt)
     return list(result.scalars().all())
+
+
+async def claim_pending_events(
+    session: AsyncSession,
+    *,
+    limit: int,
+    max_attempts: int,
+    lease_duration: timedelta,
+) -> tuple[list[OutboxEvent], int]:
+    """Claim ready events and dead-letter exhausted events in the current transaction."""
+    now = datetime.now(UTC)
+    ready = or_(
+        OutboxEvent.status == "PENDING",
+        (OutboxEvent.status == "FAILED")
+        & OutboxEvent.next_attempt_at.is_not(None)
+        & (OutboxEvent.next_attempt_at <= now),
+        (OutboxEvent.status == "PROCESSING")
+        & OutboxEvent.lease_expires_at.is_not(None)
+        & (OutboxEvent.lease_expires_at <= now),
+    )
+    result = await session.execute(
+        select(OutboxEvent)
+        .where(ready)
+        .order_by(OutboxEvent.created_at.asc())
+        .limit(limit)
+        .with_for_update(skip_locked=True)
+    )
+    candidates = list(result.scalars().all())
+    claimed: list[OutboxEvent] = []
+    dead_letter_count = 0
+
+    for event in candidates:
+        if event.attempts >= max_attempts:
+            event.status = "DEAD_LETTER"
+            event.last_error = f"Exceeded maximum retry attempts ({max_attempts})"
+            event.next_attempt_at = None
+            event.claim_token = None
+            event.lease_expires_at = None
+            dead_letter_count += 1
+            continue
+
+        event.status = "PROCESSING"
+        event.attempts += 1
+        event.claim_token = uuid4()
+        event.lease_expires_at = now + lease_duration
+        claimed.append(event)
+
+    await session.flush()
+    return claimed, dead_letter_count
+
+
+async def finish_claimed_event(
+    session: AsyncSession,
+    *,
+    event_id: UUID,
+    claim_token: UUID,
+    status: str,
+    error: str | None = None,
+    next_attempt_at: datetime | None = None,
+) -> bool:
+    """Finish an event only if this worker still owns its dispatch lease."""
+    result = await session.execute(
+        update(OutboxEvent)
+        .where(
+            OutboxEvent.id == event_id,
+            OutboxEvent.status == "PROCESSING",
+            OutboxEvent.claim_token == claim_token,
+        )
+        .values(
+            status=status,
+            last_error=error[:1000] if error else None,
+            next_attempt_at=next_attempt_at,
+            claim_token=None,
+            lease_expires_at=None,
+            updated_at=datetime.now(UTC),
+        )
+    )
+    return (result.rowcount or 0) == 1
 
 
 async def mark_event_dispatched(

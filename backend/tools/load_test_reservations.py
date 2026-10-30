@@ -8,23 +8,27 @@ and measure throughput and latency on reservation endpoints.
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
 import sys
 import time
 from decimal import Decimal
+from pathlib import Path
 from uuid import UUID, uuid4
 
 _backend_dir = str(Path(__file__).resolve().parent.parent)
 if _backend_dir not in sys.path:
     sys.path.insert(0, _backend_dir)
 
-from core.constants import BusinessStatus, InventoryMovementType, InventoryState, OrderStatus, UserRole
+from core.constants import BusinessStatus, InventoryState, OrderStatus, UserRole
 from core.controllers.order_controller import order_controller
-from core.cruds import catalog_crud, identity_crud, inventory_crud
-from core.database.database import close_database_connection, connect_to_database, transaction_session
+from core.cruds import inventory_crud
+from core.database.database import (
+    close_database_connection,
+    connect_to_database,
+    transaction_session,
+)
 from core.models.catalog_model import Product
 from core.models.identity_model import Seller, User, Warehouse
-from core.models.inventory_model import InventoryBalance, InventoryMovement
+from core.models.inventory_model import InventoryBalance
 
 
 async def run_reservation_load_test(
@@ -43,8 +47,11 @@ async def run_reservation_load_test(
     Returns:
         dict[str, object]: Performance and correctness metrics.
     """
-    print(f"=== Starting Reservation Concurrency Load Test ===")
-    print(f"Concurrency: {concurrency} workers | Total Orders: {total_orders} | Initial Stock: {initial_stock}")
+    print("=== Starting Reservation Concurrency Load Test ===")
+    print(
+        f"Concurrency: {concurrency} workers | Total Orders: {total_orders}"
+        f" | Initial Stock: {initial_stock}"
+    )
 
     await connect_to_database()
 
@@ -175,7 +182,9 @@ async def run_reservation_load_test(
 
     # Invariants verification
     over_allocated = reserved_count > initial_stock
-    balance_consistent = (final_reserved == Decimal(str(reserved_count))) and (final_available == Decimal(str(initial_stock - reserved_count)))
+    balance_consistent = (final_reserved == Decimal(str(reserved_count))) and (
+        final_available == Decimal(str(initial_stock - reserved_count))
+    )
 
     sorted_lats = sorted(latencies) if latencies else [0]
     p50 = sorted_lats[int(len(sorted_lats) * 0.50)]

@@ -5,10 +5,7 @@
 @custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 
 /*
- * Whitfield Fulfillment - Anti-AI Slop Human-Crafted Design System.
- * Clean #f8fafc canvas, pure white card surfaces, hairline 1px borders,
- * high-contrast typography, tabular numbers, and snappy physical micro-interactions.
- * Full dark mode support with deep slate surfaces and high-contrast accessibility.
+ * Whitfield Fulfillment interface styles.
  */
 
 @theme inline {
@@ -70,9 +67,9 @@
 
 :root,
 [data-theme="light"] {
-  --radius: 0.75rem;
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --radius: 0.625rem;
+  --background: #f4f6f8;
+  --foreground: #17212f;
   --card: #ffffff;
   --card-foreground: #0f172a;
   --popover: #ffffff;
@@ -90,8 +87,8 @@
   --accent-foreground: #1e40af;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #cbd5e1;
+  --border: #dce3e9;
+  --input: #cbd5dd;
   --ring: #2563eb;
   --status-green: #15803d;
   --status-amber: #b45309;
@@ -100,9 +97,8 @@
   --status-red: #b91c1c;
   --status-purple: #6b21a8;
   --status-gray: #475569;
-  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
-  --shadow-panel: 0 4px 12px 0 rgba(15, 23, 42, 0.06);
-  --gradient-hero: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.035);
+  --shadow-panel: 0 4px 12px rgba(15, 23, 42, 0.055);
   --chart-1: #1e40af;
   --chart-2: #059669;
   --chart-3: #d97706;
@@ -120,7 +116,7 @@
 
 .dark,
 [data-theme="dark"] {
-  --background: #090d16;
+  --background: #0b1118;
   --foreground: #f1f5f9;
   --card: #0f172a;
   --card-foreground: #f8fafc;
@@ -207,12 +203,16 @@
     font-variant-numeric: tabular-nums;
   }
 
+  ::selection {
+    background: rgba(37, 99, 235, 0.18);
+  }
+
   th,
   td {
     vertical-align: middle;
   }
 
-  /* Clean, Human-Crafted Select Styling */
+  /* Keep native select controls consistent with the form system. */
   select {
     appearance: none;
     -webkit-appearance: none;
@@ -259,46 +259,14 @@
 
 @utility card-surface {
   background-color: var(--color-card, #ffffff);
-  border: 1px solid var(--color-border, rgba(226, 232, 240, 0.95));
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+  border: 1px solid var(--color-border, #dce3e9);
+  border-radius: 0.625rem;
+  box-shadow: var(--shadow-card);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
   &:is(.dark *) {
     background-color: #0f172a;
     border-color: #1e293b;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  }
-}
-
-@utility card-surface-hover {
-  &:hover {
-    border-color: #94a3b8;
-    box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  }
-  &:is(.dark *) {
-    &:hover {
-      border-color: #475569;
-      box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    }
-  }
-}
-
-@utility control-panel {
-  background-color: var(--color-card, #ffffff);
-  border: 1px solid var(--color-border, rgba(226, 232, 240, 0.95));
-  border-radius: 0.875rem;
-  box-shadow: var(--shadow-panel);
-  &:is(.dark *) {
-    background-color: #0f172a;
-    border-color: #1e293b;
-    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  }
-}
-
-@utility hero-gradient {
-  background-image: var(--gradient-hero);
-  &:is(.dark *) {
-    background-image: linear-gradient(135deg, #0f172a 0%, #090d16 100%);
+    box-shadow: var(--shadow-card);
   }
 }
 
@@ -345,97 +313,12 @@
   animation: wf-rise 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Compatibility aliases mapped to clean tactile neomorphic human design */
-@utility neu-flat {
-  background-color: var(--color-card, #ffffff);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 0.75rem;
-  box-shadow: var(--shadow-card);
-  &:is(.dark *) {
-    background-color: #0f172a;
-    border-color: #1e293b;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition: none !important;
   }
-}
-
-@utility neu-raised {
-  background-color: var(--color-card, #ffffff);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 0.75rem;
-  box-shadow: var(--shadow-panel);
-  &:is(.dark *) {
-    background-color: #0f172a;
-    border-color: #1e293b;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  }
-}
-
-@utility neu-raised-sm {
-  background-color: var(--color-card, #ffffff);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  &:is(.dark *) {
-    background-color: #0f172a;
-    border-color: #1e293b;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  }
-}
-
-@utility neu-inset {
-  background-color: var(--color-muted, #f8fafc);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 0.5rem;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
-  &:is(.dark *) {
-    background-color: #090d16;
-    border-color: #1e293b;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
-  }
-}
-
-@utility neu-pill {
-  background-color: var(--color-card, #ffffff);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 9999px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  &:is(.dark *) {
-    background-color: #0f172a;
-    border-color: #1e293b;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  }
-}
-
-@utility neu-pill-inset {
-  background-color: var(--color-muted, #f1f5f9);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 9999px;
-  &:is(.dark *) {
-    background-color: #090d16;
-    border-color: #1e293b;
-  }
-}
-
-@utility neu-card {
-  background-color: var(--color-card, #ffffff);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 0.75rem;
-  box-shadow: var(--shadow-card);
-  &:is(.dark *) {
-    background-color: #0f172a;
-    border-color: #1e293b;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  }
-}
-
-@utility neu-card-exception {
-  background-color: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);
-  &:is(.dark *) {
-    background-color: rgba(180, 83, 9, 0.15);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-  }
-}
 }

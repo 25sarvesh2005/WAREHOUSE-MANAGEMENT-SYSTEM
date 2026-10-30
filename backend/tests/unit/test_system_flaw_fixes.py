@@ -9,7 +9,7 @@ Unit tests verifying fixes for core system flaws:
 from __future__ import annotations
 
 from decimal import Decimal
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
@@ -26,14 +26,11 @@ from core.constants import (
 from core.controllers.fulfillment_controller import fulfillment_controller
 from core.controllers.order_controller import order_controller
 from core.controllers.transfer_controller import transfer_controller
-from core.cruds import catalog_crud, identity_crud, inventory_crud, order_crud, transfer_crud
-from core.database.database import close_database_connection, connect_to_database, transaction_session
-from core.database.seed import initialize_schema_for_development, seed_initial_data
+from core.cruds import identity_crud, inventory_crud
+from core.database.database import transaction_session
 from core.models.catalog_model import Product
 from core.models.identity_model import Seller, Warehouse
 from core.models.inventory_model import InventoryMovement
-
-
 
 
 @pytest.mark.asyncio
@@ -70,7 +67,7 @@ async def test_scope_assertions_accept_uuids_and_strings():
 
 @pytest.mark.asyncio
 async def test_order_re_reservation_succeeds_without_idempotency_collision():
-    """Verify that an order with backorder can be reserved multiple times without unique constraint error."""
+    """Verify backordered orders can be reserved repeatedly without a unique constraint error."""
     async with transaction_session() as session:
         admin_user = await identity_crud.get_user_by_email(session, "admin@whitfield.local")
         assert admin_user is not None
@@ -149,7 +146,7 @@ async def test_order_re_reservation_succeeds_without_idempotency_collision():
             quantity_delta=Decimal("10.00"),
         )
 
-    # Second reservation attempt on the same order: should reserve the remaining 5 without constraint collision
+    # Second attempt on the same order reserves the remaining 5 without a constraint collision.
     res2 = await order_controller.reserve_order(order.id, scope)
     assert res2.status == OrderStatus.RESERVED.value
     assert res2.lines[0].reserved_quantity == Decimal("10.00")

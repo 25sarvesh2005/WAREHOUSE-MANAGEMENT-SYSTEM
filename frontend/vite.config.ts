@@ -9,9 +9,26 @@ type NitroBundlerConfig = {
   output?: {
     inlineDynamicImports?: boolean;
   };
+  onwarn?: (
+    warning: { code?: string; message: string },
+    warn: (warning: { code?: string; message: string }) => void,
+  ) => void;
 };
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      onwarn(warning, warn) {
+        if (
+          warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+          warning.message.includes('"use client"')
+        ) {
+          return;
+        }
+        warn(warning);
+      },
+    },
+  },
   css: {
     transformer: "lightningcss",
   },
@@ -56,6 +73,17 @@ export default defineConfig({
       hooks: {
         "rollup:before": (_nitro: unknown, config: NitroBundlerConfig) => {
           delete config.output?.inlineDynamicImports;
+          const previousOnWarn = config.onwarn;
+          config.onwarn = (warning, warn) => {
+            if (
+              warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+              warning.message.includes('"use client"')
+            ) {
+              return;
+            }
+            if (previousOnWarn) previousOnWarn(warning, warn);
+            else warn(warning);
+          };
         },
       },
     }),

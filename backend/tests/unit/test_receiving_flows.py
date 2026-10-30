@@ -33,7 +33,7 @@ from core.apis.schemas.requests.receiving_request import (
     ReceiptCreateRequest,
     ReceiptLineSaveRequest,
 )
-from core.constants import ReceiptSourceType, ReceiptStatus
+from core.constants import ReceiptSourceType
 
 
 def test_receipt_create_request_validation() -> None:

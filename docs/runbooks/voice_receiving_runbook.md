@@ -1,7 +1,7 @@
 # Voice-Assisted Receiving Operations Runbook (AI Release C Slice 1)
 
 ## 1. Purpose & Architecture Overview
-This runbook guides warehouse operators, warehouse managers, and system administrators in operating, troubleshooting, and verifying **AI Release C Slice 1: Voice-Assisted Receiving Drafts** using **Deepgram**, **Sarvam AI**, and a **Pipecat-ready service architecture**.
+This runbook guides warehouse operators, warehouse managers, and system administrators in operating, troubleshooting, and verifying **AI Release C Slice 1: Voice-Assisted Receiving Drafts** using **Deepgram** and **Sarvam AI**.
 
 ```
                            +--------------------------------------------+

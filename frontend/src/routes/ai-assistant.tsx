@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
-import { AiAssistant } from "@/components/AiAssistant";
+import { AiAssistant } from "@/features/ai/components/AiAssistant";
 import { PageHeader } from "@/components/ui-kit";
 import { useAuth } from "@/lib/auth";
 

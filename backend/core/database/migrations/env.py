@@ -47,6 +47,7 @@ from core.models import receiving_model as receiving_model
 from core.models import return_model as return_model
 from core.models import transfer_model as transfer_model
 from core.models import voice_model as voice_model
+from core.models import webhook_model as webhook_model
 
 config = context.config
 if config.config_file_name is not None:
@@ -66,6 +67,7 @@ _MODEL_IMPORTS = (
     return_model,
     transfer_model,
     voice_model,
+    webhook_model,
 )
 target_metadata = Base.metadata
 

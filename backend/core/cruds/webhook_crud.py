@@ -11,7 +11,11 @@ from uuid import UUID
 from sqlalchemy import delete, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.models.webhook_model import WebhookDelivery, WebhookSubscription
+from core.models.webhook_model import InboundWebhookReceipt, WebhookDelivery, WebhookSubscription
+
+
+class DuplicateInboundWebhookDelivery(Exception):
+    """Raised when an inbound integration reuses an already accepted delivery ID."""
 
 
 async def create_subscription(
@@ -37,6 +41,28 @@ async def create_subscription(
     return sub
 
 
+async def record_inbound_delivery(
+    session: AsyncSession,
+    *,
+    provider: str,
+    delivery_id: str,
+) -> None:
+    """Claim an inbound delivery ID within the caller's transaction."""
+    receipt = InboundWebhookReceipt(provider=provider, delivery_id=delivery_id)
+    session.add(receipt)
+    try:
+        await session.flush()
+    except Exception as error:
+        # Unique constraint conflicts are the expected duplicate path. Raising
+        # a domain exception lets the route return 409 after the transaction
+        # context rolls back both the receipt and outbox writes.
+        from sqlalchemy.exc import IntegrityError
+
+        if isinstance(error, IntegrityError):
+            raise DuplicateInboundWebhookDelivery from error
+        raise
+
+
 async def list_subscriptions(
     session: AsyncSession,
     *,
@@ -46,7 +72,8 @@ async def list_subscriptions(
     query = select(WebhookSubscription).order_by(desc(WebhookSubscription.created_at))
     if tenant_id and tenant_id != "ALL":
         query = query.where(
-            (WebhookSubscription.tenant_id == tenant_id) | (WebhookSubscription.tenant_id == "GLOBAL")
+            (WebhookSubscription.tenant_id == tenant_id)
+            | (WebhookSubscription.tenant_id == "GLOBAL")
         )
     result = await session.execute(query)
     return list(result.scalars().all())

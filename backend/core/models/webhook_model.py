@@ -7,7 +7,17 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    JSON,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -57,7 +67,30 @@ class WebhookDelivery(UUIDPrimaryKeyMixin, Base):
     latency_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
     attempt_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     error: Mapped[str | None] = mapped_column(String(1000), nullable=True)
-    delivered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    delivered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
 
-    subscription: Mapped[WebhookSubscription] = relationship("WebhookSubscription", back_populates="deliveries")
+    subscription: Mapped[WebhookSubscription] = relationship(
+        "WebhookSubscription", back_populates="deliveries"
+    )
+
+
+class InboundWebhookReceipt(UUIDPrimaryKeyMixin, Base):
+    """Persisted one-time IDs used to reject signed webhook replays."""
+
+    __tablename__ = "inbound_webhook_receipts"
+    __table_args__ = (
+        UniqueConstraint(
+            "provider",
+            "delivery_id",
+            name="uq_inbound_webhook_receipts_provider_delivery_id",
+        ),
+    )
+
+    provider: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    delivery_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), index=True
+    )
 

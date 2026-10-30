@@ -35,13 +35,13 @@ jobs:
         with:
           python-version: "3.13"
           cache: "pip"
-          cache-dependency-path: backend/requirements.txt
+          cache-dependency-path: backend/requirements-dev.txt
 
       - name: Install Backend Dependencies
         working-directory: backend
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
       - name: FastAPI Import Check
         working-directory: backend
@@ -56,6 +56,11 @@ jobs:
         working-directory: backend
         run: |
           python -m compileall main.py common core cli tools tests mcp_server
+
+      - name: Python Dead-Code and Import Hygiene
+        working-directory: backend
+        run: |
+          python -m ruff check --select F401,F841,I,UP035,F541,E741 .
 
       - name: Run Backend Pytest Suite
         working-directory: backend

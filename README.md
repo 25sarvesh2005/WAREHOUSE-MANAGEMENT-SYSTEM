@@ -87,8 +87,9 @@ The Whitfield Fulfillment WMS has successfully completed all development phases 
 - **Transactional Outbox & Webhooks Subsystem:** All ledger-affecting controller operations atomically persist lifecycle events (`outbox_events`) in the same database transaction, dispatched via an asynchronous HTTP webhook engine to registered subscriber endpoints.
 - **HMAC-SHA256 Cryptographic Signer:** Payloads include `X-Whitfield-Signature: sha256=<hmac_hex>` and `X-Whitfield-Timestamp` with 300s clock skew replay defense.
 - **Inbound Carrier & Order Ingestion:** Receives tracking updates (`/api/v1/webhooks/inbound/carrier`) and marketplace orders (`/api/v1/webhooks/inbound/order`) from external platforms (Shopify, FedEx, UPS).
+- **Inbound Authentication and Replay Defense:** Both inbound endpoints require `X-Whitfield-Signature`, `X-Whitfield-Timestamp`, and a unique `X-Whitfield-Delivery` ID outside local development. The HMAC covers `timestamp + "." + delivery_id + "." + raw_body`; accepted delivery IDs are stored transactionally and duplicates return HTTP 409. Production startup rejects missing or placeholder secrets. Outbound HTTPS connections are pinned to the public IPs validated for that request.
 - **Periodic Background Workers (FastAPI ASGI Lifespan):**
-  - **Outbox Dispatcher** (every 10s): Dispatches pending events to registered downstream listeners with exponential backoff (`min(3600, 2^(attempts+1) * 10)`), transitioning to `DEAD_LETTER` after 5 failed attempts.
+  - **Outbox Dispatcher** (every 10s): Claims one event in a short transaction, performs network delivery outside the transaction under a 10-minute lease, and finalizes delivery status by claim token. Failures retry with capped exponential backoff; expired claims can be reclaimed.
   - **Reservation Expiry Worker** (every 60s): Automatically releases expired order reservations (`RESERVED` -> `AVAILABLE`) back to sellable inventory.
   - **Receipt Aging Monitor** (every 300s): Identifies inbound receipts stalled past 48h SLA and emits `RECEIPT_AGING_ALERT`.
   - **Transfer Delay Scanner** (every 300s): Flags in-transit transfers exceeding 7-day transit SLA with `TRANSFER_DELAY_ALERT`.
@@ -246,7 +247,7 @@ python -m venv venv
 # Linux / macOS
 source venv/bin/activate
 
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 cp .env.example .env
 
 # Run FastAPI development server (includes background jobs and /mcp)

@@ -12,7 +12,6 @@ from pydantic import ValidationError
 
 from core.apis.schemas.requests.return_request import (
     ReturnCreateRequest,
-    ReturnInspectRequest,
     ReturnLineRequest,
 )
 from core.constants import ReturnDispositionState, ReturnStatus

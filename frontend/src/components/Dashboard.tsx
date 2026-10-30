@@ -9,7 +9,6 @@ import {
   PackageCheck,
   PackagePlus,
   Repeat,
-  ShieldCheck,
   ShoppingCart,
   Truck,
   Undo2,
@@ -55,49 +54,22 @@ function DashboardHeader({
   const formattedRole = formatRole(user.role);
 
   return (
-    <header className="card-surface rounded-xl p-6 sm:p-7 transition-all">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <header className="border-b border-border pb-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/60 text-[11px] font-semibold text-primary dark:text-blue-400">
-              <span className="size-1.5 rounded-full bg-primary" />
-              Operations overview
-            </span>
-          </div>
-
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
-            Welcome back, {firstName}.
+          <h1 className="text-[1.85rem] font-semibold tracking-tight text-slate-950 dark:text-slate-50 sm:text-3xl">
+            {isManager ? "Operations" : `Welcome, ${firstName}`}
           </h1>
 
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-              Signed in as <span className="font-semibold text-slate-900 dark:text-slate-100">{formattedRole}</span>
-            </span>
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <span>Signed in as {formattedRole}</span>
           </div>
 
-          <p className="max-w-2xl text-sm leading-relaxed text-slate-500 dark:text-slate-400 pt-0.5">
+          <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
             {isManager
-              ? "Review current inventory totals, open work, and exception queues reported by the WMS."
-              : "Open the operational workflows available to your assigned role."}
+              ? "Current exceptions, work in progress, and inventory across your warehouses."
+              : "Choose a workflow to continue."}
           </p>
-        </div>
-
-        {/* Clean System Status Pill */}
-        <div className="hidden lg:flex flex-col items-end gap-1.5 shrink-0">
-          <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 flex items-center gap-3">
-            <div className="size-8 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-primary dark:text-blue-400 shadow-2xs">
-              <ShieldCheck className="size-4" />
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-                Outbox & Invariant Engine
-              </p>
-              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 justify-end">
-                <span className="size-1.5 rounded-full bg-emerald-500" />
-                Ledger Balanced
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </header>
@@ -110,66 +82,38 @@ function MetricCard({
   to,
   isException = false,
   icon: Icon,
-  accentColor,
 }: {
-  accentColor?: string;
   icon?: ElementType;
   isException?: boolean;
   label: string;
   to: string;
   value: number | string;
 }) {
+  const needsAttention = isException && safeNumber(value) > 0;
   return (
     <Link
       to={to}
-      className={`group relative flex min-h-[44px] flex-col justify-between rounded-xl p-5 transition-all duration-150 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-        isException
-          ? "bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/90 dark:border-amber-900/50 hover:border-amber-300 dark:hover:border-amber-800 hover:shadow-xs"
-          : "card-surface hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs"
+      className={`group flex min-h-36 flex-col justify-between rounded-lg border p-4 transition-[border-color,box-shadow,background-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+        needsAttention
+          ? "border-amber-300 bg-amber-50/70 hover:border-amber-400 dark:border-amber-900/70 dark:bg-amber-950/25"
+          : "card-surface hover:border-slate-300 dark:hover:border-slate-600"
       }`}
     >
-      {/* Top Header: Label + Icon */}
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p
-            className={`text-xs font-semibold uppercase tracking-wider ${
-              isException ? "text-amber-900 dark:text-amber-300" : "text-slate-500 dark:text-slate-400"
-            }`}
-          >
-            {label}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {Icon ? (
-            <div
-              className={`size-8 rounded-lg flex items-center justify-center border transition-colors ${
-                isException
-                  ? "bg-amber-100/70 dark:bg-amber-900/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300"
-                  : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 group-hover:text-primary group-hover:bg-blue-50 dark:group-hover:bg-blue-950/50 group-hover:border-blue-200 dark:group-hover:border-blue-800"
-              }`}
-            >
-              <Icon className="size-4" />
-            </div>
-          ) : null}
-          <div className="size-6 flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
-            <ArrowRight className="size-3.5" />
-          </div>
-        </div>
+        <p className={`text-[13px] font-medium ${needsAttention ? "text-amber-900 dark:text-amber-200" : "text-slate-600 dark:text-slate-400"}`}>
+          {label}
+        </p>
+        {Icon ? <Icon className={`size-[18px] shrink-0 ${needsAttention ? "text-amber-700 dark:text-amber-300" : "text-slate-400 dark:text-slate-500"}`} aria-hidden="true" /> : null}
       </div>
 
-      {/* Value Display */}
-      <div className="mt-4 flex items-baseline justify-between">
-        <p className="font-mono text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl tabular-nums">
+      <div className="mt-4 flex items-end justify-between gap-3">
+        <p className={`font-mono text-[2rem] font-semibold leading-none tracking-tight tabular-nums ${needsAttention ? "text-amber-950 dark:text-amber-100" : "text-slate-950 dark:text-slate-50"}`}>
           {value}
         </p>
-
-        {accentColor ? (
-          <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-            <span className={`size-2 rounded-full ${accentColor}`} />
-            Tracked
-          </span>
-        ) : null}
+        <span className="flex items-center gap-1 text-xs font-medium text-slate-500 transition-colors group-hover:text-primary dark:text-slate-400">
+          {needsAttention ? "Review" : "View"}
+          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </span>
       </div>
     </Link>
   );
@@ -185,10 +129,10 @@ function WorkflowCard({
   return (
     <Link
       to={item.to}
-      className="group flex min-h-[44px] items-center justify-between gap-3.5 rounded-xl card-surface p-4 transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="group flex min-h-[44px] items-center justify-between gap-3.5 rounded-lg card-surface p-4 transition-[border-color,box-shadow] duration-150 hover:border-slate-300 dark:hover:border-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div className="flex items-center gap-3.5 min-w-0 flex-1">
-        <div className="size-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/60 flex items-center justify-center text-primary dark:text-blue-400 group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+        <div className="size-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
           <Icon className="size-5" />
         </div>
         <div className="min-w-0 flex-1">
@@ -201,8 +145,8 @@ function WorkflowCard({
         </div>
       </div>
 
-      <div className="size-7 flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">
-        <ArrowRight className="size-4" />
+        <div className="size-7 flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors shrink-0">
+          <ArrowRight className="size-4" aria-hidden="true" />
       </div>
     </Link>
   );
@@ -290,16 +234,16 @@ function ManagerDashboard({ user }: { user: User }) {
               <span className="size-2 rounded-full bg-amber-500" />
               Needs attention
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Exception queues reported by the WMS.
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              Work that needs review right now.
             </p>
           </div>
-          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-            {totalExceptions} Active
+          <span className={`text-xs font-medium px-2.5 py-1 rounded-md border ${totalExceptions > 0 ? "bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/70" : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"}`}>
+            {totalExceptions} {totalExceptions === 1 ? "active exception" : "active exceptions"}
           </span>
         </div>
 
-        <div className="grid gap-3.5 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-3">
           <MetricCard
             label="Short-pick exceptions"
             value={shortPickCount}
@@ -324,9 +268,9 @@ function ManagerDashboard({ user }: { user: User }) {
         </div>
 
         {totalExceptions === 0 ? (
-          <div className="card-surface rounded-xl p-5 text-center text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
+          <div className="card-surface rounded-lg p-4 text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
             <CheckCircle2 className="size-4 text-emerald-600" />
-            No active manager exceptions were reported.
+            No open exceptions.
           </div>
         ) : null}
       </section>
@@ -337,11 +281,11 @@ function ManagerDashboard({ user }: { user: User }) {
           <h2 id="open-work-heading" className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Open work
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Active warehouse operations requiring processing.
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            Work currently in progress.
           </p>
         </div>
-        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Open receipts"
             value={openReceipts}
@@ -375,38 +319,34 @@ function ManagerDashboard({ user }: { user: User }) {
           <h2 id="inventory-state-heading" className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Inventory by state
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Total units reported across all warehouses by inventory state.
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            Units across all warehouses, grouped by state.
           </p>
         </div>
-        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Available"
             value={available.toLocaleString()}
             to="/inventory"
             icon={Boxes}
-            accentColor="bg-emerald-500"
           />
           <MetricCard
             label="Reserved"
             value={reserved.toLocaleString()}
             to="/inventory"
             icon={ShoppingCart}
-            accentColor="bg-blue-500"
           />
           <MetricCard
             label="Controlled"
             value={controlled.toLocaleString()}
             to="/inventory"
             icon={AlertTriangle}
-            accentColor="bg-amber-500"
           />
           <MetricCard
             label="In transit"
             value={inTransit.toLocaleString()}
             to="/inventory"
             icon={Truck}
-            accentColor="bg-purple-500"
           />
         </div>
       </section>
@@ -417,8 +357,8 @@ function ManagerDashboard({ user }: { user: User }) {
           <h2 id="available-workflows-heading" className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Available workflows
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Direct operational access to fulfillment areas.
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            Go directly to a warehouse workflow.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -472,8 +412,8 @@ function RoleWorkspaceDashboard({ user }: { user: User }) {
           <h2 id="role-workflows-heading" className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Available workflows
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Workflows authorized for your account role.
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            Start with the work assigned to your team.
           </p>
         </div>
 

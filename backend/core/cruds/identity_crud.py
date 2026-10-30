@@ -265,6 +265,15 @@ async def get_seller_by_id(session: AsyncSession, seller_id: UUID) -> Seller | N
     return result.scalar_one_or_none()
 
 
+async def get_sellers_by_ids(session: AsyncSession, seller_ids: set[UUID]) -> list[Seller]:
+    """Read a set of seller records with one query."""
+    if not seller_ids:
+        return []
+    logger.debug("Reading sellers by id count=%d", len(seller_ids))
+    result = await session.execute(select(Seller).where(Seller.id.in_(seller_ids)))
+    return list(result.scalars().all())
+
+
 async def create_warehouse(session: AsyncSession, warehouse: Warehouse) -> Warehouse:
     """
     Persist a warehouse facility record.

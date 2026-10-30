@@ -34,7 +34,7 @@ import {
   useSaveReceiptLineMutation,
   useWarehousesQuery,
 } from "@/hooks/use-api";
-import { ReceivingVoiceDraftPanel } from "@/components/ReceivingVoiceDraftPanel";
+import { ReceivingVoiceDraftPanel } from "@/features/receiving/components/ReceivingVoiceDraftPanel";
 import type { Product, VoiceParsedLine } from "@/lib/types";
 
 const EMPTY_PRODUCTS: Product[] = [];

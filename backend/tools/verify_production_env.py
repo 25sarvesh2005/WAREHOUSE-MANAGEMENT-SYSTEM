@@ -30,7 +30,11 @@ def check_env_example_placeholders() -> list[str]:
         errors.append(".env.example contains a live Google API key!")
     if re.search(r"eyJ[A-Za-z0-9_-]{20,}\.eyJ[A-Za-z0-9_-]{20,}", content):
         errors.append(".env.example contains a live JWT token!")
-    if "postgres:postgres@" in content and "localhost" not in content and "127.0.0.1" not in content:
+    if (
+        "postgres:postgres@" in content
+        and "localhost" not in content
+        and "127.0.0.1" not in content
+    ):
         errors.append(".env.example should use [PASSWORD] placeholder instead of real credentials.")
 
     return errors
@@ -47,7 +51,9 @@ def verify_active_configuration(env_dict: dict[str, str | None]) -> list[str]:
         errors.append("DATABASE_URL is not set.")
     elif "[PASSWORD]" in db_url or "[PROJECT_REF]" in db_url:
         if app_env == "production":
-            errors.append("DATABASE_URL contains unpopulated placeholder values in production mode.")
+            errors.append(
+                "DATABASE_URL contains unpopulated placeholder values in production mode."
+            )
 
     # 2. JWT Secret Strength
     jwt_secret = env_dict.get("JWT_SECRET") or ""
@@ -55,13 +61,22 @@ def verify_active_configuration(env_dict: dict[str, str | None]) -> list[str]:
         errors.append("JWT_SECRET is not set.")
     elif len(jwt_secret) < 32:
         errors.append(f"JWT_SECRET is too short ({len(jwt_secret)} chars). Must be >= 32 chars.")
-    elif jwt_secret in {"replace-with-long-random-secret", "secret", "change-me", "your-secret-key"}:
+    elif jwt_secret in {
+        "replace-with-long-random-secret",
+        "secret",
+        "change-me",
+        "your-secret-key",
+    }:
         if app_env == "production":
             errors.append("JWT_SECRET is using an insecure default placeholder in production.")
 
     # 3. Bootstrap admin password
     admin_pw = env_dict.get("BOOTSTRAP_ADMIN_PASSWORD") or ""
-    if app_env == "production" and admin_pw in {"change-this-before-use", "admin123", "WhitfieldAdmin123!"}:
+    if app_env == "production" and admin_pw in {
+        "change-this-before-use",
+        "admin123",
+        "WhitfieldAdmin123!",
+    }:
         errors.append("BOOTSTRAP_ADMIN_PASSWORD is using a default password in production mode.")
 
     # 4. AI configuration
@@ -70,7 +85,9 @@ def verify_active_configuration(env_dict: dict[str, str | None]) -> list[str]:
     if ai_enabled and ai_provider == "google_genai":
         api_key = env_dict.get("GOOGLE_GENAI_API_KEY") or env_dict.get("GOOGLE_API_KEY") or ""
         if not api_key:
-            errors.append("AI is enabled with google_genai provider but GOOGLE_GENAI_API_KEY is missing.")
+            errors.append(
+                "AI is enabled with google_genai provider but GOOGLE_GENAI_API_KEY is missing."
+            )
 
     return errors
 

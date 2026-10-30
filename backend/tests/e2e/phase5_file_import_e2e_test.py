@@ -166,7 +166,9 @@ class Phase5FileImportRunner:
     ) -> None:
         """Verify exact duplicate upload is idempotent and modified row conflicts."""
         exact_csv = self.build_csv_bytes(seller, warehouse, product, "75.00")
-        duplicate_response = await self.upload_csv(batch["id"], "opening_file_import.csv", exact_csv)
+        duplicate_response = await self.upload_csv(
+            batch["id"], "opening_file_import.csv", exact_csv
+        )
         duplicate_response.raise_for_status()
 
         changed_csv = self.build_csv_bytes(seller, warehouse, product, "76.00")

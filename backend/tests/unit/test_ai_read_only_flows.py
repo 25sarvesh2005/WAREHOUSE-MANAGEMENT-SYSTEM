@@ -33,8 +33,8 @@ from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from pydantic import ValidationError
 from fastapi import HTTPException
+from pydantic import ValidationError
 
 from core.apis.api import api_router
 from core.apis.schemas.requests.ai_request import (

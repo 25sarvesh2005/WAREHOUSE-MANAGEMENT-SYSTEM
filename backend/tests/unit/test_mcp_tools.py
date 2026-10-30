@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -23,8 +23,6 @@ from mcp_server.tools import (
     tool_exception_listing,
     tool_inventory_lookup,
     tool_ledger_explanation,
-    tool_order_status,
-    tool_receipt_status,
 )
 
 
@@ -152,7 +150,9 @@ async def test_mcp_http_endpoints():
         assert "exception_listing" in tool_names
 
         # 2. POST /mcp/call without auth -> 401
-        unauth_resp = await client.post("/mcp/call", json={"name": "exception_listing", "arguments": {}})
+        unauth_resp = await client.post(
+            "/mcp/call", json={"name": "exception_listing", "arguments": {}}
+        )
         assert unauth_resp.status_code == 401
 
         # 3. POST /mcp/call with valid Bearer token

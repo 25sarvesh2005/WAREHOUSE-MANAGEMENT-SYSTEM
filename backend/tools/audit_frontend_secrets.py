@@ -12,7 +12,6 @@ import argparse
 from collections.abc import Iterable
 from pathlib import Path
 
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SCAN_PATHS = (
     REPOSITORY_ROOT / "frontend" / "src",

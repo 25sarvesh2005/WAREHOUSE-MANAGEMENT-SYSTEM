@@ -19,6 +19,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 
+from sqlalchemy import select
+
 from common.logger import get_logger
 from core.constants import UserRole
 from core.controllers.migration_controller import migration_controller
@@ -29,7 +31,6 @@ from core.database.database import (
 )
 from core.models.catalog_model import Product
 from core.models.identity_model import Seller, User, Warehouse
-from sqlalchemy import select
 
 logger = get_logger(__name__)
 

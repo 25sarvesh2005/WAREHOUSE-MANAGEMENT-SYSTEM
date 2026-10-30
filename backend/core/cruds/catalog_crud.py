@@ -98,6 +98,15 @@ async def get_product_by_id(session: AsyncSession, product_id: UUID) -> Product 
     return result.scalar_one_or_none()
 
 
+async def get_products_by_ids(session: AsyncSession, product_ids: set[UUID]) -> list[Product]:
+    """Read a set of product records with one query."""
+    if not product_ids:
+        return []
+    logger.debug("Reading products by id count=%d", len(product_ids))
+    result = await session.execute(select(Product).where(Product.id.in_(product_ids)))
+    return list(result.scalars().all())
+
+
 async def get_product_by_sku(
     session: AsyncSession, sku: str, seller_id: UUID | None = None
 ) -> Product | None:

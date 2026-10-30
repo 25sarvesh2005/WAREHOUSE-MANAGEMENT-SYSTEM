@@ -15,22 +15,29 @@ Populates realistic, production-grade warehouse master data:
 """
 
 import asyncio
+import uuid
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-import uuid
 
-from sqlalchemy import delete, select
-from core.database.database import connect_to_database, transaction_session
-from core.models.identity_model import User, Warehouse, Seller, UserSellerAssignment, UserWarehouseAssignment
-from core.models.catalog_model import Product, ProductIdentifier, WarehouseLocation
-from core.models.inventory_model import InventoryBalance, InventoryMovement
-from core.models.order_model import Order, OrderLine, InventoryReservation
-from core.models.receiving_model import Receipt, ReceiptLine
-from core.models.fulfillment_model import PickTask, PickTaskLine, Shipment
-from core.models.transfer_model import Transfer, TransferLine
-from core.models.return_model import Return, ReturnLine
-from core.constants import BusinessStatus, UserRole, UserStatus
+from sqlalchemy import select
+
 from common.auth import hash_password
+from core.constants import BusinessStatus, UserRole, UserStatus
+from core.database.database import connect_to_database, transaction_session
+from core.models.catalog_model import Product, ProductIdentifier, WarehouseLocation
+from core.models.fulfillment_model import PickTask, PickTaskLine, Shipment
+from core.models.identity_model import (
+    Seller,
+    User,
+    UserSellerAssignment,
+    UserWarehouseAssignment,
+    Warehouse,
+)
+from core.models.inventory_model import InventoryBalance, InventoryMovement
+from core.models.order_model import InventoryReservation, Order, OrderLine
+from core.models.receiving_model import Receipt, ReceiptLine
+from core.models.return_model import Return, ReturnLine
+from core.models.transfer_model import Transfer, TransferLine
 
 
 async def seed_enterprise_data():
@@ -56,8 +63,20 @@ async def seed_enterprise_data():
 
         print("1. Seeding Bicoastal Fulfillment Warehouses (RNO & CMH)...")
         warehouses_data = [
-            {"code": "RNO", "name": "Reno West Coast Fulfillment Center", "city": "Reno", "state": "Nevada", "tz": "America/Los_Angeles"},
-            {"code": "CMH", "name": "Columbus Midwest Fulfillment Center", "city": "Columbus", "state": "Ohio", "tz": "America/New_York"},
+            {
+                "code": "RNO",
+                "name": "Reno West Coast Fulfillment Center",
+                "city": "Reno",
+                "state": "Nevada",
+                "tz": "America/Los_Angeles",
+            },
+            {
+                "code": "CMH",
+                "name": "Columbus Midwest Fulfillment Center",
+                "city": "Columbus",
+                "state": "Ohio",
+                "tz": "America/New_York",
+            },
         ]
         wh_map = {}
         for wd in warehouses_data:
@@ -96,11 +115,36 @@ async def seed_enterprise_data():
 
         print("2. Seeding Canonical Enterprise Staff...")
         staff_data = [
-            ("admin@whitfield.local", "Alex Whitfield (Platform Admin)", UserRole.ADMINISTRATOR.value, "WhitfieldAdmin123!"),
-            ("manager@whitfield.local", "Marcus Vance (Operations Manager)", UserRole.WAREHOUSE_MANAGER.value, "Manager123!"),
-            ("receiver@whitfield.local", "Elena Rostova (Inbound Dock Lead)", UserRole.RECEIVER.value, "Receiver123!"),
-            ("picker@whitfield.local", "John Doe (Lead Picker/Packer)", UserRole.PICKER_PACKER.value, "Picker123!"),
-            ("seller@whitfield.local", "David Chen (Aura Electronics Merchant)", UserRole.SELLER.value, "Seller123!"),
+            (
+                "admin@whitfield.local",
+                "Alex Whitfield (Platform Admin)",
+                UserRole.ADMINISTRATOR.value,
+                "WhitfieldAdmin123!",
+            ),
+            (
+                "manager@whitfield.local",
+                "Marcus Vance (Operations Manager)",
+                UserRole.WAREHOUSE_MANAGER.value,
+                "Manager123!",
+            ),
+            (
+                "receiver@whitfield.local",
+                "Elena Rostova (Inbound Dock Lead)",
+                UserRole.RECEIVER.value,
+                "Receiver123!",
+            ),
+            (
+                "picker@whitfield.local",
+                "John Doe (Lead Picker/Packer)",
+                UserRole.PICKER_PACKER.value,
+                "Picker123!",
+            ),
+            (
+                "seller@whitfield.local",
+                "David Chen (Aura Electronics Merchant)",
+                UserRole.SELLER.value,
+                "Seller123!",
+            ),
         ]
         user_map = {}
         for email, name, role, pwd in staff_data:
@@ -132,7 +176,13 @@ async def seed_enterprise_data():
                     )
                 )
                 if not uwa_q.scalar_one_or_none():
-                    session.add(UserWarehouseAssignment(user_id=u.id, warehouse_id=wh.id, assignment_role="PRIMARY"))
+                    session.add(
+                        UserWarehouseAssignment(
+                            user_id=u.id,
+                            warehouse_id=wh.id,
+                            assignment_role="PRIMARY",
+                        )
+                    )
 
         print("3. Seeding Real Brand Sellers...")
         sellers_data = [
@@ -149,40 +199,154 @@ async def seed_enterprise_data():
             seller_map[sc] = s
 
         # Assign seller user to Aura
-        session.add(UserSellerAssignment(user_id=user_map["seller@whitfield.local"].id, seller_id=seller_map["SL-AURA"].id, assignment_role="SELLER_PRIMARY"))
+        session.add(
+            UserSellerAssignment(
+                user_id=user_map["seller@whitfield.local"].id,
+                seller_id=seller_map["SL-AURA"].id,
+                assignment_role="SELLER_PRIMARY",
+            )
+        )
 
         print("4. Seeding Real Products with Barcodes & Dimensions...")
         products_data = [
             # Aura Electronics
-            ("SL-AURA", "SKU-AURA-ANC100", "Aura Pro Wireless Noise-Cancelling Headphones", "Active noise cancellation, 40h battery, spatial audio.", Decimal("0.45"), Decimal("20.0"), Decimal("18.0"), Decimal("8.0")),
-            ("SL-AURA", "SKU-AURA-CHG45W", "Aura MagCharge 45W Fast Wireless Dock", "3-in-1 magnetic charging stand for phone, watch, earbuds.", Decimal("0.25"), Decimal("12.0"), Decimal("12.0"), Decimal("3.0")),
-            ("SL-AURA", "SKU-AURA-SPK20", "Aura Sonic Waterproof Bluetooth Speaker", "IPX7 waterproof, 360-degree sound, bass boost.", Decimal("0.60"), Decimal("15.0"), Decimal("8.0"), Decimal("8.0")),
+            (
+                "SL-AURA",
+                "SKU-AURA-ANC100",
+                "Aura Pro Wireless Noise-Cancelling Headphones",
+                "Active noise cancellation, 40h battery, spatial audio.",
+                Decimal("0.45"),
+                Decimal("20.0"),
+                Decimal("18.0"),
+                Decimal("8.0"),
+            ),
+            (
+                "SL-AURA",
+                "SKU-AURA-CHG45W",
+                "Aura MagCharge 45W Fast Wireless Dock",
+                "3-in-1 magnetic charging stand for phone, watch, earbuds.",
+                Decimal("0.25"),
+                Decimal("12.0"),
+                Decimal("12.0"),
+                Decimal("3.0"),
+            ),
+            (
+                "SL-AURA",
+                "SKU-AURA-SPK20",
+                "Aura Sonic Waterproof Bluetooth Speaker",
+                "IPX7 waterproof, 360-degree sound, bass boost.",
+                Decimal("0.60"),
+                Decimal("15.0"),
+                Decimal("8.0"),
+                Decimal("8.0"),
+            ),
             # Nordic Apparel
-            ("SL-NORD", "SKU-NORD-HDY01", "Nordic Heavyweight Oversized Hoodie (Navy / L)", "450 GSM organic French terry cotton, custom relaxed fit.", Decimal("0.80"), Decimal("35.0"), Decimal("25.0"), Decimal("5.0")),
-            ("SL-NORD", "SKU-NORD-JCK02", "Nordic All-Weather Ripstop Anorak (Black / M)", "Waterproof membrane, taped seams, packable hood.", Decimal("0.65"), Decimal("38.0"), Decimal("28.0"), Decimal("4.0")),
-            ("SL-NORD", "SKU-NORD-TEE01", "Nordic Supima Heavy Cotton Tee (White / M)", "220 GSM combed cotton, reinforced collar.", Decimal("0.25"), Decimal("30.0"), Decimal("22.0"), Decimal("2.0")),
+            (
+                "SL-NORD",
+                "SKU-NORD-HDY01",
+                "Nordic Heavyweight Oversized Hoodie (Navy / L)",
+                "450 GSM organic French terry cotton, custom relaxed fit.",
+                Decimal("0.80"),
+                Decimal("35.0"),
+                Decimal("25.0"),
+                Decimal("5.0"),
+            ),
+            (
+                "SL-NORD",
+                "SKU-NORD-JCK02",
+                "Nordic All-Weather Ripstop Anorak (Black / M)",
+                "Waterproof membrane, taped seams, packable hood.",
+                Decimal("0.65"),
+                Decimal("38.0"),
+                Decimal("28.0"),
+                Decimal("4.0"),
+            ),
+            (
+                "SL-NORD",
+                "SKU-NORD-TEE01",
+                "Nordic Supima Heavy Cotton Tee (White / M)",
+                "220 GSM combed cotton, reinforced collar.",
+                Decimal("0.25"),
+                Decimal("30.0"),
+                Decimal("22.0"),
+                Decimal("2.0"),
+            ),
             # Vitality Nutrition
-            ("SL-VITA", "SKU-VITA-ELX30", "Vitality Electrolyte Hydration Sticks (Lemon 30pk)", "Zero sugar, potassium, magnesium, Himalayan pink salt.", Decimal("0.35"), Decimal("18.0"), Decimal("12.0"), Decimal("6.0")),
-            ("SL-VITA", "SKU-VITA-WHEY2", "Vitality Grass-Fed Isolate Protein (Vanilla 2lb)", "27g pure protein per scoop, non-GMO, digestive enzymes.", Decimal("1.10"), Decimal("25.0"), Decimal("15.0"), Decimal("15.0")),
-            ("SL-VITA", "SKU-VITA-MGN60", "Vitality Triple Magnesium Complex (60 Caps)", "Glycinate, Malate, and L-Threonate for sleep and recovery.", Decimal("0.15"), Decimal("10.0"), Decimal("6.0"), Decimal("6.0")),
+            (
+                "SL-VITA",
+                "SKU-VITA-ELX30",
+                "Vitality Electrolyte Hydration Sticks (Lemon 30pk)",
+                "Zero sugar, potassium, magnesium, Himalayan pink salt.",
+                Decimal("0.35"),
+                Decimal("18.0"),
+                Decimal("12.0"),
+                Decimal("6.0"),
+            ),
+            (
+                "SL-VITA",
+                "SKU-VITA-WHEY2",
+                "Vitality Grass-Fed Isolate Protein (Vanilla 2lb)",
+                "27g pure protein per scoop, non-GMO, digestive enzymes.",
+                Decimal("1.10"),
+                Decimal("25.0"),
+                Decimal("15.0"),
+                Decimal("15.0"),
+            ),
+            (
+                "SL-VITA",
+                "SKU-VITA-MGN60",
+                "Vitality Triple Magnesium Complex (60 Caps)",
+                "Glycinate, Malate, and L-Threonate for sleep and recovery.",
+                Decimal("0.15"),
+                Decimal("10.0"),
+                Decimal("6.0"),
+                Decimal("6.0"),
+            ),
             # Apex Workspace
-            ("SL-APEX", "SKU-APEX-KBD75", "Apex Pro 75% Gasket Mechanical Keyboard", "Hot-swappable switches, wireless 2.4G/BT, CNC aluminum frame.", Decimal("0.95"), Decimal("32.0"), Decimal("14.0"), Decimal("4.0")),
-            ("SL-APEX", "SKU-APEX-MATXL", "Apex DeskMat Pro Felt & Leather (90x40cm)", "Water-resistant vegan leather and merino wool felt backing.", Decimal("0.40"), Decimal("42.0"), Decimal("8.0"), Decimal("8.0")),
-            ("SL-APEX", "SKU-APEX-MOU01", "Apex Ultralight Wireless Precision Mouse", "58g featherweight, 26,000 DPI optical sensor, optical switches.", Decimal("0.18"), Decimal("14.0"), Decimal("9.0"), Decimal("5.0")),
+            (
+                "SL-APEX",
+                "SKU-APEX-KBD75",
+                "Apex Pro 75% Gasket Mechanical Keyboard",
+                "Hot-swappable switches, wireless 2.4G/BT, CNC aluminum frame.",
+                Decimal("0.95"),
+                Decimal("32.0"),
+                Decimal("14.0"),
+                Decimal("4.0"),
+            ),
+            (
+                "SL-APEX",
+                "SKU-APEX-MATXL",
+                "Apex DeskMat Pro Felt & Leather (90x40cm)",
+                "Water-resistant vegan leather and merino wool felt backing.",
+                Decimal("0.40"),
+                Decimal("42.0"),
+                Decimal("8.0"),
+                Decimal("8.0"),
+            ),
+            (
+                "SL-APEX",
+                "SKU-APEX-MOU01",
+                "Apex Ultralight Wireless Precision Mouse",
+                "58g featherweight, 26,000 DPI optical sensor, optical switches.",
+                Decimal("0.18"),
+                Decimal("14.0"),
+                Decimal("9.0"),
+                Decimal("5.0"),
+            ),
         ]
 
         prod_map = {}
-        for sc, sku, pname, pdesc, wt, l, w, h in products_data:
+        for sc, sku, pname, pdesc, weight, length, width, height in products_data:
             p = Product(
                 seller_id=seller_map[sc].id,
                 sku=sku,
                 name=pname,
                 description=pdesc,
                 unit_of_measure="EA",
-                weight=wt,
-                length=l,
-                width=w,
-                height=h,
+                weight=weight,
+                length=length,
+                width=width,
+                height=height,
                 status="ACTIVE",
             )
             session.add(p)
@@ -292,7 +456,10 @@ async def seed_enterprise_data():
                 "city": "San Francisco",
                 "state": "CA",
                 "zip": "94102",
-                "lines": [("SKU-AURA-ANC100", Decimal("1.00")), ("SKU-AURA-CHG45W", Decimal("1.00"))],
+                "lines": [
+                    ("SKU-AURA-ANC100", Decimal("1.00")),
+                    ("SKU-AURA-CHG45W", Decimal("1.00")),
+                ],
             },
             {
                 "num": "ORD-2026-1002",
@@ -382,8 +549,17 @@ async def seed_enterprise_data():
                     order_id=ord_obj.id,
                     product_id=p.id,
                     ordered_quantity=qty,
-                    reserved_quantity=qty if od["status"] in ["RESERVED", "ALLOCATED", "PICKED", "PACKED", "SHIPPED"] else Decimal("0.00"),
-                    picked_quantity=qty if od["status"] in ["PICKED", "PACKED", "SHIPPED"] else Decimal("0.00"),
+                    reserved_quantity=(
+                        qty
+                        if od["status"]
+                        in ["RESERVED", "ALLOCATED", "PICKED", "PACKED", "SHIPPED"]
+                        else Decimal("0.00")
+                    ),
+                    picked_quantity=(
+                        qty
+                        if od["status"] in ["PICKED", "PACKED", "SHIPPED"]
+                        else Decimal("0.00")
+                    ),
                     shipped_quantity=qty if od["status"] == "SHIPPED" else Decimal("0.00"),
                 )
                 session.add(ol)
@@ -517,7 +693,9 @@ async def seed_enterprise_data():
             product_id=prod_map["SKU-NORD-HDY01"].id,
             expected_quantity=Decimal("1.00"),
             received_quantity=Decimal("1.00"),
-            inspection_notes="Returned in original packaging, perfect condition. Restocked to available.",
+            inspection_notes=(
+                "Returned in original packaging, perfect condition. Restocked to available."
+            ),
         ))
 
         ret2 = Return(
@@ -535,7 +713,9 @@ async def seed_enterprise_data():
             product_id=prod_map["SKU-APEX-KBD75"].id,
             expected_quantity=Decimal("1.00"),
             received_quantity=Decimal("1.00"),
-            inspection_notes="Outer box crushed during carrier transit. Switches intact, held in quarantine.",
+            inspection_notes=(
+                "Outer box crushed during carrier transit. Switches intact, held in quarantine."
+            ),
         ))
 
         print("10. Seeding Pick Tasks & Shipments...")

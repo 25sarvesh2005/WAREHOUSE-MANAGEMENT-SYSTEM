@@ -29,6 +29,37 @@ class MCPRecordNotFoundError(MCPToolError):
     """Raised when a requested operational record does not exist."""
 
 
+def _serialize_evidence_summary(
+    summary: dict[str, Any], *, stringify_uuids: bool = False
+) -> dict[str, Any]:
+    return {
+        key: (
+            value.isoformat()
+            if hasattr(value, "isoformat")
+            else str(value)
+            if stringify_uuids and isinstance(value, UUID)
+            else value
+        )
+        for key, value in summary.items()
+    }
+
+
+def _serialize_evidence_details(details: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            key: (
+                float(value)
+                if hasattr(value, "as_tuple")
+                else str(value)
+                if isinstance(value, UUID)
+                else value
+            )
+            for key, value in detail.items()
+        }
+        for detail in details
+    ]
+
+
 async def tool_inventory_lookup(
     sku: Annotated[str, Field(description="Product SKU or product name to search")],
     requester: RequesterContext,
@@ -70,12 +101,20 @@ async def tool_inventory_lookup(
 async def tool_ledger_explanation(
     sku: Annotated[str, Field(description="Product SKU to retrieve movement ledger history for")],
     requester: RequesterContext,
-    limit: Annotated[int, Field(description="Maximum movement records to return (default 10)")] = 10,
+    limit: Annotated[
+        int,
+        Field(description="Maximum movement records to return (default 10)"),
+    ] = 10,
 ) -> list[dict[str, Any]]:
     """
     Retrieve append-only inventory movement ledger history for an audit explanation.
     """
-    logger.info("MCP tool: ledger_explanation sku=%s limit=%d caller=%s", sku, limit, requester.email)
+    logger.info(
+        "MCP tool: ledger_explanation sku=%s limit=%d caller=%s",
+        sku,
+        limit,
+        requester.email,
+    )
     try:
         async with transaction_session() as session:
             rows = await read_tools.lookup_recent_ledger_movements(
@@ -112,7 +151,10 @@ async def tool_ledger_explanation(
 
 async def tool_order_status(
     requester: RequesterContext,
-    reference_number: Annotated[str | None, Field(description="Seller order reference number")] = None,
+    reference_number: Annotated[
+        str | None,
+        Field(description="Seller order reference number"),
+    ] = None,
     order_id: Annotated[str | None, Field(description="Internal order UUID")] = None,
 ) -> dict[str, Any] | None:
     """
@@ -141,11 +183,8 @@ async def tool_order_status(
                 "status": evidence.status,
                 "seller_code": evidence.seller_code,
                 "warehouse_codes": evidence.warehouse_codes,
-                "summary": {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in evidence.summary.items()},
-                "details": [
-                    {k: (float(v) if hasattr(v, "as_tuple") else str(v) if isinstance(v, UUID) else v) for k, v in d.items()}
-                    for d in evidence.details
-                ],
+                "summary": _serialize_evidence_summary(evidence.summary),
+                "details": _serialize_evidence_details(evidence.details),
             }
     except Exception as exc:
         logger.error("MCP tool order_status error: %s", exc, exc_info=True)
@@ -183,11 +222,8 @@ async def tool_receipt_status(
                 "status": evidence.status,
                 "seller_code": evidence.seller_code,
                 "warehouse_codes": evidence.warehouse_codes,
-                "summary": {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in evidence.summary.items()},
-                "details": [
-                    {k: (float(v) if hasattr(v, "as_tuple") else str(v) if isinstance(v, UUID) else v) for k, v in d.items()}
-                    for d in evidence.details
-                ],
+                "summary": _serialize_evidence_summary(evidence.summary),
+                "details": _serialize_evidence_details(evidence.details),
             }
     except Exception as exc:
         logger.error("MCP tool receipt_status error: %s", exc, exc_info=True)
@@ -196,7 +232,10 @@ async def tool_receipt_status(
 
 async def tool_transfer_status(
     requester: RequesterContext,
-    transfer_number: Annotated[str | None, Field(description="Transfer order reference number")] = None,
+    transfer_number: Annotated[
+        str | None,
+        Field(description="Transfer order reference number"),
+    ] = None,
     transfer_id: Annotated[str | None, Field(description="Internal transfer UUID")] = None,
 ) -> dict[str, Any] | None:
     """
@@ -225,11 +264,8 @@ async def tool_transfer_status(
                 "status": evidence.status,
                 "seller_code": evidence.seller_code,
                 "warehouse_codes": evidence.warehouse_codes,
-                "summary": {k: (v.isoformat() if hasattr(v, "isoformat") else str(v) if isinstance(v, UUID) else v) for k, v in evidence.summary.items()},
-                "details": [
-                    {k: (float(v) if hasattr(v, "as_tuple") else str(v) if isinstance(v, UUID) else v) for k, v in d.items()}
-                    for d in evidence.details
-                ],
+                "summary": _serialize_evidence_summary(evidence.summary, stringify_uuids=True),
+                "details": _serialize_evidence_details(evidence.details),
             }
     except Exception as exc:
         logger.error("MCP tool transfer_status error: %s", exc, exc_info=True)
@@ -267,11 +303,8 @@ async def tool_shipment_status(
                 "status": evidence.status,
                 "seller_code": evidence.seller_code,
                 "warehouse_codes": evidence.warehouse_codes,
-                "summary": {k: (v.isoformat() if hasattr(v, "isoformat") else str(v) if isinstance(v, UUID) else v) for k, v in evidence.summary.items()},
-                "details": [
-                    {k: (float(v) if hasattr(v, "as_tuple") else str(v) if isinstance(v, UUID) else v) for k, v in d.items()}
-                    for d in evidence.details
-                ],
+                "summary": _serialize_evidence_summary(evidence.summary, stringify_uuids=True),
+                "details": _serialize_evidence_details(evidence.details),
             }
     except Exception as exc:
         logger.error("MCP tool shipment_status error: %s", exc, exc_info=True)
@@ -309,11 +342,8 @@ async def tool_return_status(
                 "status": evidence.status,
                 "seller_code": evidence.seller_code,
                 "warehouse_codes": evidence.warehouse_codes,
-                "summary": {k: (v.isoformat() if hasattr(v, "isoformat") else str(v) if isinstance(v, UUID) else v) for k, v in evidence.summary.items()},
-                "details": [
-                    {k: (float(v) if hasattr(v, "as_tuple") else str(v) if isinstance(v, UUID) else v) for k, v in d.items()}
-                    for d in evidence.details
-                ],
+                "summary": _serialize_evidence_summary(evidence.summary, stringify_uuids=True),
+                "details": _serialize_evidence_details(evidence.details),
             }
     except Exception as exc:
         logger.error("MCP tool return_status error: %s", exc, exc_info=True)

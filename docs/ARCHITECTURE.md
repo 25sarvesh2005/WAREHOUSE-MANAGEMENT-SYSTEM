@@ -28,7 +28,8 @@ Whitfield WMS is a multi-tenant, bicoastal fulfillment and warehouse operations 
 WAREHOUSE-MANAGEMENT-SYSTEM/
 ├── backend/                        # Python FastAPI application
 │   ├── main.py                     # ASGI entrypoint, lifespan, middleware registration
-│   ├── requirements.txt            # Pinned Python dependencies
+│   ├── requirements.txt            # Pinned runtime dependencies
+│   ├── requirements-dev.txt        # Runtime plus test/lint dependencies
 │   ├── pyproject.toml              # Build metadata, pytest config, ruff lint rules
 │   ├── alembic.ini                 # Alembic migration tool configuration
 │   ├── .env.example                # All supported environment variables with examples
@@ -67,7 +68,12 @@ WAREHOUSE-MANAGEMENT-SYSTEM/
 ├── frontend/                       # Vite + React 19 + TanStack Router SPA
 │   ├── src/
 │   │   ├── routes/                 # File-based TanStack Router pages
-│   │   ├── components/             # Feature components (AI, Voice, Migration, etc.)
+│   │   ├── components/             # Shared shell, dialogs, badges, and UI primitives
+│   │   ├── features/               # Domain-owned UI that is loaded by its route/workflow
+│   │   │   ├── admin/components/   # Webhook integrations and controlled launch panels
+│   │   │   ├── ai/components/      # AI assistant and audit panels
+│   │   │   ├── migration/components/
+│   │   │   └── receiving/components/
 │   │   ├── hooks/                  # TanStack Query data hooks
 │   │   ├── lib/                    # API client, TypeScript interfaces, auth utils
 │   │   └── styles.css              # Global CSS and design tokens
@@ -153,7 +159,9 @@ Supported inventory states: `AVAILABLE`, `RESERVED`, `DAMAGED`, `QUARANTINED`, `
 
 Every controller that modifies inventory state also writes a row to `outbox_events` **inside the same database transaction**. This enforces at-least-once event delivery without distributed transactions.
 
-The `_periodic_outbox_dispatch_worker` polls every 10 seconds and dispatches pending events to registered HTTP/HTTPS webhook destinations with exponential backoff (`min(3600, 2^(attempt+1) × 10)`). Events failing after 5 attempts transition to `DEAD_LETTER`.
+The `_periodic_outbox_dispatch_worker` polls every 10 seconds. It claims one event at a time in a short transaction, commits the claim, then performs webhook and handler work outside any database transaction. Each claim stores a unique token and a 10-minute lease; a later worker can reclaim a `PROCESSING` event after the lease expires. Delivery audit rows and final event status are committed together, guarded by the claim token.
+
+Failed attempts use `min(3600, 10 * 2^n)` seconds of backoff, where `n` is the one-based attempt number. An event at the five-attempt limit becomes `DEAD_LETTER` when next eligible for dispatch. Delivery remains at-least-once: a process failure after a destination accepts an event but before the final status commit can cause a retry. The stable event ID in `X-Whitfield-Delivery` supports receiver deduplication.
 
 - **Cryptographic Signing:** Payloads are signed with `X-Whitfield-Signature: sha256=<hmac_hex>` and timestamped with `X-Whitfield-Timestamp` to prevent replay attacks (300-second skew tolerance).
 - **Delivery Audit Log:** Every dispatch attempt is recorded in `webhook_deliveries` with target subscription, latency in milliseconds, HTTP status code, and response body for full observability.
@@ -168,7 +176,7 @@ All workers are `asyncio.Task` objects started in the ASGI lifespan and cancelle
 
 | Worker | Interval | Function |
 |---|---|---|
-| Outbox Dispatcher | 10 s | Dispatch pending outbox events with exponential backoff |
+| Outbox Dispatcher | 10 s | Lease and dispatch events outside database transactions; reclaim expired leases |
 | Reservation Expiry | 60 s | Release `RESERVED` balances for expired orders back to `AVAILABLE` |
 | Receipt Aging Monitor | 300 s | Emit `RECEIPT_AGING_ALERT` for receipts stalled > 48 h |
 | Transfer Delay Scanner | 300 s | Emit `TRANSFER_DELAY_ALERT` for in-transit transfers > 7 days |

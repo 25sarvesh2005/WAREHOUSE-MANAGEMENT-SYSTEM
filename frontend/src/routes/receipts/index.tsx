@@ -11,7 +11,7 @@ import {
 import { AppDialog } from "@/components/AppDialog";
 import { AppShell } from "@/components/AppShell";
 import { FacilityBadge, StatusBadge } from "@/components/StatusBadge";
-import { ReceivingVoiceDraftPanel } from "@/components/ReceivingVoiceDraftPanel";
+import { ReceivingVoiceDraftPanel } from "@/features/receiving/components/ReceivingVoiceDraftPanel";
 import {
   Button,
   Card,

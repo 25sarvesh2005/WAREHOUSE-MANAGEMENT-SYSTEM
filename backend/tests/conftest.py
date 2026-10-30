@@ -6,9 +6,9 @@ from __future__ import annotations
 
 import pytest
 from sqlalchemy import text
+
 from core.database.database import connect_to_database, transaction_session
 from core.database.seed import initialize_schema_for_development, seed_initial_data
-
 
 _SCHEMA_INITIALIZED = False
 _DB_AVAILABLE = False

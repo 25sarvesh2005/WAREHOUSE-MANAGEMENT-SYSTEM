@@ -14,6 +14,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.auth import create_access_token, hash_password, verify_password
 from common.logger import get_logger
@@ -27,6 +28,18 @@ from core.models.identity_model import Seller, User, Warehouse
 logger = get_logger(__name__)
 
 _REFRESH_TOKEN_BYTES = 64
+
+
+async def _activate_assigned_sellers(session: AsyncSession, user: User) -> None:
+    seller_ids = {assignment.seller_id for assignment in user.seller_assignments}
+    sellers = await identity_crud.get_sellers_by_ids(session, seller_ids)
+    for seller in sellers:
+        if seller.status != BusinessStatus.ACTIVE.value:
+            await identity_crud.update_seller_status(
+                session,
+                seller,
+                BusinessStatus.ACTIVE.value,
+            )
 
 
 def _hash_token(raw_token: str) -> str:
@@ -360,13 +373,8 @@ class IdentityController:
 
             await identity_crud.update_user_status(session, user, UserStatus.ACTIVE.value)
 
-            # Also activate all associated seller tenant entities
-            for assignment in user.seller_assignments:
-                seller = await identity_crud.get_seller_by_id(session, assignment.seller_id)
-                if seller and seller.status != BusinessStatus.ACTIVE.value:
-                    await identity_crud.update_seller_status(
-                        session, seller, BusinessStatus.ACTIVE.value
-                    )
+            # Also activate all associated seller tenant entities.
+            await _activate_assigned_sellers(session, user)
 
             await audit_crud.create_audit_event(
                 session,
@@ -429,12 +437,7 @@ class IdentityController:
 
             # If user is a seller and activated, also activate seller tenant
             if status_val == UserStatus.ACTIVE.value and user.role == UserRole.SELLER.value:
-                for assignment in user.seller_assignments:
-                    seller = await identity_crud.get_seller_by_id(session, assignment.seller_id)
-                    if seller and seller.status != BusinessStatus.ACTIVE.value:
-                        await identity_crud.update_seller_status(
-                            session, seller, BusinessStatus.ACTIVE.value
-                        )
+                await _activate_assigned_sellers(session, user)
 
             await audit_crud.create_audit_event(
                 session,

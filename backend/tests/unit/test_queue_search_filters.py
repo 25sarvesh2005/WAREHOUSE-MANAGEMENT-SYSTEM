@@ -72,7 +72,7 @@ def compile_statement(stmt: Select) -> tuple[str, dict[str, Any]]:
 
 @pytest.mark.asyncio
 async def test_transfer_search_case_insensitive_predicate() -> None:
-    """Verify that transfer search applies a case-insensitive search predicate on transfer_number and notes."""
+    """Verify transfer search is case-insensitive on transfer_number and notes."""
     session = StatementCapturingSession()
     await transfer_crud.list_transfers(session, q="TRF-ALPHA")
 
@@ -186,7 +186,7 @@ async def test_blank_search_behaves_like_no_search() -> None:
 
 @pytest.mark.asyncio
 async def test_search_combines_with_existing_filters() -> None:
-    """Verify that seller, facility, and status filters remain combined with search using AND predicates."""
+    """Verify seller, facility, and status filters combine with search using AND."""
     session = StatementCapturingSession()
     seller_uuid = uuid4()
     origin_wh_uuid = uuid4()
@@ -203,8 +203,14 @@ async def test_search_combines_with_existing_filters() -> None:
 
     item_sql, item_params = compile_statement(session.statements[1])
     assert "transfers.seller_id ==" in item_sql or "transfers.seller_id =" in item_sql
-    assert "transfers.origin_warehouse_id ==" in item_sql or "transfers.origin_warehouse_id =" in item_sql
-    assert "transfers.destination_warehouse_id ==" in item_sql or "transfers.destination_warehouse_id =" in item_sql
+    assert (
+        "transfers.origin_warehouse_id ==" in item_sql
+        or "transfers.origin_warehouse_id =" in item_sql
+    )
+    assert (
+        "transfers.destination_warehouse_id ==" in item_sql
+        or "transfers.destination_warehouse_id =" in item_sql
+    )
     assert "transfers.status ==" in item_sql or "transfers.status =" in item_sql
     assert "transfers.transfer_number" in item_sql
     assert "%TRANSFER-NOTE%" in list(item_params.values())
@@ -228,7 +234,7 @@ async def test_search_combines_with_existing_filters() -> None:
 
 @pytest.mark.asyncio
 async def test_limit_and_offset_applied_to_item_query_only() -> None:
-    """Verify that limit and offset remain applied to the item query and omitted from the count query."""
+    """Verify limit and offset apply to the item query but not the count query."""
     session = StatementCapturingSession()
     await transfer_crud.list_transfers(session, limit=25, offset=50)
 

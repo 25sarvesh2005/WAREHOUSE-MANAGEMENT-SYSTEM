@@ -370,6 +370,7 @@ class OutboxEventStatus(str, Enum):
     """Transactional outbox event statuses."""
 
     PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
     DISPATCHED = "DISPATCHED"
     FAILED = "FAILED"
     DEAD_LETTER = "DEAD_LETTER"

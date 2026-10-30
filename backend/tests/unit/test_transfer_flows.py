@@ -13,7 +13,6 @@ from pydantic import ValidationError
 from core.apis.schemas.requests.transfer_request import (
     TransferCreateRequest,
     TransferLineRequest,
-    TransferReceiveRequest,
 )
 from core.constants import TransferStatus
 

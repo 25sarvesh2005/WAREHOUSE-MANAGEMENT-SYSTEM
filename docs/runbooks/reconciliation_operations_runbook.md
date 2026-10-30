@@ -54,7 +54,7 @@ The platform executes autonomous background workers within the FastAPI ASGI life
 | Worker / Job Name | Implementation | Cadence | Purpose & Failure Handling |
 |---|---|---|---|
 | **Reservation Expiry Worker** | `core/jobs/reservation_expiry_job.py` | 60 seconds | Releases expired customer order inventory reservations (`RESERVED` -> `AVAILABLE`) back to stock. Safe on concurrent orders; skips orders already in physical fulfillment. |
-| **Outbox Dispatch Worker** | `core/jobs/outbox_dispatch_job.py` | 10 seconds | Polls `outbox_events` in `PENDING` status, executes downstream event handlers, and marks `DISPATCHED`. Retries failures with exponential backoff; transitions to `DEAD_LETTER` after 5 failed attempts. |
+| **Outbox Dispatch Worker** | `core/jobs/outbox_dispatch_job.py` | 10 seconds | Claims one ready event in a short transaction, then performs network delivery outside the transaction. Claims expire after 10 minutes and can be reclaimed. Failed attempts use exponential backoff and transition to `DEAD_LETTER` after the five-attempt limit. |
 | **Receipt Aging Job** | `core/jobs/receipt_aging_job.py` | 300 seconds | Detects inbound receipts in `DRAFT`/`IN_PROGRESS` exceeding 48h SLA threshold; emits `RECEIPT_AGING_ALERT` outbox events for dock manager escalation. |
 | **Transfer Delay Job** | `core/jobs/transfer_delay_job.py` | 300 seconds | Scans in-transit transfers in `DISPATCHED` status exceeding expected transit SLA (default 7 days); emits `TRANSFER_DELAY_ALERT` outbox events. |
 | **Return Aging Job** | `core/jobs/return_aging_job.py` | 300 seconds | Monitors customer returns received but uninspected past 24h SLA; emits `RETURN_AGING_ALERT` outbox events for QA lead triage. |

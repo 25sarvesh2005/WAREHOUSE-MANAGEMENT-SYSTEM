@@ -72,11 +72,16 @@ class VoiceE2ERunner:
         data = response.json()
 
         assert "voice" in data, "Expected 'voice' key in /health/status response"
-        assert data["alembic_head"] == "d2e3f4a5b6c7", f"Unexpected alembic head: {data.get('alembic_head')}"
+        assert data["alembic_head"] == "d2e3f4a5b6c7", (
+            f"Unexpected alembic head: {data.get('alembic_head')}"
+        )
         voice_info = data["voice"]
         assert "stt_provider" in voice_info
         assert "tts_provider" in voice_info
-        print("  ✓ /health/status contains valid voice provider metadata and alembic head d2e3f4a5b6c7")
+        print(
+            '  ✓ /health/status contains valid voice provider metadata and alembic head '
+            'd2e3f4a5b6c7'
+        )
 
     async def test_parse_valid_transcript(self) -> str:
         """Verify parsing valid spoken transcript returns structured receiving lines."""
@@ -102,7 +107,10 @@ class VoiceE2ERunner:
         assert data["lines"][1]["inventory_state"] == "DAMAGED"
         assert data["lines"][1]["condition_note"] == "box crushed"
 
-        print(f"  ✓ /voice/receiving/parse-transcript created draft {data['draft_id']} with 2 lines")
+        print(
+            f"  ✓ /voice/receiving/parse-transcript created draft {data['draft_id']} "
+            "with 2 lines"
+        )
         return str(data["draft_id"])
 
     async def test_safety_refusal(self) -> None:
@@ -119,7 +127,10 @@ class VoiceE2ERunner:
         assert response.status_code == 400, f"Expected 400 Bad Request, got {response.status_code}"
         err = response.json()
         assert "strictly draft-only" in err.get("detail", "")
-        print("  ✓ /voice/receiving/parse-transcript correctly refused mutation command with safety explanation")
+        print(
+            '  ✓ /voice/receiving/parse-transcript correctly refused mutation command with '
+            'safety explanation'
+        )
 
     async def test_discard_voice_draft(self, draft_id: str) -> None:
         """Verify discarding a voice draft marks it as DISCARDED."""
@@ -150,7 +161,7 @@ class VoiceE2ERunner:
         print(f"  ✓ /voice/interactions returned {data['total']} recorded interactions")
 
     async def test_voice_synthesis_fallback(self) -> None:
-        """Verify TTS endpoint gracefully reports status when provider key is unconfigured or configured."""
+        """Verify the TTS endpoint reports provider configuration status gracefully."""
         payload = {
             "text": "Draft created with 12 available and 2 damaged units.",
             "language_code": "en-IN",
@@ -167,7 +178,10 @@ class VoiceE2ERunner:
             assert "audio_base64" in data
             print("  ✓ /voice/speak successfully synthesized audio")
         else:
-            print("  ✓ /voice/speak gracefully returned 503 Service Unavailable when TTS unconfigured")
+            print(
+                '  ✓ /voice/speak gracefully returned 503 Service Unavailable when TTS '
+                'unconfigured'
+            )
 
     async def run(self) -> None:
         """Execute all voice E2E smoke tests in sequence."""

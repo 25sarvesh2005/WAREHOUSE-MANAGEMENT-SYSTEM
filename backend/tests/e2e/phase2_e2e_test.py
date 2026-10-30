@@ -298,7 +298,8 @@ class Phase2E2ERunner:
 
         if balance_totals != movement_totals:
             raise RuntimeError(
-                f"Balance projection differs from movement ledger: {balance_totals} vs {movement_totals}"
+                "Balance projection differs from movement ledger: "
+                f"{balance_totals} vs {movement_totals}"
             )
 
         self.mark_passed("Smoke product balances reconcile exactly to movement ledger")

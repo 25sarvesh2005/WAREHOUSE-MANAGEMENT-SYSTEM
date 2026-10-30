@@ -46,15 +46,23 @@ import httpx
 from dotenv import load_dotenv
 from sqlalchemy import select
 
-from core.models import audit_model, catalog_model, fulfillment_model, identity_model
-from core.models import inventory_model, outbox_model, receiving_model, return_model
-from core.models import transfer_model
 from core.database.database import (
     close_database_connection,
     connect_to_database,
     transaction_session,
 )
 from core.jobs.reservation_expiry_job import release_expired_reservations
+from core.models import (
+    audit_model,
+    catalog_model,
+    fulfillment_model,
+    identity_model,
+    inventory_model,
+    outbox_model,
+    receiving_model,
+    return_model,
+    transfer_model,
+)
 from core.models.order_model import InventoryReservation
 
 DEFAULT_API_BASE_URL = "http://127.0.0.1:8080/api/v1"

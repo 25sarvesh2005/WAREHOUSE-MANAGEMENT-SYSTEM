@@ -5,7 +5,6 @@ Purpose     : Test pure common helper behavior.
 
 Responsibilities:
     - Validate pagination bounds.
-    - Validate idempotency-key normalization.
 
 Flow:
     pytest
@@ -29,7 +28,6 @@ from __future__ import annotations
 
 import pytest
 
-from common.idempotency import normalize_idempotency_key
 from common.pagination import normalize_pagination
 from core.config.settings import Settings
 
@@ -65,39 +63,6 @@ def test_normalize_pagination_rejects_invalid_limit() -> None:
     """
     with pytest.raises(ValueError):
         normalize_pagination(limit=201, offset=0)
-
-
-def test_normalize_idempotency_key_strips_whitespace() -> None:
-    """
-    Verify idempotency keys are normalized before workflow use.
-
-    Whitespace-only differences should not create distinct retry keys for future
-    duplicate-safe workflows.
-
-    Returns:
-        None.
-
-    Raises:
-        AssertionError: If key normalization regresses.
-    """
-    assert normalize_idempotency_key("  receipt-123  ") == "receipt-123"
-
-
-def test_normalize_idempotency_key_rejects_empty_value() -> None:
-    """
-    Verify empty idempotency keys are rejected.
-
-    Retryable workflows must fail fast when callers omit the key needed for
-    duplicate-safe command handling.
-
-    Returns:
-        None.
-
-    Raises:
-        AssertionError: If empty keys are accepted.
-    """
-    with pytest.raises(ValueError):
-        normalize_idempotency_key("   ")
 
 
 def test_settings_normalize_database_drivers() -> None:
@@ -202,7 +167,9 @@ def test_production_config_validation_rejects_weak_secrets() -> None:
 async def test_rate_limiter_blocks_excessive_requests() -> None:
     """Verify RateLimiter raises 429 when threshold exceeded."""
     from unittest.mock import MagicMock
+
     from fastapi import HTTPException
+
     from common.rate_limit import RateLimiter
 
     limiter = RateLimiter(max_requests=2, window_seconds=60)

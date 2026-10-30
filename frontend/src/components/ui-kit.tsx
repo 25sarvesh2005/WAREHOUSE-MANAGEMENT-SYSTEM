@@ -64,7 +64,7 @@ export function Card({
   return (
     <div
       data-testid={testId}
-      className={`card-surface p-5 rounded-xl border border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-slate-900 shadow-xs ${className}`}
+      className={`card-surface p-5 ${className}`}
     >
       {children}
     </div>
@@ -91,7 +91,7 @@ export function FormField({
   return (
     <div className={`space-y-1.5 ${className}`}>
       <div className="flex items-center justify-between">
-        <label htmlFor={htmlFor} className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <label htmlFor={htmlFor} className="block text-[13px] font-medium text-slate-700 dark:text-slate-300">
           {label} {required ? <span className="text-destructive">*</span> : null}
         </label>
         {hint ? <span className="text-[11px] text-muted-foreground">{hint}</span> : null}
@@ -108,7 +108,7 @@ export function Input({
 }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full min-h-[42px] rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2 text-sm text-foreground shadow-xs outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:opacity-60 ${className}`}
+      className={`w-full min-h-11 rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
       {...props}
     />
   );
@@ -121,7 +121,7 @@ export function Select({
 }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
-      className={`w-full min-h-[42px] rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2 text-sm font-medium text-foreground shadow-xs outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:opacity-60 ${className}`}
+      className={`w-full min-h-11 rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-[border-color,box-shadow] focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
       {...props}
     >
       {children}
@@ -141,16 +141,16 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 md:text-3xl">
+          <h1 className="text-[1.7rem] font-semibold tracking-tight text-slate-900 dark:text-slate-100 md:text-3xl">
             {title}
           </h1>
           {facilityTag}
         </div>
         {subtitle ? (
-          <p className="mt-1 max-w-3xl text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
+          <p className="mt-1.5 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-400">{subtitle}</p>
         ) : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2.5">{actions}</div> : null}
@@ -170,10 +170,10 @@ export function EmptyState({
   return (
     <div
       role="status"
-      className="flex flex-col items-center justify-center gap-2.5 px-6 py-14 text-center"
+      className="flex flex-col items-center justify-center gap-2.5 px-6 py-10 text-center"
     >
-      <span className="flex size-14 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-        <Icon className="size-6" aria-hidden="true" />
+      <span className="flex size-11 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+        <Icon className="size-5" aria-hidden="true" />
       </span>
       <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{message}</p>
       {hint ? <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">{hint}</p> : null}
@@ -223,7 +223,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 
 export function ExceptionBanner({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/90 dark:bg-amber-950/40 px-4 py-3 text-sm text-amber-900 dark:text-amber-200 shadow-xs">
+    <div className="mb-5 flex items-start gap-3 rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50/80 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
       <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
       <div className="flex-1 font-medium">{children}</div>
     </div>
@@ -236,11 +236,9 @@ export function LedgerNoticeBanner({
   message?: string;
 }) {
   return (
-    <div className="mb-5 flex items-center gap-2.5 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/80 dark:bg-blue-950/40 px-4 py-3 text-sm text-blue-900 dark:text-blue-200 shadow-xs">
+    <div className="mb-5 flex items-start gap-2.5 rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/30 px-4 py-3 text-sm text-blue-900 dark:text-blue-200">
       <Database className="size-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden="true" />
-      <span>
-        <strong className="font-semibold text-blue-950 dark:text-blue-100">Ledger-backed truth:</strong> {message}
-      </span>
+      <span>{message}</span>
     </div>
   );
 }
@@ -251,11 +249,9 @@ export function DuplicateProtectionBanner({
   message?: string;
 }) {
   return (
-    <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-sm text-slate-800 dark:text-slate-200 shadow-xs">
+    <div className="mb-4 flex items-start gap-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
       <ShieldCheck className="size-4 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-      <span>
-        <strong className="font-semibold text-slate-900 dark:text-slate-100">Duplicate safe:</strong> {message}
-      </span>
+      <span>{message}</span>
     </div>
   );
 }
@@ -291,7 +287,7 @@ export function ScannerInputField({
         disabled={disabled}
         autoFocus={autoFocus}
         aria-label={ariaLabel}
-        className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 pr-3.5 pl-9 font-mono text-sm font-semibold text-slate-900 dark:text-slate-100 shadow-xs outline-none placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400"
+        className="w-full min-h-11 rounded-md border border-input bg-card py-2 pr-3.5 pl-9 font-mono text-sm font-medium text-foreground outline-none placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground transition-[border-color,box-shadow] focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
       />
     </div>
   );
@@ -316,21 +312,21 @@ export function Button({
 }: ButtonProps) {
   const styles = {
     primary:
-      "bg-primary text-primary-foreground hover:bg-primary-dark border border-blue-700/30 dark:border-blue-500/30 font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_1px_2px_rgba(37,99,235,0.25)] hover:shadow-[0_2px_4px_rgba(37,99,235,0.3)] active:bg-blue-800 active:scale-[0.99] focus-visible:ring-primary/30",
+      "bg-primary text-primary-foreground hover:bg-primary-dark border border-transparent font-medium shadow-sm active:translate-y-px focus-visible:ring-primary/30",
     secondary:
-      "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200/80 dark:border-slate-700 font-semibold focus-visible:ring-slate-400/30",
+      "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent font-medium focus-visible:ring-slate-400/30",
     outline:
-      "border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 active:bg-slate-100 dark:active:bg-slate-800 font-semibold shadow-xs focus-visible:ring-primary/30",
+      "border border-input bg-card text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 font-medium focus-visible:ring-primary/30",
     danger:
-      "bg-destructive text-destructive-foreground hover:bg-red-700 active:bg-red-800 border border-red-700/30 font-semibold shadow-[0_1px_2px_rgba(220,38,38,0.2)] focus-visible:ring-destructive/30",
+      "bg-destructive text-destructive-foreground hover:bg-red-700 border border-transparent font-medium focus-visible:ring-destructive/30",
     ghost:
-      "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 font-medium border border-transparent focus-visible:ring-slate-400/30",
+      "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium border border-transparent focus-visible:ring-slate-400/30",
   }[variant];
 
   const sizeStyles = {
-    sm: "px-3 py-1.5 text-xs rounded-md gap-1.5",
-    md: "px-3.5 py-2 text-sm rounded-lg gap-2",
-    lg: "px-4.5 py-2.5 text-sm rounded-lg gap-2.5",
+    sm: "min-h-9 px-3 py-1.5 text-xs rounded-md gap-1.5",
+    md: "min-h-10 px-3.5 py-2 text-sm rounded-md gap-2",
+    lg: "min-h-11 px-4 py-2.5 text-sm rounded-md gap-2.5",
   }[size];
 
   const isDisabled = disabled || loading;
@@ -339,7 +335,7 @@ export function Button({
     <button
       disabled={isDisabled}
       aria-busy={loading ? "true" : undefined}
-      className={`inline-flex cursor-pointer items-center justify-center transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${styles} ${sizeStyles} ${className}`}
+      className={`inline-flex cursor-pointer items-center justify-center transition-[background-color,border-color,box-shadow,transform] duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${styles} ${sizeStyles} ${className}`}
       {...props}
     >
       {loading ? <Loader2 className="size-4 animate-spin shrink-0" aria-hidden="true" /> : null}
@@ -356,7 +352,7 @@ export function TableShell({
   className?: string;
 }) {
   return (
-    <div className={`card-surface overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 ${className}`}>
+    <div className={`card-surface overflow-hidden ${className}`}>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">{children}</table>
       </div>
@@ -367,7 +363,7 @@ export function TableShell({
 export function Th({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <th
-      className={`bg-slate-50/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 px-4 py-3 text-left text-[11px] font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase whitespace-nowrap align-middle ${className}`}
+      className={`bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap align-middle ${className}`}
     >
       {children}
     </th>
@@ -376,7 +372,7 @@ export function Th({ children, className = "" }: { children: ReactNode; classNam
 
 export function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <td className={`border-t border-slate-100 dark:border-slate-800/80 px-4 py-3 text-slate-800 dark:text-slate-200 align-middle transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40 ${className}`}>
+    <td className={`border-t border-slate-100 dark:border-slate-800/80 px-4 py-3 text-slate-800 dark:text-slate-200 align-middle ${className}`}>
       {children}
     </td>
   );
@@ -443,7 +439,7 @@ export function MobileRecordCard({
   selected = false,
 }: MobileRecordCardProps) {
   const classes = [
-    "card-surface p-4 min-w-0 transition-colors rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900",
+    "card-surface p-4 min-w-0 transition-colors",
     selected ? "border-primary ring-2 ring-primary/20 bg-blue-50/50 dark:bg-blue-950/30" : "",
     className,
   ]

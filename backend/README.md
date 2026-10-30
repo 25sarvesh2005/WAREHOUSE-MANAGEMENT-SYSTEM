@@ -206,8 +206,8 @@ python -m venv venv
 .\venv\Scripts\activate          # Windows PowerShell
 # source venv/bin/activate       # Linux / macOS
 
-# 3. Install core dependencies
-pip install -r requirements.txt
+# 3. Install development and test dependencies
+pip install -r requirements-dev.txt
 
 # 4. Configure environment secrets
 cp .env.example .env

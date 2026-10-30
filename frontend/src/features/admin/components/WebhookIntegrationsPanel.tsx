@@ -1,10 +1,7 @@
 import { useState } from "react";
 import {
   Activity,
-  AlertCircle,
-  CheckCircle2,
   Copy,
-  ExternalLink,
   Eye,
   EyeOff,
   Globe,

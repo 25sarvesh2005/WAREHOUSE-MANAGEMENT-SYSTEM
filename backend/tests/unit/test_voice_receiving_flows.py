@@ -20,22 +20,16 @@ Test coverage:
 from __future__ import annotations
 
 import base64
-from decimal import Decimal
-from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
 from fastapi import HTTPException
+from sqlalchemy import text
 
 from core.config.settings import Settings
 from core.constants import UserRole, VoiceInteractionStatus, VoiceReceivingDraftStatus
 from core.controllers.voice_controller import VoiceController
-from core.cruds import voice_crud
-from core.database.database import close_database_connection, connect_to_database, transaction_session
-from core.database.seed import initialize_schema_for_development, seed_initial_data
-from core.services.voice.deepgram_provider import DeepgramSTTProvider
-
-
+from core.database.database import transaction_session
 from core.services.voice.provider import (
     DisabledSpeechToTextProvider,
     DisabledTextToSpeechProvider,
@@ -46,11 +40,8 @@ from core.services.voice.provider import (
     build_tts_provider,
 )
 from core.services.voice.safety import check_voice_receiving_safety
-from core.services.voice.sarvam_provider import SarvamSTTProvider, SarvamTTSProvider
 from core.services.voice.transcript_parser import (
-    VoiceParsedReceivingDraft,
     parse_deterministic_transcript,
-    parse_receiving_transcript,
 )
 
 
@@ -59,11 +50,21 @@ class MockSTTProvider:
 
     provider_name = "mock_deepgram"
 
-    def __init__(self, transcript: str = "received 12 available and 2 damaged note box crushed", confidence: float = 0.95) -> None:
+    def __init__(
+        self,
+        transcript: str = "received 12 available and 2 damaged note box crushed",
+        confidence: float = 0.95,
+    ) -> None:
         self.transcript = transcript
         self.confidence = confidence
 
-    async def transcribe(self, *, audio_bytes: bytes, mime_type: str, language_code: str = "en-IN") -> VoiceTranscriptionResult:
+    async def transcribe(
+        self,
+        *,
+        audio_bytes: bytes,
+        mime_type: str,
+        language_code: str = "en-IN",
+    ) -> VoiceTranscriptionResult:
         return VoiceTranscriptionResult(
             transcript=self.transcript,
             confidence=self.confidence,
@@ -232,9 +233,6 @@ async def test_disabled_tts_raises_unavailable_error() -> None:
 # ---------------------------------------------------------------------------
 
 
-from sqlalchemy import text
-
-
 async def get_test_user_and_warehouse() -> tuple[UUID, UUID]:
     """Fetch existing user and warehouse from database for unit test transactions."""
     async with transaction_session() as session:
@@ -249,7 +247,10 @@ async def get_test_user_and_warehouse() -> tuple[UUID, UUID]:
 async def test_voice_controller_transcribe_and_draft() -> None:
     """Verify controller executes audio upload, STT, parsing, and draft persistence."""
     actor_id, sample_warehouse_id = await get_test_user_and_warehouse()
-    mock_stt = MockSTTProvider(transcript="received 15 available and 3 damaged note broken seal", confidence=0.98)
+    mock_stt = MockSTTProvider(
+        transcript="received 15 available and 3 damaged note broken seal",
+        confidence=0.98,
+    )
     controller = VoiceController(stt_provider=mock_stt)
 
     receiver_scope = {

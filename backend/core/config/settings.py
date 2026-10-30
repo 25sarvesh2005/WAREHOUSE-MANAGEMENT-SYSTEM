@@ -149,6 +149,7 @@ class Settings(BaseSettings):
     warehouse_api_base_url: str = "http://127.0.0.1:8080"
     bootstrap_admin_email: str = "admin@whitfield.local"
     bootstrap_admin_password: str = "change-this-before-use"
+    inbound_webhook_secret: str = ""
     initialize_schema_on_startup: bool = True
     trusted_hosts: str = "*"
     rate_limiting_enabled: bool = True
@@ -287,6 +288,17 @@ def validate_production_configuration(settings: Settings) -> list[str]:
     if settings.bootstrap_admin_password in insecure_passwords:
         msg = "BOOTSTRAP_ADMIN_PASSWORD uses a well-known default value."
         if is_prod:
+            raise ValueError(f"CRITICAL PRODUCTION CONFIGURATION ERROR: {msg}")
+        warnings.append(msg)
+
+    # 2b. Inbound integrations must authenticate signed requests in production.
+    inbound_secret = settings.inbound_webhook_secret.strip()
+    if len(inbound_secret) < 32 or inbound_secret == "replace-with-a-long-random-secret":
+        msg = (
+            "INBOUND_WEBHOOK_SECRET is missing, weak, or still uses its placeholder; "
+            "inbound webhooks must use a random secret of at least 32 characters."
+        )
+        if settings.app_env not in ("development", "test"):
             raise ValueError(f"CRITICAL PRODUCTION CONFIGURATION ERROR: {msg}")
         warnings.append(msg)
 

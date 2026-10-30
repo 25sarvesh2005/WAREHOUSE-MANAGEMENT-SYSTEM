@@ -5,10 +5,10 @@ Enforces HMAC-SHA256 signatures and timestamp replay-attack protection.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import hashlib
 import hmac
 import time
+from datetime import datetime
 
 
 def compute_webhook_signature(payload_bytes: bytes, secret: str) -> str:
@@ -26,7 +26,9 @@ def compute_webhook_signature(payload_bytes: bytes, secret: str) -> str:
     return f"sha256={mac.hexdigest()}"
 
 
-def verify_webhook_signature(payload_bytes: bytes, signature_header: str | None, secret: str) -> bool:
+def verify_webhook_signature(
+    payload_bytes: bytes, signature_header: str | None, secret: str
+) -> bool:
     """
     Verify an inbound or outbound HMAC-SHA256 signature using constant-time comparison.
 
@@ -67,4 +69,40 @@ def verify_webhook_timestamp(timestamp_header: str | None, max_drift_seconds: in
         return abs(now - epoch) <= max_drift_seconds
     except Exception:
         return False
+
+
+def compute_inbound_webhook_signature(
+    payload_bytes: bytes,
+    timestamp_header: str,
+    delivery_id: str,
+    secret: str,
+) -> str:
+    """Sign the body together with its timestamp and one-time delivery ID."""
+    signed_payload = (
+        timestamp_header.encode("utf-8")
+        + b"."
+        + delivery_id.encode("utf-8")
+        + b"."
+        + payload_bytes
+    )
+    return compute_webhook_signature(signed_payload, secret)
+
+
+def verify_inbound_webhook_signature(
+    payload_bytes: bytes,
+    signature_header: str | None,
+    timestamp_header: str | None,
+    delivery_id: str | None,
+    secret: str,
+) -> bool:
+    """Verify an inbound signature that binds freshness and delivery identity."""
+    if not timestamp_header or not delivery_id or not signature_header:
+        return False
+    expected = compute_inbound_webhook_signature(
+        payload_bytes,
+        timestamp_header,
+        delivery_id,
+        secret,
+    )
+    return hmac.compare_digest(expected, signature_header)
 

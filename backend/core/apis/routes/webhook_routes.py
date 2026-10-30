@@ -4,18 +4,23 @@ FastAPI HTTP endpoints for webhook subscriptions, delivery inspection, and inbou
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import secrets
+from datetime import UTC, datetime
 from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
 import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 
-from common.auth import get_current_user
 from common.logger import get_logger
+from common.pinned_webhook_transport import PinnedWebhookTransport
 from common.warehouse_scope import get_warehouse_scope
-from common.webhook_signer import compute_webhook_signature, verify_webhook_signature, verify_webhook_timestamp
+from common.webhook_signer import (
+    compute_webhook_signature,
+    verify_inbound_webhook_signature,
+    verify_webhook_timestamp,
+)
+from common.webhook_url import ensure_public_https_url
 from core.apis.schemas.webhook_schemas import (
     InboundCarrierWebhookRequest,
     InboundOrderWebhookRequest,
@@ -23,11 +28,42 @@ from core.apis.schemas.webhook_schemas import (
     WebhookSubscriptionCreate,
     WebhookSubscriptionResponse,
 )
+from core.config.settings import get_settings
 from core.cruds import outbox_crud, webhook_crud
 from core.database.database import transaction_session
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/v1/webhooks", tags=["Webhooks & Integrations"])
+
+
+async def _require_valid_inbound_signature(request: Request) -> str | None:
+    """Validate the shared-secret HMAC and timestamp for inbound integrations."""
+    settings = get_settings()
+    secret = settings.inbound_webhook_secret.strip()
+    if not secret and settings.app_env in ("development", "test"):
+        return None
+
+    signature = request.headers.get("X-Whitfield-Signature")
+    timestamp = request.headers.get("X-Whitfield-Timestamp")
+    delivery_id = request.headers.get("X-Whitfield-Delivery")
+    body = await request.body()
+    if (
+        not delivery_id
+        or len(delivery_id) > 255
+        or not verify_webhook_timestamp(timestamp)
+        or not verify_inbound_webhook_signature(
+        body,
+        signature,
+        timestamp,
+        delivery_id,
+        secret,
+        )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid webhook signature, timestamp, or delivery ID",
+        )
+    return delivery_id
 
 
 @router.post(
@@ -41,6 +77,14 @@ async def create_webhook_subscription(
     scope: Annotated[dict[str, Any], Depends(get_warehouse_scope)],
 ) -> WebhookSubscriptionResponse:
     """Register an HTTP/HTTPS endpoint to receive signed transactional outbox events."""
+    try:
+        await ensure_public_https_url(request.url)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(error),
+        ) from error
+
     secret = request.secret or secrets.token_hex(24)
     seller_ids = scope.get("seller_ids", [])
     if scope.get("role") == "SELLER":
@@ -109,7 +153,10 @@ async def delete_webhook_subscription(
     async with transaction_session() as session:
         sub = await webhook_crud.get_subscription(session, subscription_id)
         if not sub:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Subscription not found",
+            )
 
         role = scope.get("role", "")
         if role not in ("ADMINISTRATOR", "SUPERADMIN"):
@@ -133,7 +180,11 @@ async def list_webhook_deliveries(
 ) -> list[WebhookDeliveryResponse]:
     """Retrieve audit log of outbound webhook delivery attempts."""
     async with transaction_session() as session:
-        deliveries = await webhook_crud.list_deliveries(session, subscription_id=subscription_id, limit=limit)
+        deliveries = await webhook_crud.list_deliveries(
+            session,
+            subscription_id=subscription_id,
+            limit=limit,
+        )
         return [WebhookDeliveryResponse.model_validate(d) for d in deliveries]
 
 
@@ -150,7 +201,10 @@ async def test_webhook_subscription(
     async with transaction_session() as session:
         sub = await webhook_crud.get_subscription(session, subscription_id)
         if not sub:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Subscription not found",
+            )
 
         test_payload = {
             "test": True,
@@ -159,6 +213,14 @@ async def test_webhook_subscription(
             "triggered_by": scope.get("user_id", "admin"),
             "timestamp": datetime.now(UTC).isoformat(),
         }
+
+        try:
+            destination = await ensure_public_https_url(sub.url)
+        except ValueError as error:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=str(error),
+            ) from error
 
         import json
         import time
@@ -181,7 +243,12 @@ async def test_webhook_subscription(
         error_msg: str | None = None
 
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with httpx.AsyncClient(
+                transport=PinnedWebhookTransport(destination),
+                timeout=5.0,
+                follow_redirects=False,
+                trust_env=False,
+            ) as client:
                 res = await client.post(sub.url, content=raw_body, headers=headers)
                 latency_ms = (time.perf_counter() - start) * 1000.0
                 status_code = res.status_code
@@ -215,13 +282,12 @@ async def test_webhook_subscription(
 async def inbound_carrier_webhook(
     request: InboundCarrierWebhookRequest,
     req: Request,
-    x_whitfield_signature: Annotated[str | None, Header()] = None,
-    x_whitfield_timestamp: Annotated[str | None, Header()] = None,
 ) -> dict[str, Any]:
     """
     Ingest real-time carrier status updates (FedEx, UPS, DHL).
     Records tracking progress and atomically updates outbox events.
     """
+    delivery_id = await _require_valid_inbound_signature(req)
     logger.info(
         "Inbound carrier webhook received: carrier=%s, tracking=%s, status=%s",
         request.carrier,
@@ -229,20 +295,32 @@ async def inbound_carrier_webhook(
         request.event_status,
     )
 
-    async with transaction_session() as session:
-        # Atomic record in outbox for downstream fulfillment reconciliation
-        await outbox_crud.create_outbox_event(
-            session,
-            event_type="carrier.tracking_updated",
-            payload={
-                "carrier": request.carrier,
-                "tracking_number": request.tracking_number,
-                "event_status": request.event_status,
-                "location": request.location,
-                "notes": request.notes,
-                "received_at": datetime.now(UTC).isoformat(),
-            },
-        )
+    try:
+        async with transaction_session() as session:
+            if delivery_id is not None:
+                await webhook_crud.record_inbound_delivery(
+                    session,
+                    provider=f"carrier:{request.carrier.upper()}",
+                    delivery_id=delivery_id,
+                )
+            # Atomic record in outbox for downstream fulfillment reconciliation.
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type="carrier.tracking_updated",
+                payload={
+                    "carrier": request.carrier,
+                    "tracking_number": request.tracking_number,
+                    "event_status": request.event_status,
+                    "location": request.location,
+                    "notes": request.notes,
+                    "received_at": datetime.now(UTC).isoformat(),
+                },
+            )
+    except webhook_crud.DuplicateInboundWebhookDelivery as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Webhook delivery was already processed",
+        ) from error
 
     return {
         "status": "ACCEPTED",
@@ -259,11 +337,13 @@ async def inbound_carrier_webhook(
 )
 async def inbound_marketplace_order_webhook(
     request: InboundOrderWebhookRequest,
+    req: Request,
 ) -> dict[str, Any]:
     """
     Ingest orders from external channels (Shopify, Amazon, WooCommerce).
     Enqueues order event for automatic allocation and inventory reservation.
     """
+    delivery_id = await _require_valid_inbound_signature(req)
     logger.info(
         "Inbound marketplace order webhook received: source=%s, order_id=%s, seller=%s",
         request.source,
@@ -271,19 +351,31 @@ async def inbound_marketplace_order_webhook(
         request.seller_tenant_id,
     )
 
-    async with transaction_session() as session:
-        await outbox_crud.create_outbox_event(
-            session,
-            event_type="order.marketplace_ingested",
-            payload={
-                "external_order_id": request.external_order_id,
-                "source": request.source,
-                "seller_tenant_id": request.seller_tenant_id,
-                "customer_name": request.customer_name,
-                "lines_count": len(request.lines),
-                "received_at": datetime.now(UTC).isoformat(),
-            },
-        )
+    try:
+        async with transaction_session() as session:
+            if delivery_id is not None:
+                await webhook_crud.record_inbound_delivery(
+                    session,
+                    provider=f"marketplace:{request.source.upper()}",
+                    delivery_id=delivery_id,
+                )
+            await outbox_crud.create_outbox_event(
+                session,
+                event_type="order.marketplace_ingested",
+                payload={
+                    "external_order_id": request.external_order_id,
+                    "source": request.source,
+                    "seller_tenant_id": request.seller_tenant_id,
+                    "customer_name": request.customer_name,
+                    "lines_count": len(request.lines),
+                    "received_at": datetime.now(UTC).isoformat(),
+                },
+            )
+    except webhook_crud.DuplicateInboundWebhookDelivery as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Webhook delivery was already processed",
+        ) from error
 
     return {
         "status": "ENQUEUED",

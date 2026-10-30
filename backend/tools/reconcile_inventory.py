@@ -28,6 +28,7 @@ from core.database.database import (
     transaction_session,
 )
 
+
 async def run_reconciliation(warehouse_id: str | None = None, seller_id: str | None = None) -> None:
     """
     Compare projected inventory balances against ledger-rebuilt quantities.
@@ -130,7 +131,8 @@ async def run_reconciliation(warehouse_id: str | None = None, seller_id: str | N
                     print(
                         f"    Seller={v['seller_id'][:8]}.. WH={v['warehouse_id'][:8]}.. "
                         f"Prod={v['product_id'][:8]}.. State={v['inventory_state']} | "
-                        f"Projection={v['projected_quantity']} vs Rebuild={v['rebuilt_quantity']} (Variance={v['variance']})"
+                        f"Projection={v['projected_quantity']} vs "
+                        f"Rebuild={v['rebuilt_quantity']} (Variance={v['variance']})"
                     )
                 print("\nResult: RECONCILIATION FAILED - Discrepancy present.")
                 sys.exit(1)

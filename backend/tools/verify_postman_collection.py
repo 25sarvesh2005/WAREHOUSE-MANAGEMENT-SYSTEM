@@ -8,8 +8,6 @@ against the active FastAPI application using ASGI transport.
 from __future__ import annotations
 
 import asyncio
-import json
-import os
 import sys
 from pathlib import Path
 from uuid import uuid4
@@ -21,7 +19,7 @@ from httpx import ASGITransport
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from core.config.settings import get_settings
-from core.database.database import connect_to_database, close_database_connection
+from core.database.database import close_database_connection, connect_to_database
 from core.database.seed import initialize_schema_for_development, seed_initial_data
 from main import app
 
@@ -79,7 +77,6 @@ async def run_postman_verification() -> None:
             passed += 1
             token_data = r_login.json()
             admin_token = token_data["access_token"]
-            refresh_tok = token_data.get("refresh_token")
             headers = {"Authorization": f"Bearer {admin_token}"}
             print("  [PASS] POST /api/v1/auth/login -> 200 OK (JWT Received)")
         else:
@@ -105,7 +102,10 @@ async def run_postman_verification() -> None:
         if r_sellers.status_code == 200 and len(r_sellers.json()) > 0:
             passed += 1
             seller_id = r_sellers.json()[0]["id"]
-            print(f"  [PASS] GET /api/v1/sellers -> 200 OK ({len(r_sellers.json())} sellers, first: {seller_id})")
+            print(
+                f"  [PASS] GET /api/v1/sellers -> 200 OK "
+                f"({len(r_sellers.json())} sellers, first: {seller_id})"
+            )
         else:
             failed += 1
             print(f"  [FAIL] GET /api/v1/sellers failed: {r_sellers.status_code}")
@@ -115,7 +115,10 @@ async def run_postman_verification() -> None:
         if r_wh.status_code == 200 and len(r_wh.json()) > 0:
             passed += 1
             wh_id = r_wh.json()[0]["id"]
-            print(f"  [PASS] GET /api/v1/warehouses -> 200 OK ({len(r_wh.json())} warehouses, first: {wh_id})")
+            print(
+                f"  [PASS] GET /api/v1/warehouses -> 200 OK "
+                f"({len(r_wh.json())} warehouses, first: {wh_id})"
+            )
         else:
             failed += 1
             print(f"  [FAIL] GET /api/v1/warehouses failed: {r_wh.status_code}")
@@ -181,7 +184,10 @@ async def run_postman_verification() -> None:
             print(f"  [PASS] POST /api/v1/warehouse-locations -> 201 Created (Code: {loc_code})")
         else:
             failed += 1
-            print(f"  [FAIL] POST /api/v1/warehouse-locations failed: {r_loc.status_code} {r_loc.text}")
+            print(
+                f"  [FAIL] POST /api/v1/warehouse-locations failed: "
+                f"{r_loc.status_code} {r_loc.text}"
+            )
 
         # -------------------------------------------------------------
         # 5. Inventory: Balances, Movements, Reconcile
@@ -191,7 +197,10 @@ async def run_postman_verification() -> None:
         total += 1
         if r_bal.status_code == 200:
             passed += 1
-            print(f"  [PASS] GET /api/v1/inventory/balances -> 200 OK ({len(r_bal.json())} balance records)")
+            print(
+                f"  [PASS] GET /api/v1/inventory/balances -> 200 OK "
+                f"({len(r_bal.json())} balance records)"
+            )
         else:
             failed += 1
             print(f"  [FAIL] GET /api/v1/inventory/balances failed: {r_bal.status_code}")
@@ -200,7 +209,10 @@ async def run_postman_verification() -> None:
         total += 1
         if r_mov.status_code == 200:
             passed += 1
-            print(f"  [PASS] GET /api/v1/inventory/movements -> 200 OK ({len(r_mov.json())} ledger movements)")
+            print(
+                f"  [PASS] GET /api/v1/inventory/movements -> 200 OK "
+                f"({len(r_mov.json())} ledger movements)"
+            )
         else:
             failed += 1
             print(f"  [FAIL] GET /api/v1/inventory/movements failed: {r_mov.status_code}")
@@ -213,10 +225,16 @@ async def run_postman_verification() -> None:
         total += 1
         if r_rec.status_code == 201:
             passed += 1
-            print(f"  [PASS] POST /api/v1/inventory/reconcile -> 201 Created (Status: {r_rec.json().get('status')})")
+            print(
+                f"  [PASS] POST /api/v1/inventory/reconcile -> 201 Created "
+                f"(Status: {r_rec.json().get('status')})"
+            )
         else:
             failed += 1
-            print(f"  [FAIL] POST /api/v1/inventory/reconcile failed: {r_rec.status_code} {r_rec.text}")
+            print(
+                f"  [FAIL] POST /api/v1/inventory/reconcile failed: "
+                f"{r_rec.status_code} {r_rec.text}"
+            )
 
         # -------------------------------------------------------------
         # 6. Inbound Receiving
@@ -236,7 +254,10 @@ async def run_postman_verification() -> None:
             passed += 1
             receipt = r_rcp.json()
             receipt_id = receipt["id"]
-            print(f"  [PASS] POST /api/v1/receipts -> 201 Created (Receipt: {receipt['receipt_number']})")
+            print(
+                f"  [PASS] POST /api/v1/receipts -> 201 Created "
+                f"(Receipt: {receipt['receipt_number']})"
+            )
         else:
             failed += 1
             print(f"  [FAIL] POST /api/v1/receipts failed: {r_rcp.status_code} {r_rcp.text}")
@@ -260,7 +281,10 @@ async def run_postman_verification() -> None:
                 print("  [PASS] POST /api/v1/receipts/{id}/lines -> 201 Created")
             else:
                 failed += 1
-                print(f"  [FAIL] POST /api/v1/receipts/lines failed: {r_line.status_code} {r_line.text}")
+                print(
+                    f"  [FAIL] POST /api/v1/receipts/lines failed: "
+                    f"{r_line.status_code} {r_line.text}"
+                )
 
             r_complete = await client.post(
                 f"/api/v1/receipts/{receipt_id}/complete",
@@ -276,7 +300,10 @@ async def run_postman_verification() -> None:
                 print("  [PASS] POST /api/v1/receipts/{id}/complete -> 200 OK (Status: COMPLETED)")
             else:
                 failed += 1
-                print(f"  [FAIL] POST /api/v1/receipts/complete failed: {r_complete.status_code} {r_complete.text}")
+                print(
+                    f"  [FAIL] POST /api/v1/receipts/complete failed: "
+                    f"{r_complete.status_code} {r_complete.text}"
+                )
 
         # -------------------------------------------------------------
         # 7. Outbound Orders & Fulfillment
@@ -304,7 +331,10 @@ async def run_postman_verification() -> None:
             passed += 1
             order = r_ord.json()
             order_id = order["id"]
-            print(f"  [PASS] POST /api/v1/orders -> 201 Created (Order: {order['seller_order_number']})")
+            print(
+                f"  [PASS] POST /api/v1/orders -> 201 Created "
+                f"(Order: {order['seller_order_number']})"
+            )
         else:
             failed += 1
             print(f"  [FAIL] POST /api/v1/orders failed: {r_ord.status_code} {r_ord.text}")
@@ -322,7 +352,10 @@ async def run_postman_verification() -> None:
                 print("  [PASS] POST /api/v1/orders/{id}/reserve -> 200 OK (Status: RESERVED)")
             else:
                 failed += 1
-                print(f"  [FAIL] POST /api/v1/orders/reserve failed: {r_res.status_code} {r_res.text}")
+                print(
+                    f"  [FAIL] POST /api/v1/orders/reserve failed: "
+                    f"{r_res.status_code} {r_res.text}"
+                )
 
             r_pick = await client.post(
                 "/api/v1/pick-tasks",
@@ -338,7 +371,10 @@ async def run_postman_verification() -> None:
                 print(f"  [PASS] POST /api/v1/pick-tasks -> 201 Created (ID: {pick_task['id']})")
             else:
                 failed += 1
-                print(f"  [FAIL] POST /api/v1/pick-tasks failed: {r_pick.status_code} {r_pick.text}")
+                print(
+                    f"  [FAIL] POST /api/v1/pick-tasks failed: "
+                    f"{r_pick.status_code} {r_pick.text}"
+                )
                 pick_task_id = None
 
             if pick_task_id:
@@ -361,7 +397,10 @@ async def run_postman_verification() -> None:
                     print("  [PASS] POST /api/v1/pick-tasks/{id}/complete -> 200 OK")
                 else:
                     failed += 1
-                    print(f"  [FAIL] POST /api/v1/pick-tasks/complete failed: {r_comp_pick.status_code} {r_comp_pick.text}")
+                    print(
+                        f"  [FAIL] POST /api/v1/pick-tasks/complete failed: "
+                        f"{r_comp_pick.status_code} {r_comp_pick.text}"
+                    )
 
                 r_ship = await client.post(
                     "/api/v1/shipments",
@@ -385,10 +424,16 @@ async def run_postman_verification() -> None:
                 total += 1
                 if r_ship.status_code == 201:
                     passed += 1
-                    print(f"  [PASS] POST /api/v1/shipments -> 201 Created (Tracking: {r_ship.json().get('tracking_number')})")
+                    print(
+                        f"  [PASS] POST /api/v1/shipments -> 201 Created "
+                        f"(Tracking: {r_ship.json().get('tracking_number')})"
+                    )
                 else:
                     failed += 1
-                    print(f"  [FAIL] POST /api/v1/shipments failed: {r_ship.status_code} {r_ship.text}")
+                    print(
+                        f"  [FAIL] POST /api/v1/shipments failed: "
+                        f"{r_ship.status_code} {r_ship.text}"
+                    )
 
         # -------------------------------------------------------------
         # 8. Multi-Warehouse Transfers
@@ -410,8 +455,10 @@ async def run_postman_verification() -> None:
         if r_trans.status_code == 201:
             passed += 1
             transfer = r_trans.json()
-            transfer_id = transfer["id"]
-            print(f"  [PASS] POST /api/v1/transfers -> 201 Created (Transfer: {transfer['transfer_number']})")
+            print(
+                f"  [PASS] POST /api/v1/transfers -> 201 Created "
+                f"(Transfer: {transfer['transfer_number']})"
+            )
         else:
             failed += 1
             print(f"  [FAIL] POST /api/v1/transfers failed: {r_trans.status_code} {r_trans.text}")
@@ -420,7 +467,10 @@ async def run_postman_verification() -> None:
         total += 1
         if r_trans_list.status_code == 200:
             passed += 1
-            print(f"  [PASS] GET /api/v1/transfers -> 200 OK (Total: {r_trans_list.json().get('total')})")
+            print(
+                f"  [PASS] GET /api/v1/transfers -> 200 OK "
+                f"(Total: {r_trans_list.json().get('total')})"
+            )
         else:
             failed += 1
             print(f"  [FAIL] GET /api/v1/transfers failed: {r_trans_list.status_code}")
@@ -457,7 +507,10 @@ async def run_postman_verification() -> None:
         total += 1
         if r_ret_list.status_code == 200:
             passed += 1
-            print(f"  [PASS] GET /api/v1/returns -> 200 OK (Total: {r_ret_list.json().get('total')})")
+            print(
+                f"  [PASS] GET /api/v1/returns -> 200 OK "
+                f"(Total: {r_ret_list.json().get('total')})"
+            )
         else:
             failed += 1
             print(f"  [FAIL] GET /api/v1/returns failed: {r_ret_list.status_code}")
@@ -531,7 +584,10 @@ async def run_postman_verification() -> None:
             print("  [PASS] GET /api/v1/reports/inventory-reconciliation -> 200 OK")
         else:
             failed += 1
-            print(f"  [FAIL] GET /api/v1/reports/inventory-reconciliation failed: {r_rec_rep.status_code}")
+            print(
+                "  [FAIL] GET /api/v1/reports/inventory-reconciliation failed: "
+                f"{r_rec_rep.status_code}"
+            )
 
         # -------------------------------------------------------------
         # 12. Opening Inventory Migration
@@ -550,10 +606,16 @@ async def run_postman_verification() -> None:
             passed += 1
             mbatch = r_mbatch.json()
             mbatch_id = mbatch["id"]
-            print(f"  [PASS] POST /api/v1/migration/batches -> 201 Created (Batch: {mbatch['batch_number']})")
+            print(
+                f"  [PASS] POST /api/v1/migration/batches -> 201 Created "
+                f"(Batch: {mbatch['batch_number']})"
+            )
         else:
             failed += 1
-            print(f"  [FAIL] POST /api/v1/migration/batches failed: {r_mbatch.status_code} {r_mbatch.text}")
+            print(
+                f"  [FAIL] POST /api/v1/migration/batches failed: "
+                f"{r_mbatch.status_code} {r_mbatch.text}"
+            )
             mbatch_id = None
 
         if mbatch_id:
@@ -582,34 +644,61 @@ async def run_postman_verification() -> None:
                 print("  [PASS] POST /api/v1/migration/batches/{id}/rows -> 201 Created")
             else:
                 failed += 1
-                print(f"  [FAIL] POST /api/v1/migration/batches/rows failed: {r_mrows.status_code} {r_mrows.text}")
+                print(
+                    f"  [FAIL] POST /api/v1/migration/batches/rows failed: "
+                    f"{r_mrows.status_code} {r_mrows.text}"
+                )
 
-            r_mval = await client.post(f"/api/v1/migration/batches/{mbatch_id}/validate", headers=headers)
+            r_mval = await client.post(
+                f"/api/v1/migration/batches/{mbatch_id}/validate", headers=headers
+            )
             total += 1
             if r_mval.status_code == 200 and r_mval.json().get("status") == "VALIDATED":
                 passed += 1
-                print("  [PASS] POST /api/v1/migration/batches/{id}/validate -> 200 OK (Status: VALIDATED)")
+                print(
+                    "  [PASS] POST /api/v1/migration/batches/{id}/validate -> 200 OK "
+                    "(Status: VALIDATED)"
+                )
             else:
                 failed += 1
-                print(f"  [FAIL] POST /api/v1/migration/batches/validate failed: {r_mval.status_code} {r_mval.text}")
+                print(
+                    f"  [FAIL] POST /api/v1/migration/batches/validate failed: "
+                    f"{r_mval.status_code} {r_mval.text}"
+                )
 
-            r_mapprove = await client.post(f"/api/v1/migration/batches/{mbatch_id}/approve", headers=headers)
+            r_mapprove = await client.post(
+                f"/api/v1/migration/batches/{mbatch_id}/approve", headers=headers
+            )
             total += 1
             if r_mapprove.status_code == 200 and r_mapprove.json().get("status") == "APPROVED":
                 passed += 1
-                print("  [PASS] POST /api/v1/migration/batches/{id}/approve -> 200 OK (Status: APPROVED)")
+                print(
+                    "  [PASS] POST /api/v1/migration/batches/{id}/approve -> 200 OK "
+                    "(Status: APPROVED)"
+                )
             else:
                 failed += 1
-                print(f"  [FAIL] POST /api/v1/migration/batches/approve failed: {r_mapprove.status_code} {r_mapprove.text}")
+                print(
+                    f"  [FAIL] POST /api/v1/migration/batches/approve failed: "
+                    f"{r_mapprove.status_code} {r_mapprove.text}"
+                )
 
-            r_mapply = await client.post(f"/api/v1/migration/batches/{mbatch_id}/apply", headers=headers)
+            r_mapply = await client.post(
+                f"/api/v1/migration/batches/{mbatch_id}/apply", headers=headers
+            )
             total += 1
             if r_mapply.status_code == 200 and r_mapply.json().get("status") == "APPLIED":
                 passed += 1
-                print("  [PASS] POST /api/v1/migration/batches/{id}/apply -> 200 OK (Status: APPLIED)")
+                print(
+                    "  [PASS] POST /api/v1/migration/batches/{id}/apply -> 200 OK "
+                    "(Status: APPLIED)"
+                )
             else:
                 failed += 1
-                print(f"  [FAIL] POST /api/v1/migration/batches/apply failed: {r_mapply.status_code} {r_mapply.text}")
+                print(
+                    f"  [FAIL] POST /api/v1/migration/batches/apply failed: "
+                    f"{r_mapply.status_code} {r_mapply.text}"
+                )
 
         # -------------------------------------------------------------
         # 13. Read-Only AI Assistance
@@ -622,7 +711,10 @@ async def run_postman_verification() -> None:
             print("  [PASS] GET /api/v1/ai/admin/provider-health -> 200 OK")
         else:
             failed += 1
-            print(f"  [FAIL] GET /api/v1/ai/admin/provider-health failed: {r_ai_health.status_code}")
+            print(
+                f"  [FAIL] GET /api/v1/ai/admin/provider-health failed: "
+                f"{r_ai_health.status_code}"
+            )
 
         r_ai_inv = await client.post(
             "/api/v1/ai/inventory/availability",
@@ -632,10 +724,16 @@ async def run_postman_verification() -> None:
         total += 1
         if r_ai_inv.status_code == 200 and "answer" in r_ai_inv.json():
             passed += 1
-            print(f"  [PASS] POST /api/v1/ai/inventory/availability -> 200 OK (Audit ID: {r_ai_inv.json().get('interaction_id')})")
+            print(
+                f"  [PASS] POST /api/v1/ai/inventory/availability -> 200 OK "
+                f"(Audit ID: {r_ai_inv.json().get('interaction_id')})"
+            )
         else:
             failed += 1
-            print(f"  [FAIL] POST /api/v1/ai/inventory/availability failed: {r_ai_inv.status_code} {r_ai_inv.text}")
+            print(
+                f"  [FAIL] POST /api/v1/ai/inventory/availability failed: "
+                f"{r_ai_inv.status_code} {r_ai_inv.text}"
+            )
 
         r_ai_ord = await client.post(
             "/api/v1/ai/status/order",
@@ -648,7 +746,10 @@ async def run_postman_verification() -> None:
             print("  [PASS] POST /api/v1/ai/status/order -> 200 OK")
         else:
             failed += 1
-            print(f"  [FAIL] POST /api/v1/ai/status/order failed: {r_ai_ord.status_code} {r_ai_ord.text}")
+            print(
+                f"  [FAIL] POST /api/v1/ai/status/order failed: "
+                f"{r_ai_ord.status_code} {r_ai_ord.text}"
+            )
 
         r_ai_rcp = await client.post(
             "/api/v1/ai/status/receipt",
@@ -661,7 +762,10 @@ async def run_postman_verification() -> None:
             print("  [PASS] POST /api/v1/ai/status/receipt -> 200 OK")
         else:
             failed += 1
-            print(f"  [FAIL] POST /api/v1/ai/status/receipt failed: {r_ai_rcp.status_code} {r_ai_rcp.text}")
+            print(
+                f"  [FAIL] POST /api/v1/ai/status/receipt failed: "
+                f"{r_ai_rcp.status_code} {r_ai_rcp.text}"
+            )
 
         if return_id:
             r_ai_ret = await client.post(
@@ -675,7 +779,10 @@ async def run_postman_verification() -> None:
                 print("  [PASS] POST /api/v1/ai/status/return -> 200 OK")
             else:
                 failed += 1
-                print(f"  [FAIL] POST /api/v1/ai/status/return failed: {r_ai_ret.status_code} {r_ai_ret.text}")
+                print(
+                    f"  [FAIL] POST /api/v1/ai/status/return failed: "
+                    f"{r_ai_ret.status_code} {r_ai_ret.text}"
+                )
 
     await close_database_connection()
 

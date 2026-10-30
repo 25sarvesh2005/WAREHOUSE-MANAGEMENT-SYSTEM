@@ -5,15 +5,13 @@ Unit tests verifying transactional outbox operations and event emission.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
 
 from core.constants import (
     BusinessStatus,
-    InventoryState,
     OrderStatus,
     OutboxEventStatus,
     OutboxEventType,
@@ -21,7 +19,7 @@ from core.constants import (
 )
 from core.controllers.order_controller import order_controller
 from core.controllers.receiving_controller import receiving_controller
-from core.cruds import catalog_crud, identity_crud, inventory_crud, outbox_crud
+from core.cruds import outbox_crud
 from core.database.database import transaction_session
 from core.models.catalog_model import Product
 from core.models.identity_model import Seller, User, Warehouse
@@ -57,7 +55,9 @@ async def test_outbox_crud_lifecycle():
 
         # Mark failed with next attempt
         retry_time = datetime.now(UTC) + timedelta(minutes=5)
-        await outbox_crud.mark_event_failed(session, event.id, error="Network timeout", next_attempt_at=retry_time)
+        await outbox_crud.mark_event_failed(
+            session, event.id, error="Network timeout", next_attempt_at=retry_time
+        )
         assert event.status == OutboxEventStatus.FAILED.value
         assert event.attempts == 2
         assert event.last_error == "Network timeout"
