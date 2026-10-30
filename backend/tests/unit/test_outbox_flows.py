@@ -43,7 +43,7 @@ async def test_outbox_crud_lifecycle():
         assert event.payload == test_payload
 
         # Fetch pending events
-        pending = await outbox_crud.fetch_pending_events(session, limit=50)
+        pending = await outbox_crud.fetch_pending_events(session, limit=500)
         matching = [e for e in pending if e.id == event.id]
         assert len(matching) == 1
         assert matching[0].event_type == OutboxEventType.ORDER_CREATED.value

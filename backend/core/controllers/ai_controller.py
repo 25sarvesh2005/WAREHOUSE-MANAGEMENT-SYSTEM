@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -1296,6 +1297,63 @@ class AIController:
                 "items": exceptions.migration_validation_failures,
             },
         ]
+
+    def _build_exception_fallback_narrative(
+        self,
+        evidence: OperationalExceptionEvidence,
+        categories: list[dict[str, object]],
+    ) -> str:
+        """Deterministic narrative fallback for operational exception summaries."""
+        if evidence.total_exceptions == 0:
+            return "No active operational exceptions found across warehouse queues."
+        lines = [
+            f"Identified {evidence.total_exceptions} active operational exception(s):"
+        ]
+        for cat in categories:
+            count = int(str(cat.get("count", 0)))
+            if count > 0:
+                name = cat.get("label") or cat.get("title") or cat.get("category")
+                lines.append(f"- {name}: {count} item(s)")
+        return "\n".join(lines)
+
+    def _availability_fallback_answer(
+        self, sku: str, rows: list[AvailableInventoryEvidence]
+    ) -> str:
+        """Deterministic text summary of available inventory rows."""
+        if not rows:
+            return f"No available stock found for SKU {sku}."
+        parts = [
+            f"{r.sku} has {r.available_quantity:.2f} units at warehouse {r.warehouse_code}."
+            for r in rows
+        ]
+        return " ".join(parts)
+
+    def _ledger_fallback_answer(
+        self, sku: str, movements: list[LedgerMovementEvidence]
+    ) -> str:
+        """Deterministic text summary of ledger movement evidence."""
+        count = len(movements)
+        net_delta = sum((m.quantity_delta for m in movements), Decimal("0"))
+        plural = "s" if count != 1 else ""
+        return (
+            f"Found {count} recent ledger movement{plural} for SKU {sku}; "
+            f"net delta across returned rows is {net_delta:.2f}."
+        )
+
+    def _status_fallback_answer(self, evidence: OperationalStatusEvidence) -> str:
+        """Deterministic text summary of operational record status."""
+        rec_type = evidence.record_type.capitalize()
+        ref = evidence.reference_number
+        status = evidence.status
+        seller = evidence.seller_code or "unknown"
+        warehouses = (
+            ", ".join(evidence.warehouse_codes)
+            if evidence.warehouse_codes
+            else "unassigned"
+        )
+        return (
+            f"{rec_type} {ref} is {status} for seller {seller} at warehouse(s): {warehouses}."
+        )
 
     async def _resolve_seller_id(
         self,
