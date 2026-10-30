@@ -57,8 +57,15 @@ function DashboardHeader({
     <header className="border-b border-border pb-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <h1 className="text-[1.85rem] font-semibold tracking-tight text-slate-950 dark:text-slate-50 sm:text-3xl">
-            {isManager ? "Operations" : `Welcome, ${firstName}`}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/60 text-[11px] font-semibold text-primary dark:text-blue-400">
+              <span className="size-1.5 rounded-full bg-primary" />
+              Operations overview
+            </span>
+          </div>
+
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
+            Welcome back, {firstName}.
           </h1>
 
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
@@ -270,7 +277,7 @@ function ManagerDashboard({ user }: { user: User }) {
         {totalExceptions === 0 ? (
           <div className="card-surface rounded-lg p-4 text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
             <CheckCircle2 className="size-4 text-emerald-600" />
-            No open exceptions.
+            No active manager exceptions were reported.
           </div>
         ) : null}
       </section>

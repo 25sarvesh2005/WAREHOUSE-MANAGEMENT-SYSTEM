@@ -419,7 +419,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 maxLength={100}
                 value={globalSearch}
                 onChange={(event) => setGlobalSearch(event.target.value)}
-                placeholder="Search by order, receipt, transfer, return, or SKU"
+                placeholder="Search ORD-, REC-/1Z, TRF-/TRN-, RET-/RMA-, or SKU-…"
                 className="w-full min-h-10 rounded-md border border-input bg-slate-50 dark:bg-slate-900 py-2 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/15 transition-[background-color,border-color,box-shadow] duration-150"
               />
             </form>
