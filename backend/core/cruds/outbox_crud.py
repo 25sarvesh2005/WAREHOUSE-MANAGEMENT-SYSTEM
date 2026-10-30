@@ -87,6 +87,10 @@ async def fetch_pending_events(
         )
         .order_by(OutboxEvent.created_at.asc())
         .limit(limit)
+        # Each worker owns the rows it returns until its surrounding
+        # transaction commits. Workers can therefore poll concurrently without
+        # dispatching the same event at the same time.
+        .with_for_update(skip_locked=True)
     )
     result = await session.execute(stmt)
     return list(result.scalars().all())

@@ -42,7 +42,16 @@ async def create_webhook_subscription(
 ) -> WebhookSubscriptionResponse:
     """Register an HTTP/HTTPS endpoint to receive signed transactional outbox events."""
     secret = request.secret or secrets.token_hex(24)
-    tenant_id = scope.get("seller_id") or "GLOBAL"
+    seller_ids = scope.get("seller_ids", [])
+    if scope.get("role") == "SELLER":
+        if len(seller_ids) != 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A seller webhook must be scoped to exactly one seller account",
+            )
+        tenant_id = seller_ids[0]
+    else:
+        tenant_id = "GLOBAL"
 
     async with transaction_session() as session:
         sub = await webhook_crud.create_subscription(
@@ -66,11 +75,24 @@ async def list_webhook_subscriptions(
 ) -> list[WebhookSubscriptionResponse]:
     """List webhook destinations visible to the caller's tenancy or all for admin."""
     role = scope.get("role", "")
-    tenant_id = "ALL" if role in ("ADMINISTRATOR", "SUPERADMIN") else (scope.get("seller_id") or "GLOBAL")
+    seller_ids = scope.get("seller_ids", [])
 
     async with transaction_session() as session:
-        subs = await webhook_crud.list_subscriptions(session, tenant_id=tenant_id)
-        return [WebhookSubscriptionResponse.model_validate(s) for s in subs]
+        if role in ("ADMINISTRATOR", "SUPERADMIN"):
+            subs = await webhook_crud.list_subscriptions(session, tenant_id="ALL")
+        else:
+            subscriptions_by_id = {}
+            for seller_id in seller_ids:
+                for sub in await webhook_crud.list_subscriptions(session, tenant_id=seller_id):
+                    subscriptions_by_id[sub.id] = sub
+            if not seller_ids:
+                for sub in await webhook_crud.list_subscriptions(session, tenant_id="GLOBAL"):
+                    subscriptions_by_id[sub.id] = sub
+            subs = list(subscriptions_by_id.values())
+        return [
+            WebhookSubscriptionResponse.model_validate(s).model_copy(update={"secret": None})
+            for s in subs
+        ]
 
 
 @router.delete(
@@ -91,8 +113,8 @@ async def delete_webhook_subscription(
 
         role = scope.get("role", "")
         if role not in ("ADMINISTRATOR", "SUPERADMIN"):
-            caller_tenant = scope.get("seller_id") or "GLOBAL"
-            if sub.tenant_id != caller_tenant:
+            caller_tenants = set(scope.get("seller_ids", []))
+            if sub.tenant_id not in caller_tenants:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
         await webhook_crud.delete_subscription(session, subscription_id)

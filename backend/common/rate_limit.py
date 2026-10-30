@@ -5,13 +5,14 @@ Sliding-window rate limiting dependencies for FastAPI endpoints.
 from __future__ import annotations
 
 import time
-from collections import defaultdict, deque
+from collections import deque
 from threading import Lock
 from typing import Callable
 
 from fastapi import HTTPException, Request, status
 
 from common.logger import get_logger
+from core.config.settings import get_settings
 
 logger = get_logger(__name__)
 
@@ -40,8 +41,9 @@ class RateLimiter:
         self.window_seconds = window_seconds
         self.key_func = key_func or self._default_key_func
         self.error_message = error_message
-        self._records: dict[str, deque[float]] = defaultdict(deque)
+        self._records: dict[str, deque[float]] = {}
         self._lock = Lock()
+        self._last_cleanup = 0.0
 
     @staticmethod
     def _default_key_func(request: Request) -> str:
@@ -54,9 +56,9 @@ class RateLimiter:
         Returns:
             str: Identifier key.
         """
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
+        # Forwarded headers are client controlled unless a trusted-proxy
+        # middleware has validated them. Using them directly lets callers
+        # rotate spoofed addresses to evade limits.
         client = request.client
         return client.host if client else "unknown"
 
@@ -73,7 +75,8 @@ class RateLimiter:
         import os
 
         if (
-            os.getenv("RATE_LIMITING_ENABLED", "true").lower() in ("false", "0", "no")
+            not get_settings().rate_limiting_enabled
+            or os.getenv("RATE_LIMITING_ENABLED", "true").lower() in ("false", "0", "no")
             or os.getenv("RATE_LIMIT_ENABLED", "true").lower() in ("false", "0", "no")
         ):
             return
@@ -83,7 +86,19 @@ class RateLimiter:
         cutoff = now - self.window_seconds
 
         with self._lock:
-            queue = self._records[key]
+            # A service that sees many one-off client addresses should not keep
+            # one empty deque per address for the lifetime of the process.
+            if now - self._last_cleanup >= self.window_seconds:
+                stale_keys = [
+                    record_key
+                    for record_key, timestamps in self._records.items()
+                    if not timestamps or timestamps[-1] < cutoff
+                ]
+                for record_key in stale_keys:
+                    del self._records[record_key]
+                self._last_cleanup = now
+
+            queue = self._records.setdefault(key, deque())
             while queue and queue[0] < cutoff:
                 queue.popleft()
 

@@ -30,7 +30,9 @@ class WebhookSubscriptionResponse(BaseModel):
     id: UUID
     tenant_id: str
     url: str
-    secret: str
+    # Secrets are returned only by subscription creation, then redacted from
+    # list responses so other users in the same tenant cannot retrieve them.
+    secret: str | None = None
     event_types: list[str]
     status: str
     description: str | None

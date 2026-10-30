@@ -34,8 +34,17 @@ async def dispatch_outbox_event_to_webhooks(
     Returns:
         int: Number of successful deliveries.
     """
+    tenant_id = (
+        event.payload.get("seller_tenant_id")
+        or event.payload.get("seller_id")
+        or event.payload.get("tenant_id")
+    )
     subscriptions = await webhook_crud.get_active_subscriptions_for_event(
-        session, event.event_type
+        session,
+        event.event_type,
+        # Treat events without a seller as global-only. Never fan them out to
+        # every seller-specific subscription.
+        tenant_id=str(tenant_id) if tenant_id is not None else "GLOBAL",
     )
     if not subscriptions:
         logger.debug("No active webhook subscriptions match event '%s'", event.event_type)

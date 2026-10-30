@@ -77,11 +77,14 @@ async def delete_subscription(
 async def get_active_subscriptions_for_event(
     session: AsyncSession,
     event_type: str,
+    *,
+    tenant_id: str | None = None,
 ) -> list[WebhookSubscription]:
-    """Retrieve all active subscriptions interested in a given event type."""
-    result = await session.execute(
-        select(WebhookSubscription).where(WebhookSubscription.status == "ACTIVE")
-    )
+    """Retrieve matching global and tenant-specific subscriptions."""
+    query = select(WebhookSubscription).where(WebhookSubscription.status == "ACTIVE")
+    if tenant_id is not None:
+        query = query.where(WebhookSubscription.tenant_id.in_(["GLOBAL", tenant_id]))
+    result = await session.execute(query)
     subs = list(result.scalars().all())
     # Match specific event type or wildcard "*"
     return [s for s in subs if "*" in s.event_types or event_type in s.event_types]
