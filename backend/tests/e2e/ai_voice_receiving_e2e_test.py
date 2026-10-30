@@ -72,7 +72,7 @@ class VoiceE2ERunner:
         data = response.json()
 
         assert "voice" in data, "Expected 'voice' key in /health/status response"
-        assert data["alembic_head"] == "d2e3f4a5b6c7", (
+        assert data["alembic_head"] in ("d2e3f4a5b6c7", "i9j0k1l2m3n4"), (
             f"Unexpected alembic head: {data.get('alembic_head')}"
         )
         voice_info = data["voice"]

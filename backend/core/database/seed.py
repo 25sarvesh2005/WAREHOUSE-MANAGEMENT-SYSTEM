@@ -133,7 +133,7 @@ async def initialize_schema_for_development() -> None:
         await connection.execute(
             text(
                 "INSERT INTO alembic_version (version_num) "
-                "VALUES ('d2e3f4a5b6c7') "
+                "VALUES ('i9j0k1l2m3n4') "
                 "ON CONFLICT DO NOTHING"
             )
         )
