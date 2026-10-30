@@ -2,7 +2,7 @@
 
 ## 1. Overview & Architecture
 
-The Whitfield Fulfillment Warehouse operations platform integrates a read-only and draft-only AI operations assistant powered by Google Gemini (with safe deterministic fallback capabilities).
+The Whitfield Fulfillment Warehouse operations platform integrates a read-only and draft-only AI operations assistant powered by Google Gemini. AI requests return a service-unavailable message when the provider is disabled, unconfigured, or unavailable; the assistant does not substitute rule-based answers.
 
 ### Core Operational Principles:
 1. **Zero Direct DB Mutations**: AI never directly writes to inventory balances, orders, transfers, receipts, returns, or shipments.
@@ -43,7 +43,7 @@ The Whitfield Fulfillment Warehouse operations platform integrates a read-only a
 If the Gemini API key expires, encounters quota limits, or is rotated:
 1. Update `GOOGLE_GENAI_API_KEY` in deployment environment secrets (or `.env`).
 2. Verify readiness at `GET /health/status` or `GET /api/v1/ai/admin/provider-health`.
-3. If provider fails, the platform automatically falls back to deterministic rule engines with zero downtime or user disruption.
+3. If the provider is unavailable, the assistant responds that AI services will be available shortly. Configure a valid backend API key and verify provider readiness before retrying.
 
 ---
 

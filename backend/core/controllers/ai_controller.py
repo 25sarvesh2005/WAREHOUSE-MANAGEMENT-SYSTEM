@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from datetime import UTC, datetime
-from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -63,6 +62,9 @@ from core.services.ai.safety import AISafetyGuard, hash_sensitive_text, make_saf
 from core.services.ai.types import AIProviderRequest
 
 logger = get_logger(__name__)
+AI_SERVICE_UNAVAILABLE_MESSAGE = (
+    "Sorry, our AI services are unavailable right now. They will be available shortly."
+)
 
 
 class AIController:
@@ -102,6 +104,7 @@ class AIController:
             HTTPException: If scope or validation checks fail.
         """
         settings = get_settings()
+        self._ensure_ai_provider_available(settings)
         raw_query = (request.sku or "").strip()
         if request.prompt:
             prompt = request.prompt
@@ -179,11 +182,9 @@ class AIController:
             )
             interaction_id = interaction.id
 
-        fallback_answer = self._availability_fallback_answer(request.sku, rows)
         answer, provider_name, model_name, provider_metadata = await self._provider_answer(
             settings,
             prompt=prompt,
-            fallback_answer=fallback_answer,
             evidence_payload={"rows": [self._availability_row(row) for row in rows]},
         )
         await self._complete_interaction(
@@ -224,6 +225,7 @@ class AIController:
             HTTPException: If scope or validation checks fail.
         """
         settings = get_settings()
+        self._ensure_ai_provider_available(settings)
         prompt = request.prompt or (
             f"Explain recent inventory ledger changes for SKU {request.sku}."
         )
@@ -298,11 +300,9 @@ class AIController:
             )
             interaction_id = interaction.id
 
-        fallback_answer = self._ledger_fallback_answer(request.sku, movements)
         answer, provider_name, model_name, provider_metadata = await self._provider_answer(
             settings,
             prompt=prompt,
-            fallback_answer=fallback_answer,
             evidence_payload={
                 "movements": [self._ledger_movement_row(row) for row in movements]
             },
@@ -348,6 +348,7 @@ class AIController:
             HTTPException: If scope, record type, or lookup checks fail.
         """
         settings = get_settings()
+        self._ensure_ai_provider_available(settings)
         tool_name, category = self._status_tool_config(record_type)
         prompt = request.prompt or self._status_prompt(record_type, request)
         safety = self._safety_guard.evaluate_prompt(prompt)
@@ -426,11 +427,9 @@ class AIController:
             interaction_id = interaction.id
 
         record_payload = self._status_record(evidence)
-        fallback_answer = self._status_fallback_answer(evidence)
         answer, provider_name, model_name, provider_metadata = await self._provider_answer(
             settings,
             prompt=prompt,
-            fallback_answer=fallback_answer,
             evidence_payload={"record": record_payload},
         )
         await self._complete_interaction(
@@ -744,6 +743,7 @@ class AIController:
             HTTPException: If scope or lookup checks fail.
         """
         settings = get_settings()
+        self._ensure_ai_provider_available(settings)
         prompt = (
             request.prompt
             or "Summarize active operational exceptions across warehouse subsystems."
@@ -824,13 +824,9 @@ class AIController:
             interaction_id = interaction.id
 
         categories = self._build_exception_categories(exceptions)
-        fallback_narrative = self._build_exception_fallback_narrative(
-            exceptions, categories
-        )
         narrative, provider_name, model_name, provider_metadata = await self._provider_answer(
             settings,
             prompt=prompt,
-            fallback_answer=fallback_narrative,
             evidence_payload={
                 "total_exceptions": exceptions.total_exceptions,
                 "categories": categories,
@@ -891,6 +887,24 @@ class AIController:
                 refusal_reason=safety.reason,
             )
 
+        recommendation_summary, provider_name, model_name, provider_metadata = (
+            await self._provider_answer(
+                settings,
+                prompt=prompt,
+                evidence_payload={
+                    "recommendation_type": request.recommendation_type,
+                    "target_record_type": request.target_record_type,
+                    "target_record_id": request.target_record_id,
+                    "seller_code": request.seller_code,
+                    "warehouse_code": request.warehouse_code,
+                    "details": request.details or {},
+                },
+            )
+        )
+        provider_metadata.update(
+            {"provider_name": provider_name, "model_name": model_name}
+        )
+
         self._safety_guard.ensure_read_only_tool("draft_recommendation")
         async with transaction_session() as session:
             seller_id = await self._resolve_seller_id(
@@ -933,7 +947,7 @@ class AIController:
                 if request.target_record_id
                 else None,
                 "details": request.details,
-                "generated_reason": "Draft recommendation generated for human review.",
+                "generated_reason": recommendation_summary,
             }
             draft_payload_str = json.dumps(draft_payload, default=str)
             draft_action = await ai_crud.create_ai_draft_action(
@@ -965,10 +979,6 @@ class AIController:
             draft_id = draft_action.id
             interaction_id = interaction.id
 
-        recommendation_summary = (
-            f"Draft recommendation '{request.recommendation_type}' created successfully. "
-            f"Requires human approval before any operational execution."
-        )
         references = []
         if request.target_record_type and request.target_record_id:
             references.append(
@@ -986,7 +996,7 @@ class AIController:
             safety_decision=AISafetyDecision.ALLOW_READ_ONLY.value,
             answer=recommendation_summary,
             references=references,
-            metadata_json={"provider_used": False, "draft_only": True},
+            metadata_json={**provider_metadata, "draft_only": True},
         )
         return {
             "interaction_id": interaction_id,
@@ -1286,37 +1296,6 @@ class AIController:
                 "items": exceptions.migration_validation_failures,
             },
         ]
-
-    def _build_exception_fallback_narrative(
-        self,
-        exceptions: OperationalExceptionEvidence,
-        categories: list[dict[str, object]],
-    ) -> str:
-        """
-        Build deterministic exception summary text.
-
-        Args:
-            exceptions: Aggregated exceptions evidence.
-            categories: Formatted category summaries.
-
-        Returns:
-            str: Deterministic narrative summary.
-        """
-        if exceptions.total_exceptions == 0:
-            return (
-                "No active operational exceptions found across the specified scope. "
-                "Operations are in normal status."
-            )
-
-        parts = [
-            f"Identified {exceptions.total_exceptions} active operational exception(s) "
-            "across warehouse subsystems:"
-        ]
-        for cat in categories:
-            count = int(cat["count"])
-            if count > 0:
-                parts.append(f"- {cat['label']}: {count} item(s) [Severity: {cat['severity']}]")
-        return "\n".join(parts)
 
     async def _resolve_seller_id(
         self,
@@ -1654,56 +1633,56 @@ class AIController:
         settings: Settings,
         *,
         prompt: str,
-        fallback_answer: str,
         evidence_payload: dict[str, object],
     ) -> tuple[str, str, str, dict[str, object]]:
         """
-        Generate optional provider wording or return deterministic fallback text.
+        Generate a response using the configured AI provider.
 
         Args:
             settings: Application settings.
             prompt: User prompt or generated read-only prompt.
-            fallback_answer: Deterministic answer from application evidence.
             evidence_payload: Retrieved application evidence for provider context.
 
         Returns:
             tuple[str, str, str, dict[str, object]]: Answer, provider, model, metadata.
 
         Raises:
-            None.
+            HTTPException: If AI is disabled, unavailable, or returns no response.
         """
         if not settings.ai_enabled:
-            return fallback_answer, "disabled", settings.ai_model, {"provider_used": False}
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=AI_SERVICE_UNAVAILABLE_MESSAGE,
+            )
 
         try:
             provider = build_ai_provider(settings)
-            provider_prompt = self._provider_prompt(prompt, fallback_answer, evidence_payload)
+            provider_prompt = self._provider_prompt(prompt, evidence_payload)
             response = await provider.generate_text(
                 AIProviderRequest(
                     prompt=provider_prompt,
                     model_name=settings.ai_model,
                     system_instruction=(
                         "You are a read-only warehouse operations assistant. "
-                        "Use only supplied application evidence. Do not propose "
-                        "or perform mutations, seller communications, SQL, or "
-                        "scope bypasses."
+                        "Use only supplied application evidence. You may suggest "
+                        "a human-reviewable draft when requested, but must never "
+                        "perform mutations, seller communications, SQL, or scope "
+                        "bypasses. State when the evidence is insufficient and "
+                        "never invent quantities or record details."
                     ),
                 )
             )
             if not response.text.strip():
-                return fallback_answer, response.provider_name, response.model_name, {
-                    "provider_used": True,
-                    "provider_empty_response": True,
-                }
+                raise AIProviderExecutionError("AI provider returned an empty response.")
             return response.text.strip(), response.provider_name, response.model_name, {
                 "provider_used": True,
             }
         except (AIProviderExecutionError, AIProviderUnavailableError) as error:
-            logger.warning("AI provider fallback used: %s", error.__class__.__name__)
-            return fallback_answer, "disabled", settings.ai_model, {
-                "provider_used": False,
-                "provider_fallback_reason": error.__class__.__name__,
-            }
+            logger.warning("AI provider unavailable: %s", error.__class__.__name__)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=AI_SERVICE_UNAVAILABLE_MESSAGE,
+            ) from error
 
     async def _complete_interaction(
         self,
@@ -1852,7 +1831,6 @@ class AIController:
     def _provider_prompt(
         self,
         prompt: str,
-        fallback_answer: str,
         evidence_payload: dict[str, object],
     ) -> str:
         """
@@ -1860,7 +1838,6 @@ class AIController:
 
         Args:
             prompt: User prompt or generated read-only prompt.
-            fallback_answer: Deterministic application answer.
             evidence_payload: Retrieved application records.
 
         Returns:
@@ -1872,7 +1849,6 @@ class AIController:
         return (
             f"User inquiry:\n{prompt}\n\n"
             f"Warehouse evidence (live records):\n{json.dumps(evidence_payload, default=str)}\n\n"
-            f"Guidance/Fallback context:\n{fallback_answer}\n\n"
             "Instructions for AI:\n"
             "- Answer the user's inquiry directly, conversationally, and accurately based on "
             "the supplied warehouse evidence.\n"
@@ -1883,71 +1859,13 @@ class AIController:
             "where helpful), and strictly grounded in the live evidence."
         )
 
-    def _availability_fallback_answer(
-        self,
-        sku: str,
-        rows: Sequence[AvailableInventoryEvidence],
-    ) -> str:
-        """
-        Build deterministic available inventory answer text.
-
-        Args:
-            sku: Product SKU or search query.
-            rows: Available inventory evidence rows.
-
-        Returns:
-            str: Deterministic answer text.
-
-        Raises:
-            None.
-        """
-        if not rows:
-            return f"No AVAILABLE inventory balance records were found matching '{sku}'."
-        unique_skus = {row.sku for row in rows}
-        if len(unique_skus) > 1:
-            total_units = sum(row.available_quantity for row in rows)
-            return (
-                f"Found available inventory across {len(rows)} facility balance record(s) "
-                f"for {len(unique_skus)} product(s). "
-                f"Total available stock is {total_units:.2f} units across warehouses."
+    def _ensure_ai_provider_available(self, settings: Settings) -> None:
+        """Fail before any workflow work when the AI provider is not configured."""
+        if not settings.ai_enabled or build_ai_provider(settings).provider_name == "disabled":
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=AI_SERVICE_UNAVAILABLE_MESSAGE,
             )
-        parts = [
-            f"{row.available_quantity} units at warehouse {row.warehouse_code} "
-            f"for seller {row.seller_code}"
-            for row in rows
-        ]
-        return f"SKU {rows[0].sku} has " + "; ".join(parts) + "."
-
-    def _ledger_fallback_answer(
-        self,
-        sku: str,
-        movements: Sequence[LedgerMovementEvidence],
-    ) -> str:
-        """
-        Build deterministic movement ledger explanation text.
-
-        Args:
-            sku: Product SKU.
-            movements: Recent movement evidence rows.
-
-        Returns:
-            str: Deterministic explanation text.
-
-        Raises:
-            None.
-        """
-        if not movements:
-            return f"No inventory movement ledger rows were found for SKU {sku}."
-
-        total_delta = sum((row.quantity_delta for row in movements), Decimal("0.00"))
-        newest = movements[0]
-        return (
-            f"Found {len(movements)} recent ledger movement(s) for SKU {sku}. "
-            f"The net delta across returned rows is {total_delta}. "
-            f"The latest movement is {newest.movement_type} with delta "
-            f"{newest.quantity_delta} in state {newest.inventory_state} at "
-            f"warehouse {newest.warehouse_code}."
-        )
 
     def _availability_references(
         self,
@@ -2076,28 +1994,6 @@ class AIController:
             "summary": evidence.summary,
             "details": evidence.details,
         }
-
-    def _status_fallback_answer(self, evidence: OperationalStatusEvidence) -> str:
-        """
-        Build deterministic operational status answer text.
-
-        Args:
-            evidence: Operational status evidence.
-
-        Returns:
-            str: Deterministic status answer.
-
-        Raises:
-            None.
-        """
-        warehouse_text = ", ".join(evidence.warehouse_codes)
-        detail_count = len(evidence.details)
-        return (
-            f"{evidence.record_type.title()} {evidence.reference_number} is "
-            f"{evidence.status} for seller {evidence.seller_code} at "
-            f"warehouse scope {warehouse_text}. Returned {detail_count} "
-            f"detail row(s) as supporting evidence."
-        )
 
     def _availability_row(self, row: AvailableInventoryEvidence) -> dict[str, object]:
         """

@@ -48,6 +48,16 @@ export interface IntentConfig {
   execute: (query: string, scope: ScopeOptions) => Promise<AiResult>;
 }
 
+function findReference(query: string, prefixes: string[]): string | undefined {
+  const escaped = prefixes.map((prefix) => prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const match = query.match(new RegExp(`\\b(?:${escaped.join("|")})-[A-Z0-9-]+\\b`, "i"));
+  return match?.[0].toUpperCase();
+}
+
+function findSku(query: string): string | undefined {
+  return query.match(/\b(?:SKU|PROD)-[A-Z0-9-]+\b/i)?.[0].toUpperCase();
+}
+
 export const AI_INTENTS: IntentConfig[] = [
   {
     id: "inventory-availability",
@@ -55,15 +65,16 @@ export const AI_INTENTS: IntentConfig[] = [
     title: "AI Warehouse Copilot & Stock Inquiry",
     shortLabel: "Stock & Quantities",
     placeholder:
-      "Ask any stock question (e.g., 'product with 0 quantity', 'which headphones are in stock?', 'lowest stock items', 'SKU-AURA-ANC100')...",
-    example: "product with 0 quantity",
+      "Ask about a SKU or product name, e.g. 'How much stock do we have for SKU-AURA-ANC100?'",
+    example: "Which headphones are in stock?",
     description:
-      "Natural language query of live warehouse stock, zero/low inventory levels, and facility distributions.",
+      "Search live warehouse stock by SKU or product name, including zero availability and 10-or-fewer low stock.",
     allowedRoles: [],
     execute: (query, scope) => {
-      const payload: AiInventoryAvailabilityRequest = { sku: query.trim() };
+      const payload: AiInventoryAvailabilityRequest = { sku: findSku(query) ?? query.trim() };
       if (scope.warehouseCode) payload.warehouse_code = scope.warehouseCode;
       if (scope.sellerCode) payload.seller_code = scope.sellerCode;
+      payload.prompt = query.trim();
       return askAiInventoryAvailability(payload);
     },
   },
@@ -78,9 +89,10 @@ export const AI_INTENTS: IntentConfig[] = [
       "Natural language analysis of balance shifts, adjustments, receipts, and order reserves.",
     allowedRoles: ["ADMINISTRATOR", "WAREHOUSE_MANAGER", "RECEIVER"],
     execute: (query, scope) => {
-      const payload: AiLedgerExplanationRequest = { sku: query.trim() };
+      const payload: AiLedgerExplanationRequest = { sku: findSku(query) ?? query.trim() };
       if (scope.warehouseCode) payload.warehouse_code = scope.warehouseCode;
       if (scope.sellerCode) payload.seller_code = scope.sellerCode;
+      payload.prompt = query.trim();
       return askAiLedgerExplanation(payload);
     },
   },
@@ -93,7 +105,11 @@ export const AI_INTENTS: IntentConfig[] = [
     example: "ORD-2026-1001",
     description: "Detailed status check on allocation, pick task assignment, and shipment stage.",
     allowedRoles: ["ADMINISTRATOR", "WAREHOUSE_MANAGER", "PICKER_PACKER", "SELLER"],
-    execute: (query) => askAiOrderStatus({ reference_number: query.trim() }),
+    execute: (query) =>
+      askAiOrderStatus({
+        reference_number: findReference(query, ["ORD"]) ?? query.trim(),
+        prompt: query.trim(),
+      }),
   },
   {
     id: "receipt-status",
@@ -104,7 +120,11 @@ export const AI_INTENTS: IntentConfig[] = [
     example: "REC-2026-001",
     description: "Inspect arriving lines, received quantities, and location putaway status.",
     allowedRoles: ["ADMINISTRATOR", "WAREHOUSE_MANAGER", "RECEIVER"],
-    execute: (query) => askAiReceiptStatus({ reference_number: query.trim() }),
+    execute: (query) =>
+      askAiReceiptStatus({
+        reference_number: findReference(query, ["REC", "RCV"]) ?? query.trim(),
+        prompt: query.trim(),
+      }),
   },
   {
     id: "shipment-status",
@@ -115,7 +135,14 @@ export const AI_INTENTS: IntentConfig[] = [
     example: "1Z999AA10123456784",
     description: "Carrier dispatch confirmation, label status, and delivery milestones.",
     allowedRoles: ["ADMINISTRATOR", "WAREHOUSE_MANAGER", "PICKER_PACKER", "SELLER"],
-    execute: (query) => askAiShipmentStatus({ reference_number: query.trim() }),
+    execute: (query) => {
+      const reference = findReference(query, ["SHP", "TRK"]);
+      const trackingNumber = query.match(/\b1Z[A-Z0-9]{8,}\b/i)?.[0];
+      return askAiShipmentStatus({
+        reference_number: reference ?? trackingNumber ?? query.trim(),
+        prompt: query.trim(),
+      });
+    },
   },
   {
     id: "transfer-status",
@@ -126,7 +153,11 @@ export const AI_INTENTS: IntentConfig[] = [
     example: "TRF-2026-101",
     description: "Monitor bicoastal transfer movement between Reno and Columbus warehouses.",
     allowedRoles: ["ADMINISTRATOR", "WAREHOUSE_MANAGER"],
-    execute: (query) => askAiTransferStatus({ reference_number: query.trim() }),
+    execute: (query) =>
+      askAiTransferStatus({
+        reference_number: findReference(query, ["TRF"]) ?? query.trim(),
+        prompt: query.trim(),
+      }),
   },
   {
     id: "return-status",
@@ -137,7 +168,11 @@ export const AI_INTENTS: IntentConfig[] = [
     example: "RMA-2026-501",
     description: "Disposition, customer restock status, and inspection findings.",
     allowedRoles: ["ADMINISTRATOR", "WAREHOUSE_MANAGER", "RECEIVER", "SELLER"],
-    execute: (query) => askAiReturnStatus({ reference_number: query.trim() }),
+    execute: (query) =>
+      askAiReturnStatus({
+        reference_number: findReference(query, ["RMA", "RET"]) ?? query.trim(),
+        prompt: query.trim(),
+      }),
   },
   {
     id: "exceptions-summary",
@@ -153,6 +188,7 @@ export const AI_INTENTS: IntentConfig[] = [
       const payload: AiExceptionSummaryRequest = {};
       if (scope.warehouseCode) payload.warehouse_code = scope.warehouseCode;
       if (scope.sellerCode) payload.seller_code = scope.sellerCode;
+      if (_query.trim()) payload.prompt = _query.trim();
       return summarizeAiExceptionsApi(payload);
     },
   },
@@ -170,6 +206,7 @@ export const AI_INTENTS: IntentConfig[] = [
       const payload: AiDraftRecommendationRequest = { recommendation_type: "REBALANCE" };
       if (scope.warehouseCode) payload.warehouse_code = scope.warehouseCode;
       if (scope.sellerCode) payload.seller_code = scope.sellerCode;
+      if (_query.trim()) payload.prompt = _query.trim();
       return createAiDraftRecommendationApi(payload);
     },
   },
@@ -177,17 +214,18 @@ export const AI_INTENTS: IntentConfig[] = [
 
 export function detectIntentFromText(text: string): string | null {
   const clean = text.trim().toUpperCase();
-  if (clean.startsWith("ORD-")) return "order-status";
-  if (clean.startsWith("REC-") || clean.startsWith("RCV-")) return "receipt-status";
-  if (clean.startsWith("TRK-") || clean.startsWith("SHP-")) return "shipment-status";
-  if (clean.startsWith("TRF-")) return "transfer-status";
-  if (clean.startsWith("RMA-") || clean.startsWith("RET-")) return "return-status";
-  if (clean.startsWith("SKU-") || clean.startsWith("PROD-")) return "inventory-availability";
+  if (findReference(clean, ["ORD"])) return "order-status";
+  if (findReference(clean, ["REC", "RCV"])) return "receipt-status";
+  if (findReference(clean, ["TRK", "SHP"]) || /\b1Z[A-Z0-9]{8,}\b/.test(clean))
+    return "shipment-status";
+  if (findReference(clean, ["TRF"])) return "transfer-status";
+  if (findReference(clean, ["RMA", "RET"])) return "return-status";
   if (clean.includes("EXCEPTION") || clean.includes("FLAGGED") || clean.includes("BOTTLENECK"))
     return "exceptions-summary";
   if (clean.includes("REBALANCE") || clean.includes("TRANSFER RECOMMENDATION"))
     return "rebalance-recommendation";
   if (clean.includes("LEDGER") || clean.includes("AUDIT") || clean.includes("VARIANCE"))
     return "ledger-explanation";
+  if (findSku(clean)) return "inventory-availability";
   return null;
 }

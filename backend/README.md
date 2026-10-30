@@ -372,9 +372,9 @@ docker run -d \
 </details>
 
 <details>
-<summary><strong>Q: How do I test the Gemini AI Copilot without an API key?</strong></summary>
+<summary><strong>Q: What happens when the Gemini AI Copilot has no API key?</strong></summary>
 
-> **Resolution:** Set `AI_ENABLED=false` or omit `GOOGLE_GENAI_API_KEY`. The backend will automatically fall back to deterministic heuristics and return structured read-only mock recommendations.
+> **Resolution:** AI requests return HTTP 503 with a user-friendly message that the service will be available shortly. Configure `GOOGLE_GENAI_API_KEY` on the backend to enable AI responses.
 </details>
 
 <details>

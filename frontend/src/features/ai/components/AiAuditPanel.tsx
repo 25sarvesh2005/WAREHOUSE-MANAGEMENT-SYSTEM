@@ -75,10 +75,10 @@ export function AiAuditPanel() {
             <div className="text-lg font-bold text-foreground">
               {health?.provider_name === "google_genai"
                 ? "Google Gemini"
-                : "Deterministic Fallback"}
+                : "AI service unavailable"}
             </div>
             <div className="text-xs text-muted-foreground font-mono mt-0.5">
-              {health?.model_name || "rule-engine-v1"}
+              {health?.model_name || "Not configured"}
             </div>
           </div>
           <div className="mt-3 flex items-center gap-1.5 text-xs">
@@ -111,7 +111,9 @@ export function AiAuditPanel() {
               )}
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
-              {health?.configured ? "Backend API Key Validated" : "Using safe local fallback"}
+              {health?.configured
+                ? "Backend API key configured"
+                : "AI responses require a configured API key"}
             </div>
           </div>
           <div className="mt-3 text-[11px] text-muted-foreground">
@@ -370,7 +372,7 @@ export function AiAuditPanel() {
                       </span>
                     </Td>
                     <Td className="text-xs font-medium text-foreground">
-                      {item.provider_name === "google_genai" ? "Gemini" : "Rule Engine"}
+                      {item.provider_name === "google_genai" ? "Gemini" : "AI unavailable"}
                     </Td>
                     <Td className="text-center text-xs text-muted-foreground">
                       {item.tool_call_count} / {item.draft_action_count}

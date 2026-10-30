@@ -56,6 +56,7 @@ interface RecentQuery {
 
 function ProviderBadge({ providerName }: { providerName?: string }) {
   const isGemini = providerName === "google_genai";
+  const isDisabled = providerName === "disabled";
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -69,7 +70,7 @@ function ProviderBadge({ providerName }: { providerName?: string }) {
       ) : (
         <Bot className="size-3 text-slate-500" />
       )}
-      {isGemini ? "Google Gemini" : "Rule Engine"}
+      {isGemini ? "Google Gemini" : isDisabled ? "AI not used" : "AI Provider"}
     </span>
   );
 }
@@ -184,7 +185,11 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
   const detectedIntent = detectedIntentId
     ? availableIntents.find((i) => i.id === detectedIntentId)
     : null;
-  const isAutoRouting = Boolean(detectedIntent && detectedIntent.id !== activeIntent.id);
+  const keepsExplicitLedgerIntent =
+    activeIntent.id === "ledger-explanation" && detectedIntent?.id === "inventory-availability";
+  const isAutoRouting = Boolean(
+    detectedIntent && detectedIntent.id !== activeIntent.id && !keepsExplicitLedgerIntent,
+  );
 
   // Handle Intent Selection
   function handleSelectIntent(intent: IntentConfig) {
@@ -209,7 +214,9 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
     // If user typed an ID that belongs to another domain, switch automatically
     const detected = detectIntentFromText(query);
     let resolvedIntent = intent;
-    if (detected && detected !== intent.id) {
+    const keepLedgerIntent =
+      intent.id === "ledger-explanation" && detected === "inventory-availability";
+    if (detected && detected !== intent.id && !keepLedgerIntent) {
       const match = availableIntents.find((i) => i.id === detected);
       if (match) {
         resolvedIntent = match;
@@ -287,7 +294,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
     activeResult && "interaction_id" in activeResult ? activeResult.interaction_id : "";
 
   const provider =
-    activeResult && "provider_name" in activeResult ? activeResult.provider_name : "google_genai";
+    activeResult && "provider_name" in activeResult ? activeResult.provider_name : "disabled";
 
   const safety =
     activeResult && "safety_decision" in activeResult
@@ -298,14 +305,14 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
   const categoryIntents = availableIntents.filter((i) => i.category === activeCategory);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ─────────────────────────────────────────────────────────────────
           1. Hero Header & Safety Banner
           ───────────────────────────────────────────────────────────────── */}
       <div
         role="region"
         aria-label="AI Safety and Overview"
-        className="relative overflow-hidden rounded-2xl border border-border dark:border-slate-800 bg-gradient-to-br from-white via-slate-50/50 to-primary-tint/30 dark:from-slate-900 dark:via-slate-900/90 dark:to-blue-950/40 p-6 shadow-card"
+        className="relative overflow-hidden rounded-2xl border border-border dark:border-slate-800 bg-gradient-to-br from-white via-slate-50/50 to-primary-tint/30 dark:from-slate-900 dark:via-slate-900/90 dark:to-blue-950/40 p-4 shadow-card"
       >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-start gap-4">
@@ -314,7 +321,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-foreground">Operations AI Assistant</h2>
+                <h2 className="text-xl font-bold text-foreground">What can I help you find?</h2>
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                   <ShieldCheck className="size-3 text-emerald-600 dark:text-emerald-400" />
                   Read-Only Safe
@@ -343,7 +350,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
         <div
           role="group"
           aria-label="Inquiry Domain"
-          className="mt-6 flex flex-wrap items-center gap-2 border-t border-border/70 pt-4"
+          className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/70 pt-3"
         >
           <span className="text-xs font-semibold text-muted-foreground mr-1">Inquiry Domain:</span>
           <button
@@ -492,13 +499,13 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             <div className="pointer-events-none absolute left-3.5 text-slate-400 dark:text-slate-500">
               <Search className="size-5" />
             </div>
-            <input
+            <textarea
               id="ai-query-input"
-              type="text"
+              rows={2}
               value={queryInput}
               onChange={(e) => setQueryInput(e.target.value)}
               placeholder={activeIntent.placeholder}
-              className="w-full rounded-xl border border-border dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/60 py-3.5 pl-11 pr-32 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full resize-none rounded-xl border border-border dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/60 py-3.5 pl-11 pr-32 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
             {queryInput && (
               <button
@@ -595,13 +602,13 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             <span>Click any prompt to launch</span>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             <button
               type="button"
               onClick={() =>
                 handleQuickStarter("inventory-availability", "product with 0 quantity")
               }
-              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-primary-tint text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                 <Box className="size-4" />
@@ -622,7 +629,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
                   "which headphones do we have in stock?",
                 )
               }
-              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                 <Sparkles className="size-4" />
@@ -638,7 +645,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             <button
               type="button"
               onClick={() => handleQuickStarter("order-status", "ORD-2026-1001")}
-              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                 <Truck className="size-4" />
@@ -654,7 +661,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             <button
               type="button"
               onClick={() => handleQuickStarter("ledger-explanation", "SKU-AURA-ANC100")}
-              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                 <Layers className="size-4" />
@@ -670,7 +677,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
             <button
               type="button"
               onClick={() => handleQuickStarter("receipt-status", "REC-2026-001")}
-              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-teal-50 text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">
                 <PackageCheck className="size-4" />
@@ -688,7 +695,7 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
               onClick={() =>
                 handleQuickStarter("exceptions-summary", "Summarize facility hold reasons")
               }
-              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+              className="group flex flex-col items-start rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-left shadow-2xs transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
             >
               <div className="flex size-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
                 <AlertTriangle className="size-4" />
@@ -709,6 +716,13 @@ export function AiAssistant({ userRole }: { userRole: Role }) {
           ───────────────────────────────────────────────────────────────── */}
       {activeResult && (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          {queryInput.trim() && (
+            <div className="flex justify-end">
+              <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-4 py-3 text-sm leading-relaxed text-white shadow-sm">
+                {queryInput}
+              </p>
+            </div>
+          )}
           <div className="rounded-2xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-card space-y-6">
             {/* Header / Meta bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
